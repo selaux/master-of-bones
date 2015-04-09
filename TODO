@@ -1,0 +1,7 @@
+- Kantenfilter auf low-res bild -> Verbessern der Kanten mit Texturinformationen
+  - Gradient Rausfinden
+  - Orthogonal zum Gradient die Texturfeatures berechen
+  - Textur Features:
+    - haralick-matritzen
+    - snake
+  - SVM?
