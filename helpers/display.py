@@ -94,6 +94,27 @@ def get_outline_actor(outline, base_color, line_style, show_direction):
 
     return actor
 
+def get_points_actor(pts):
+    points = vtk.vtkPoints()
+    vertices = vtk.vtkCellArray()
+    for i, p in enumerate(pts):
+        points.InsertNextPoint([p[1], p[0], 1])
+        vertices.InsertNextCell(1)
+        vertices.InsertCellPoint(i)
+
+    polyData = vtk.vtkPolyData()
+    polyData.SetPoints(points)
+    polyData.SetVerts(vertices)
+
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputData(polyData)
+
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+    actor.GetProperty().SetPointSize(10)
+    actor.GetProperty().SetColor(1.0, 0, 0)
+
+    return actor
 
 def outline(outline, show_direction=False, title=None):
     window = VTKWindow(title=title)

@@ -94,6 +94,9 @@ def normalize_outline(points, ordered_edges):
             start_point = intersect
             break
 
+    if intersect is None:
+        raise Exception('No intersect found at {0} degrees'.format(0))
+
     intersect[0] = 0
     new_points = np.roll(points, -start_index-1, axis=0)
     if new_points[-1, 0] > new_points[0, 0]:
@@ -152,58 +155,73 @@ def estimate_rigid_transform(A, B):
 
     return R, t
 
-def perp( a ) :
-    b = np.empty_like(a)
-    b[0] = -a[1]
-    b[1] = a[0]
-    return b
+def perp(u, v):
+    return u[0]*v[1] - u[1]*v[0]
 
-def seg_intersect(a1,a2, b1,b2):
-    a1 = a1.astype(np.float64)
-    a2 = a2.astype(np.float64)
-    b1 = b1.astype(np.float64)
-    b2 = b2.astype(np.float64)
-
-    da = a2-a1
-    db = b2-b1
-    dp = a1-b1
-    dap = perp(da)
-    denom = np.dot( dap, db)
-    num = np.dot( dap, dp )
-
-    intersection = (num / denom)*db + b1
-    if np.array_equal(intersection, a1) or np.array_equal(intersection, a2) or np.array_equal(intersection, b1) or np.array_equal(intersection, b2):
-        return intersection
-
-    ia = intersection - a1
-    ib = intersection - b1
-
-    lda = np.linalg.norm(da)
-    lia = np.linalg.norm(ia)
-    ldb = np.linalg.norm(db)
-    lib = np.linalg.norm(ib)
-
-    nda = np.divide(da, lda)
-    nia = np.divide(ia, lia)
-    ndb = np.divide(db, ldb)
-    nib = np.divide(ib, lib)
-
-    is_correct_a_dir = np.array_equal(np.around(nda, decimals=3), np.around(nia, decimals=3))
-    is_correct_b_dir = np.array_equal(np.around(ndb, decimals=3), np.around(nib, decimals=3))
-    is_corrent_a_len = lia <= lda
-    is_corrent_b_len = lib <= ldb
-
-    if is_correct_a_dir and is_correct_b_dir and is_corrent_a_len and is_corrent_b_len:
-        return intersection
+def in_segment(a, b1, b2):
+    if b1[0] != b2[0]:
+        if b1[0] <= a[0] and a[0] <= b2[0]:
+            return True
+        if b1[x] >= a[0] and a[0] >= b2[0]:
+            return True
     else:
-        return None
+        if b1[1] <= a[1] and a[1] <= b2[1]:
+            return True
+        if b1[1] >= a[1] and a[1] >= b2[1]:
+            return True
+    return False
+
+def seg_intersect(a1, a2, b1, b2):
+    u = a2 - a1
+    v = b2 - b1
+    w = a1 - b1
+    d = perp(u, v)
+
+    if abs(d) < 0.00000001:
+        if perp(u,w) != 0 or perp(v,w) != 0:
+            return None
+
+        du = np.dot(u, u)
+        dv = np.dot(v, v)
+        if du == 0 and dv == 0:
+            return a1 if np.array_equal(a1, b1) else None
+        if du == 0:
+            return a1 if in_segment(a1, b1, b2) else None
+        if dv == 0:
+            return b1 if in_segment(b1, a1, a2) else None
+        w2 = a2 - b1
+        if v[0] != 0:
+            t0, t1 = w[0] / v[0], w2[0] / v[0]
+        else:
+            t0, t1 = w[1] / v[1], w2[1] / v[1]
+        if t0 > t1:
+            t1, t2 = t2, t1
+        if t0 > 1 or t1 < 0:
+            return None
+        t0 = 0 if t0 < 0 else t0
+        t1 = 1 if t1 > 1 else t1
+        return b1 + t0 * v
+    else:
+        si = perp(v,w) / d
+        if si < 0 or si > 1:
+            return None
+
+        ti = perp(u,w) / d
+        if ti < 0 or ti > 1:
+            return None
+        return a1 + si * u
 
 def angle(v1, v2):
     cosang = np.dot(v1, v2)
     sinang = np.linalg.norm(np.cross(v1, v2))
     return np.arctan2(sinang, cosang)
 
+def cart2pol(y, x):
+    rho = np.linalg.norm([x, y])
+    phi = np.arctan2(y, x)
+    return rho, phi
+
 def pol2cart(rho, phi):
     x = rho * np.cos(phi)
     y = rho * np.sin(phi)
-    return(y, x)
+    return (y, x)

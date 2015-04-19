@@ -1,7 +1,14 @@
-- Kantenfilter auf low-res bild -> Verbessern der Kanten mit Texturinformationen
-  - Gradient Rausfinden
-  - Orthogonal zum Gradient die Texturfeatures berechen
-  - Textur Features:
-    - haralick-matritzen
-    - snake
-  - SVM?
+# Hintergründe rausnehmen
+# Punkte (wie in Präsentation) manuell auswählen
+# Semilandmarks bei Registrierung einfügen
+# Warum Links oben keine Abweichung?
+# Größeres Fenster
+# Spline-Vektoren als Features
+# Nochmal 10 Knochen / Klasse triangulieren
+# Fehlermaß für Registrierung
+
+# Spiegeln: Per Hand
+# Affine Transformation ausprobieren -> estimate_transform
+# Herausfinden warum es mit der Distanz nicht funktioniert
+# Bessere Visualisierung für
+# Features: Abweichung vom Durchschnittsknochen
