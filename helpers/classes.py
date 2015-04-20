@@ -3,6 +3,7 @@
 CLASSES = [
     {
         'name': 'Gazella',
+        'short': 'GZ',
         'id': 1,
         'identifiers': [
             'Gaz'
@@ -10,6 +11,7 @@ CLASSES = [
     },
     {
         'name': 'Sheep - Wild',
+        'short': 'SW',
         'id': 2,
         'identifiers': [
             'GÖ',
@@ -18,6 +20,7 @@ CLASSES = [
     },
     {
         'name': 'Sheep - Domestic',
+        'short': 'SD',
         'id': 3,
         'identifiers': [
             'Ma',
@@ -27,6 +30,7 @@ CLASSES = [
 ]
 UNKNOWN_CLASS = {
     'id': 0,
+    'short': '?',
     'name': 'Unknown'
 }
 
@@ -37,6 +41,12 @@ def get_class(filename):
             if filename.startswith(ident):
                 return c['id'], c['name']
     return UNKNOWN_CLASS['id'], UNKNOWN_CLASS['name']
+
+def get_class_short(id):
+    for c in CLASSES:
+        if c['id'] == id:
+            return c['short']
+    return UNKNOWN_CLASS['short']
 
 def get_class_name(id):
     for c in CLASSES:
