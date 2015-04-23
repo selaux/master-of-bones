@@ -1,9 +1,10 @@
-import sys
 import pickle
 import gzip
 import traceback
 import vtk
 import numpy as np
+import geometry as gh
+import display as dh
 from functools import partial
 from PyQt4 import QtCore, QtGui
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -102,6 +103,8 @@ class TriangulationWindow(VTKWindow):
         self.bl.insertWidget(-1, self.toggle_area_effect_button)
         self.undo_button = self.get_new_button('Undo Last Step', 'edit-undo')
         self.bl.insertWidget(-1, self.undo_button)
+        self.show_outline_button = self.get_new_button('Show Outline', 'zoom-in')
+        self.bl.insertWidget(-1, self.show_outline_button)
         self.mark_as_done_button = self.get_new_button('Mark as done', 'emblem-readonly', checkable=True)
         self.bl.insertWidget(-1, self.mark_as_done_button)
         self.mark_as_done_button.setChecked('done' in self.current and self.current['done'])
@@ -127,6 +130,7 @@ class TriangulationWindow(VTKWindow):
         self.mark_as_done_button.clicked.connect(self.mark_as_done)
         self.save_button.clicked.connect(self.save_current)
         self.undo_button.clicked.connect(self.undo)
+        self.show_outline_button.clicked.connect(self.show_outline)
 
     def get_new_button(self, label, icon, checkable=False):
         button = QtGui.QPushButton('')
@@ -201,6 +205,14 @@ class TriangulationWindow(VTKWindow):
                 self.list_model.dataChanged.emit(self.list_model.index(index), self.list_model.index(index))
         except:
             print(traceback.format_exc())
+
+    def show_outline(self):
+        tri = self.do_triangulation(self.current['bone_pixels'])
+        outline_points, outline_edges = gh.extract_outline(tri.points, tri.simplices)
+        dh.outline({
+            'points': outline_points,
+            'edges': outline_edges
+        })
 
     def save_current(self):
         try:
