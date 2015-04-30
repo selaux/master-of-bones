@@ -1,7 +1,5 @@
 import math
 import numpy as np
-from algorithms.registration import to_standard_size_and_position
-
 
 def alpha_shape(triangulation, alpha=25):
     triangles_to_delete = []
@@ -83,9 +81,10 @@ def extract_outline_edges(simplices):
     return np.array(outline, dtype=np.int)
 
 def normalize_outline(points, ordered_edges):
-    points = to_standard_size_and_position({
-        'points': points
-    })
+    centroid = np.mean(points, axis=0)
+    result = points - np.tile(centroid, (points.shape[0], 1))
+    scale_factor = np.sqrt(np.sum(np.power(result, 2)) / result.shape[0])
+    points = np.divide(result, scale_factor)
 
     root = np.array([0, 0])
     raypoint = np.array(pol2cart(2, 0))

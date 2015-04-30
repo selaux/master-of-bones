@@ -5,33 +5,39 @@ from skimage import transform as tf
 from scipy.interpolate import splprep, splev
 
 
-def to_standard_size_and_position(outline):
-    centroid = np.mean(outline['points'], axis=0)
-    result = outline['points'] - np.tile(centroid, (outline['points'].shape[0], 1))
+def append_standard_size_and_position(bone):
+    centroid = np.mean(bone['points'], axis=0)
+    result = bone['points'] - np.tile(centroid, (bone['points'].shape[0], 1))
     scale_factor = np.sqrt(np.sum(np.power(result, 2)) / result.shape[0])
     result = np.divide(result, scale_factor)
-    return result
+    bone['registered'] = result
+    return bone
 
 
-def estimate_transform(bones, estimator, init_reference_estimator, iterations):
-    standard_bones = map(to_standard_size_and_position, bones)
-    reference = max(standard_bones, key=lambda o: o.shape[0])
+def estimate_transform(bones, estimator, init_reference_estimator, iterations, progress_callback=None):
+    bones = map(append_standard_size_and_position, bones)
+    reference = max(bones, key=lambda o: o['registered'].shape[0])
     reference_estimator = init_reference_estimator(reference)
+    progress = {
+        'value': 0,
+        'max': len(bones) * iterations,
+        'callback': progress_callback
+    }
 
-    def do_registration(points):
-        distance = 0
-        if points is reference:
-            return points, distance
+    def do_registration(bone, progress):
+        if bone is reference:
+            bone['error'] = 0
         for j in range(iterations):
-            from_points, to_points = reference_estimator(points)
-            points, distance = estimator(to_points, from_points, points)
-        return points, distance
+            from_points, to_points = reference_estimator(bone)
+            result = estimator(to_points, from_points, bone['registered'])
+            bone['registered'] = result[0]
+            bone['error'] = result[1]
+            progress['value'] += 1
+            if progress['callback']:
+                progress['callback'](progress['value'], progress['max'])
 
-    registered_bones = map(do_registration, standard_bones)
-
-    for i, bone in enumerate(bones):
-        bone['registered'] = registered_bones[i][0]
-        bone['error'] = registered_bones[i][1]
+    for bone in bones:
+        do_registration(bone, progress)
 
 def get_error(points, reference, tform):
     transformed = tform(points)
@@ -60,7 +66,7 @@ def projective(reference, points, points_to_transform):
     error = get_error(points, reference, tform)
     return transformed, error
 
-def procrustes(reference, points, points_to_transform, scaling=True, reflection='best'):
+def procrustes(reference, points, points_to_transform, scaling=True, reflection=False):
     """
     A port of MATLAB's `procrustes` function to Numpy.
 
@@ -177,29 +183,29 @@ def procrustes(reference, points, points_to_transform, scaling=True, reflection=
     return Z, error / norm
 
 def get_nearest_neighbor_point_estimator(reference):
-    nbrs = NearestNeighbors(n_neighbors=1, algorithm='auto').fit(reference)
+    nbrs = NearestNeighbors(n_neighbors=1, algorithm='auto').fit(reference['registered'])
     def get_neighbors(outline):
-        distances, indices = nbrs.kneighbors(outline)
+        distances, indices = nbrs.kneighbors(outline['registered'])
         indices = np.array(indices).flatten()
-        return outline, reference[indices]
+        return outline['registered'], reference['registered'][indices]
     return get_neighbors
 
 
 def get_marker_using_angles_estimator(reference):
-    reference_landmarks = landmarks.get_using_angles(reference)
+    reference_landmarks = landmarks.get_using_angles(reference['registered'])
     def get_landmarks(outline):
-        point_landmarks = landmarks.get_using_angles(outline)
+        point_landmarks = landmarks.get_using_angles(outline['registered'])
         return point_landmarks, reference_landmarks
     return get_landmarks
 
 def get_marker_using_space_partitioning_estimator(reference):
-    reference_landmarks = landmarks.get_using_space_partitioning(reference)
+    reference_landmarks = landmarks.get_using_space_partitioning(reference['registered'])
     def get_landmarks(outline):
-        point_landmarks = landmarks.get_using_space_partitioning(outline)
+        point_landmarks = landmarks.get_using_space_partitioning(outline['registered'])
         return point_landmarks, reference_landmarks
     return get_landmarks
 
-def get_spline_points_estimator(reference, num_evaluations=50):
+def get_spline_points_estimator(reference, num_evaluations=250):
     def extract_spline(points):
         y = points[:, 0].flatten()
         x = points[:, 1].flatten()
@@ -209,9 +215,9 @@ def get_spline_points_estimator(reference, num_evaluations=50):
         spline_points[:, 0] = coords[0]
         spline_points[:, 1] = coords[1]
         return spline_points
-    reference_spline = extract_spline(reference)
+    reference_spline = extract_spline(reference['registered'])
     def get_landmarks(outline):
-        point_spline = extract_spline(outline)
+        point_spline = extract_spline(outline['registered'])
         return point_spline, reference_spline
     return get_landmarks
 

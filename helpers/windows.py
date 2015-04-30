@@ -52,7 +52,7 @@ class VTKWindow(QtGui.QMainWindow):
             legend.SetNumberOfEntries(len(legends))
             legend.GetEntryTextProperty().SetFontSize(25)
             legend.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
-            legend.GetPositionCoordinate().SetValue(0, 0);
+            legend.GetPositionCoordinate().SetValue(0, 0)
             legend.GetPosition2Coordinate().SetCoordinateSystemToDisplay()
             legend.GetPosition2Coordinate().SetValue(250, len(legends)*30)
             for i, l in enumerate(legends):
@@ -65,11 +65,11 @@ class VTKWindow(QtGui.QMainWindow):
         scale.LeftAxisVisibilityOff()
         scale.BottomAxisVisibilityOff()
         scale.SetRightBorderOffset(50)
-        scale.GetRightAxis().GetProperty().SetColor(0, 0, 0);
+        scale.GetRightAxis().GetProperty().SetColor(0, 0, 0)
         scale.GetRightAxis().GetLabelTextProperty().SetFontSize(10)
         scale.GetRightAxis().GetLabelTextProperty().ShadowOff()
         scale.GetRightAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
-        scale.GetTopAxis().GetProperty().SetColor(0, 0, 0);
+        scale.GetTopAxis().GetProperty().SetColor(0, 0, 0)
         scale.GetTopAxis().GetLabelTextProperty().SetFontSize(10)
         scale.GetTopAxis().GetLabelTextProperty().ShadowOff()
         scale.GetTopAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
@@ -451,6 +451,8 @@ class RegistrationWindow(VTKWindow):
         self.sl = QtGui.QVBoxLayout()
         self.init_outline_checkboxes()
         self.init_class_selector()
+        self.progress_bar = QtGui.QProgressBar()
+        self.sl.insertWidget(-1, self.progress_bar)
         self.hl.insertLayout(0, self.sl)
 
         self.calc_button = QtGui.QPushButton('Calculate')
@@ -565,7 +567,7 @@ class RegistrationWindow(VTKWindow):
             reference_estimator = list([ r for i, r in enumerate(self.reference_estimators) if self.reference_estimators_buttons[i].isChecked() ])[0]['fn']
             iterations = self.iterations_button.value()
 
-            self.register_fn(bones, estimator, reference_estimator, iterations)
+            self.register_fn(bones, estimator, reference_estimator, iterations, progress_callback=self.update_progress_bar)
 
             QtGui.QApplication.processEvents()
             self.calc_button.setEnabled(True)
@@ -575,6 +577,11 @@ class RegistrationWindow(VTKWindow):
             self.initial_registration_done = True
         except:
             print(traceback.format_exc())
+
+    def update_progress_bar(self, progress, max_progress):
+        self.progress_bar.setMaximum(max_progress)
+        self.progress_bar.setValue(progress)
+        QtGui.QApplication.processEvents()
 
     def update_actor_visibility(self):
         for i, actor in enumerate(self.registered_actors):
