@@ -5,7 +5,7 @@ from time import time
 from skimage.color import label2rgb
 from skimage.transform import resize
 import vtk
-from windows import show_window, create_single_legend_actor, VTKWindow, TriangulationWindow
+from windows import show_window, create_single_legend_actor, VTKWindow, TriangulationWindow, RegistrationWindow
 from matplotlib.widgets import RectangleSelector
 from matplotlib.colors import colorConverter
 from matplotlib.collections import LineCollection
@@ -176,4 +176,8 @@ def to_vtk_image(image):
 
 def triangulation(bones, do_triangulation):
     window = TriangulationWindow(bones, do_triangulation)
+    show_window(window)
+
+def registration(bones, register_fn, estimators, reference_estimators):
+    window = RegistrationWindow(bones, register_fn, estimators, reference_estimators)
     show_window(window)

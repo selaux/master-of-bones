@@ -126,35 +126,6 @@ def extract_outline(points, simplices):
 
     return points[points_in_outline, :].copy(), new_outline
 
-def estimate_rigid_transform(A, B):
-    assert len(A) == len(B)
-
-    N = A.shape[0]; # total points
-
-    centroid_A = np.mean(A, axis=0)
-    centroid_B = np.mean(B, axis=0)
-
-    # centre the points
-    AA = A - np.tile(centroid_A, (N, 1))
-    BB = B - np.tile(centroid_B, (N, 1))
-
-    # dot is matrix multiplication for array
-    H = np.dot(np.transpose(AA), BB)
-
-    U, S, Vt = np.linalg.svd(H)
-
-    R = Vt.T * U.T
-
-    # special reflection case
-    if np.linalg.det(R) < 0:
-      print "Reflection detected"
-      Vt[1,:] *= -1
-      R = Vt.T * U.T
-
-    t = np.dot(-R, centroid_A.T) + centroid_B.T
-
-    return R, t
-
 def perp(u, v):
     return u[0]*v[1] - u[1]*v[0]
 

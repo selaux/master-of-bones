@@ -1,3 +1,5 @@
+# coding=utf-8
+
 import pickle
 import gzip
 import traceback
@@ -5,6 +7,7 @@ import vtk
 import numpy as np
 import geometry as gh
 import display as dh
+import classes as ch
 from functools import partial
 from PyQt4 import QtCore, QtGui
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
@@ -93,12 +96,15 @@ class TriangulationWindow(VTKWindow):
         self.list_view = QtGui.QListView()
         self.list_view.setModel(lm)
         self.list_view.selectionModel().select(lm.index(0), QtGui.QItemSelectionModel.SelectCurrent)
+        self.list_view.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.MinimumExpanding)
         self.hl.insertWidget(0, self.list_view)
 
         self.bl = QtGui.QHBoxLayout()
         self.toggle_triangulation_button = self.get_new_button('Toggle Triangulation', 'image-x-generic', checkable=True)
         self.bl.insertWidget(-1, self.toggle_triangulation_button)
         self.toggle_triangulation_button.setChecked(True)
+        self.toggle_markers_button = self.get_new_button('Toggle Markers', 'text-x-generic', checkable=True)
+        self.bl.insertWidget(-1, self.toggle_markers_button)
         self.toggle_area_effect_button = self.get_new_button('Toggle Area Effect', 'list-add', checkable=True)
         self.bl.insertWidget(-1, self.toggle_area_effect_button)
         self.undo_button = self.get_new_button('Undo Last Step', 'edit-undo')
@@ -117,16 +123,26 @@ class TriangulationWindow(VTKWindow):
         self.triangle_data = vtk.vtkPolyData()
         self.triangle_mapper = vtk.vtkPolyDataMapper()
         self.triangle_actor = vtk.vtkActor()
+        self.marker_data = vtk.vtkPolyData()
+        self.marker_mapper = vtk.vtkPolyDataMapper()
+        self.marker_actor = vtk.vtkActor()
+        self.marker_actor.VisibilityOff()
+        self.marker_labels_filter = vtk.vtkPointSetToLabelHierarchy()
+        self.marker_labels_mapper = vtk.vtkLabelPlacementMapper()
+        self.marker_labels_actor = vtk.vtkActor2D()
+        self.marker_labels_actor.VisibilityOff()
         self.initialize_actors()
-        self.render_actors([self.image_actor, self.triangle_actor])
+        self.render_actors([self.image_actor, self.triangle_actor, self.marker_actor, self.marker_labels_actor])
         self.update_current_data(including_image=True)
         self.vtkWidget.GetRenderWindow().Render()
         self.ren.ResetCamera()
 
+        self.iren.RemoveObservers('CharEvent')
         self.iren.AddObserver('KeyPressEvent', self.on_key, 0.0)
         self.intstyle.AddObserver('SelectionChangedEvent', self.area_selected, 0.0)
         self.list_view.selectionModel().currentChanged.connect(self.on_bone_model_change)
         self.toggle_triangulation_button.clicked.connect(self.toggle_triangulation)
+        self.toggle_markers_button.clicked.connect(self.toggle_markers)
         self.mark_as_done_button.clicked.connect(self.mark_as_done)
         self.save_button.clicked.connect(self.save_current)
         self.undo_button.clicked.connect(self.undo)
@@ -149,6 +165,20 @@ class TriangulationWindow(VTKWindow):
         self.triangle_actor.GetProperty().SetRepresentationToWireframe()
         self.triangle_actor.GetProperty().SetLineWidth(1.5)
 
+        self.marker_mapper.SetInputData(self.marker_data)
+        self.marker_actor.SetMapper(self.marker_mapper)
+        self.marker_actor.GetProperty().SetPointSize(10)
+        self.marker_actor.GetProperty().SetColor(1.0, 0, 0)
+        self.marker_labels_filter.SetInputDataObject(self.marker_data)
+        self.marker_labels_filter.SetLabelArrayName("labels")
+        self.marker_labels_filter.GetTextProperty().SetFontSize(16)
+        self.marker_labels_filter.GetTextProperty().BoldOn()
+        self.marker_labels_filter.GetTextProperty().SetColor(1.0, 0, 0)
+        self.marker_labels_filter.GetTextProperty().SetLineOffset(20)
+        self.marker_labels_mapper.SetInputConnection(self.marker_labels_filter.GetOutputPort())
+        self.marker_labels_actor.SetMapper(self.marker_labels_mapper)
+
+
     def update_current_data(self, including_image):
         tri = self.do_triangulation(self.current['bone_pixels'])
 
@@ -165,6 +195,23 @@ class TriangulationWindow(VTKWindow):
         self.triangle_data.SetPoints(points)
         self.triangle_data.SetPolys(triangles)
         self.triangle_data.Modified()
+
+        marker_points = vtk.vtkPoints()
+        marker_vertices = vtk.vtkCellArray()
+        labels = vtk.vtkStringArray()
+        labels.SetNumberOfValues(len(self.current['markers'].values()))
+        labels.SetName("labels")
+        for i, marker_no in enumerate(self.current['markers']):
+            marker = self.current['markers'][marker_no]
+            marker_points.InsertNextPoint([ marker[1], marker[0], 1.0 ])
+            labels.SetValue(i, str(marker_no))
+            marker_vertices.InsertNextCell(1)
+            marker_vertices.InsertCellPoint(i)
+        self.marker_data.SetPoints(marker_points)
+        self.marker_data.SetVerts(marker_vertices)
+        self.marker_data.GetPointData().AddArray(labels)
+        self.marker_data.Modified()
+        self.marker_labels_filter.Update()
 
         if including_image:
             image = np.flipud(self.current['image'].copy()).astype('uint8')
@@ -195,6 +242,18 @@ class TriangulationWindow(VTKWindow):
         except:
             print(traceback.format_exc())
 
+    def toggle_markers(self, state):
+        try:
+            if state:
+                self.marker_actor.VisibilityOn()
+                self.marker_labels_actor.VisibilityOn()
+            else:
+                self.marker_actor.VisibilityOff()
+                self.marker_labels_actor.VisibilityOff()
+            self.vtkWidget.GetRenderWindow().Render()
+        except:
+            print(traceback.format_exc())
+
     def mark_as_done(self, state):
         old = 'done' in self.current and self.current['done']
         try:
@@ -221,6 +280,7 @@ class TriangulationWindow(VTKWindow):
             to_save = {
                 'done': 'done' in self.current and self.current['done'],
                 'bone_pixels': self.current['bone_pixels'],
+                'markers': self.current['markers'],
                 'points': tri.points,
                 'simplices': tri.simplices
             }
@@ -257,6 +317,8 @@ class TriangulationWindow(VTKWindow):
 
             self.toggle_triangulation_button.setChecked(True)
             self.toggle_triangulation(True)
+            self.toggle_markers_button.setChecked(False)
+            self.toggle_markers(False)
             self.mark_as_done_button.setChecked('done' in self.current and self.current['done'])
         except:
             print(traceback.format_exc())
@@ -304,14 +366,26 @@ class TriangulationWindow(VTKWindow):
 
     def on_key(self, obj, ev):
         try:
-            #print('ONKEY')
             key = obj.GetKeyCode()
-            keymap = {
+            triangulation_keymap = {
                 'y': 255,
                 'x': 0
             }
+            marker_keymap = {
+                '1': 1,
+                '2': 2,
+                '3': 3,
+                '4': 4,
+                '5': 5,
+                '6': 6,
+                '7': 7,
+                '8': 8,
+                '9': 9,
+                '0': 10,
+                ',': 11
+            }
 
-            if key and key in keymap:
+            if key and key in triangulation_keymap:
                 mouse_position = obj.GetEventPosition()
                 #print(mouse_position)
                 if mouse_position:
@@ -321,7 +395,7 @@ class TriangulationWindow(VTKWindow):
                     self.ren.DisplayToWorld()
                     x, y, z, w = self.ren.GetWorldPoint()
 
-                    set_to = keymap[key]
+                    set_to = triangulation_keymap[key]
                     if set_to == 0:
                         # Delete closest non zero pixel
                         indices_of_bone_pixels = np.nonzero(bone_pixels)
@@ -342,8 +416,185 @@ class TriangulationWindow(VTKWindow):
                     self.current_modified = True
                     self.update_current_data(including_image=False)
                     self.vtkWidget.GetRenderWindow().Render()
+
+                    return False
+            if key and key in marker_keymap:
+                mouse_position = obj.GetEventPosition()
+                marker_no = marker_keymap[key]
+                if mouse_position:
+                    self.ren.SetDisplayPoint((mouse_position[0], mouse_position[1], 0))
+                    self.ren.DisplayToWorld()
+                    x, y, z, w = self.ren.GetWorldPoint()
+
+                    self.current['markers'][marker_no] = np.array([int(y), int(x)])
+
+                    self.current_modified = True
+                    self.update_current_data(including_image=False)
+                    self.vtkWidget.GetRenderWindow().Render()
+
+                    return False
         except:
             print(traceback.format_exc())
+
+class RegistrationWindow(VTKWindow):
+    def __init__(self, bones, register_fn, estimators, reference_estimators):
+        VTKWindow.__init__(self, title='Registration Helper')
+
+        self.bones = bones
+        self.register_fn = register_fn
+        self.estimators = estimators
+        self.reference_estimators = reference_estimators
+
+        self.initialize_actors()
+
+        self.sl = QtGui.QVBoxLayout()
+        self.init_outline_checkboxes()
+        self.init_class_selector()
+        self.hl.insertLayout(0, self.sl)
+
+        self.calc_button = QtGui.QPushButton('Calculate')
+        self.vl.insertWidget(0, self.calc_button)
+
+        self.al = QtGui.QHBoxLayout()
+        self.init_estimators()
+        self.init_reference_estimators()
+        self.init_algorithm_parameter_inputs()
+        self.vl.insertLayout(0, self.al)
+
+        self.error_label = QtGui.QLabel('Mean Error:')
+        self.vl.insertWidget(-1, self.error_label)
+
+        self.render_actors(self.registered_actors)
+        self.vtkWidget.GetRenderWindow().Render()
+        self.ren.ResetCamera()
+
+        self.update_actor_visibility()
+        self.calc_button.clicked.connect(self.calculate)
+
+    def get_actor_for_property(self, property, outline):
+        points = outline[property]
+        num_points = points.shape[0]
+        edges = np.zeros((num_points, 2), dtype=np.int)
+        edges[:, 0] = range(num_points)
+        edges[:, 1] = range(1, num_points+1)
+        edges[-1, 1] = 0
+        return dh.get_outline_actor({
+            'points': points,
+            'edges': edges
+        }, (0, 0, 0), 0xFFFF, False)
+
+    def initialize_actors(self):
+        self.registered_actors = map(partial(self.get_actor_for_property, 'points'), self.bones)
+
+    def init_outline_checkboxes(self):
+        layout = QtGui.QVBoxLayout()
+        scroll_area = QtGui.QScrollArea()
+        self.outlines_box = QtGui.QGroupBox('Selected Outlines')
+        self.outlines_buttons = map(lambda e: QtGui.QCheckBox(e['filename'].decode('utf-8')), self.bones)
+        for b in self.outlines_buttons:
+            b.toggled.connect(self.update_actor_visibility)
+            layout.addWidget(b)
+        self.outlines_box.setLayout(layout)
+        scroll_area.setWidget(self.outlines_box)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFixedHeight(500)
+        self.sl.addWidget(scroll_area)
+
+    def init_class_selector(self):
+        classes = list(set([b['class'] for b in self.bones]))
+        class_labels = list([ch.get_class_name(c) for c in classes])
+
+        layout = QtGui.QVBoxLayout()
+        self.classes_box = QtGui.QGroupBox('Select / Deselect Classes')
+        for i, c in enumerate(classes):
+            b = QtGui.QCheckBox(class_labels[i])
+
+            def select_class(b, cls):
+                try:
+                    checked = b.isChecked()
+                    to_check = map(lambda o: o['class'] == cls, self.bones)
+                    for i in range(len(self.outlines_buttons)):
+                        if to_check[i]:
+                            self.outlines_buttons[i].setChecked(checked)
+                except:
+                    print(traceback.format_exc())
+
+            b.toggled.connect(partial(select_class, b, c))
+            b.toggle()
+            layout.addWidget(b)
+        self.classes_box.setLayout(layout)
+        self.sl.insertWidget(0, self.classes_box)
+
+    def init_estimators(self):
+        layout = QtGui.QVBoxLayout()
+        self.estimators_box = QtGui.QGroupBox('Transformation Type')
+        self.estimators_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.estimators)
+        self.estimators_buttons[0].setChecked(True)
+        for b in self.estimators_buttons:
+            layout.addWidget(b)
+        self.estimators_box.setLayout(layout)
+        self.al.addWidget(self.estimators_box)
+
+    def init_reference_estimators(self):
+        layout = QtGui.QVBoxLayout()
+        self.reference_estimators_box = QtGui.QGroupBox('Selected Reference Points')
+        self.reference_estimators_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.reference_estimators)
+        self.reference_estimators_buttons[0].setChecked(True)
+        for b in self.reference_estimators_buttons:
+            layout.addWidget(b)
+        self.reference_estimators_box.setLayout(layout)
+        self.al.addWidget(self.reference_estimators_box)
+
+    def init_algorithm_parameter_inputs(self):
+        layout = QtGui.QFormLayout()
+        self.parameters_box = QtGui.QGroupBox('Algorithm Parameters')
+        self.iterations_button = QtGui.QSpinBox()
+        self.iterations_button.setValue(1)
+        layout.addRow('Iterations', self.iterations_button)
+        self.parameters_box.setLayout(layout)
+        self.al.addWidget(self.parameters_box)
+
+    def calculate(self):
+        try:
+            self.calc_button.setEnabled(False)
+            QtGui.QApplication.processEvents()
+
+            bones = list([ o for i, o in enumerate(self.bones) if self.outlines_buttons[i].isChecked() ])
+            estimator = list([ e for i, e in enumerate(self.estimators) if self.estimators_buttons[i].isChecked() ])[0]['fn']
+            reference_estimator = list([ r for i, r in enumerate(self.reference_estimators) if self.reference_estimators_buttons[i].isChecked() ])[0]['fn']
+            iterations = self.iterations_button.value()
+
+            self.register_fn(bones, estimator, reference_estimator, iterations)
+
+            QtGui.QApplication.processEvents()
+            self.calc_button.setEnabled(True)
+
+            self.update_actor_data()
+            self.update_info_panel()
+        except:
+            print(traceback.format_exc())
+
+    def update_actor_visibility(self):
+        for i, actor in enumerate(self.registered_actors):
+            if self.outlines_buttons[i].isChecked():
+                actor.VisibilityOn()
+            else:
+                actor.VisibilityOff()
+        self.vtkWidget.GetRenderWindow().Render()
+
+    def update_actor_data(self):
+        for actor in self.registered_actors:
+            self.ren.RemoveActor(actor)
+        self.registered_actors = map(partial(self.get_actor_for_property, 'registered'), self.bones)
+        for actor in self.registered_actors:
+            self.ren.AddActor(actor)
+        self.update_actor_visibility()
+        self.ren.ResetCamera()
+        self.vtkWidget.GetRenderWindow().Render()
+
+    def update_info_panel(self):
+        mean_error = np.mean([ o['error'] for o in self.bones ])
+        self.error_label.setText('Mean Error: {0}'.format(mean_error))
 
 
 class BonesListModel(QtCore.QAbstractListModel):
@@ -437,6 +688,7 @@ def create_single_legend_actor(color, line_style):
     polydata.SetPoints(points)
     polydata.SetPolys(triangles)
     return polydata
+
 
 def show_window(window):
     app = QtCore.QCoreApplication.instance()
