@@ -1,6 +1,7 @@
 import numpy as np
 from math import radians, degrees
 from helpers import geometry as gh
+from scipy.signal import argrelextrema
 
 def get_using_angles(outline):
         landmark_definitions = [
@@ -72,3 +73,94 @@ def get_using_angles(outline):
             landmarks.append(intersects_for_angles[method(distances), :])
 
         return np.array(landmarks)
+
+def get_using_space_partitioning(outline_points):
+    landmark_definitions = [
+        {
+            'x_min': -1,
+            'x_max': 0.25,
+            'y_min': -1.5,
+            'y_max': -0.75,
+            'method': 'min',
+            'dim': 'y'
+        },
+        {
+            'x_min': -0.5,
+            'x_max': 0.5,
+            'y_min': -1.5,
+            'y_max': -0.75,
+            'method': 'max',
+            'dim': 'y'
+        },
+        {
+            'x_min': 0.25,
+            'x_max': 1,
+            'y_min': -1.5,
+            'y_max': -0.75,
+            'method': 'min',
+            'dim': 'y'
+        },
+        {
+            'x_min': -1.5,
+            'x_max': 0,
+            'y_min': -0.3,
+            'y_max': 0.3,
+            'method': 'min',
+            'dim': 'x'
+        },
+        {
+            'x_min': -1,
+            'x_max': -0.25,
+            'y_min': 0.75,
+            'y_max': 1.5,
+            'method': 'max',
+            'dim': 'y'
+        },
+        {
+            'x_min': -0.5,
+            'x_max': 0.5,
+            'y_min': 0.75,
+            'y_max': 1.5,
+            'method': 'min',
+            'dim': 'y'
+        },
+        {
+            'x_min': 0.25,
+            'x_max': 1,
+            'y_min': 0.75,
+            'y_max': 1.5,
+            'method': 'max',
+            'dim': 'y'
+        }
+    ]
+    landmarks = []
+
+    for definition in landmark_definitions:
+        method = np.argmax if definition['method'] == 'max' else np.argmin
+        method_extrema = np.greater if definition['method'] == 'max' else np.less
+        dim = 0 if definition['dim'] == 'y' else 1
+        sort_dim = 1 - dim
+
+        x_min = definition['x_min']
+        x_max = definition['x_max']
+        y_min = definition['y_min']
+        y_max = definition['y_max']
+        selector = outline_points[:, 1] >= x_min
+        selector = np.logical_and(selector, outline_points[:, 1] <= x_max)
+        selector = np.logical_and(selector, outline_points[:, 0] >= y_min)
+        selector = np.logical_and(selector, outline_points[:, 0] <= y_max)
+
+        possible_points = outline_points[selector, :]
+        sorted_points = possible_points[np.argsort(possible_points[:, sort_dim]), :]
+        #print(sorted_points)
+
+        local_extrema = argrelextrema(sorted_points[:, dim], method_extrema, order=10)[0]
+        if (len(local_extrema) > 0):
+            index_of_landmark = local_extrema[0]
+        else:
+            index_of_landmark = method(sorted_points[:, dim])
+
+        #print(index_of_landmark)
+
+        landmarks.append(sorted_points[index_of_landmark, :])
+    return np.array(landmarks)

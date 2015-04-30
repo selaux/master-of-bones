@@ -1,6 +1,8 @@
 import numpy as np
 import landmarks
 from sklearn.neighbors import NearestNeighbors
+from skimage import transform as tf
+from scipy.interpolate import splprep, splev
 
 
 def to_standard_size_and_position(outline):
@@ -31,7 +33,34 @@ def estimate_transform(bones, estimator, init_reference_estimator, iterations):
         bone['registered'] = registered_bones[i][0]
         bone['error'] = registered_bones[i][1]
 
-def procrustes(X, Y, points_to_transform, scaling=True, reflection='best'):
+def get_error(points, reference, tform):
+    transformed = tform(points)
+    error = np.sum((points - transformed)**2)
+    norm = ((reference - reference.mean(0))**2).sum()
+    return error / norm
+
+
+def affine(reference, points, points_to_transform):
+    tform = tf.estimate_transform('affine', points, reference)
+    transformed = tform(points_to_transform)
+    error = get_error(points, reference, tform)
+    return transformed, error
+
+
+def similarity(reference, points, points_to_transform):
+    tform = tf.estimate_transform('similarity', points, reference)
+    transformed = tform(points_to_transform)
+    error = get_error(points, reference, tform)
+    return transformed, error
+
+
+def projective(reference, points, points_to_transform):
+    tform = tf.estimate_transform('projective', points, reference)
+    transformed = tform(points_to_transform)
+    error = get_error(points, reference, tform)
+    return transformed, error
+
+def procrustes(reference, points, points_to_transform, scaling=True, reflection='best'):
     """
     A port of MATLAB's `procrustes` function to Numpy.
 
@@ -74,14 +103,14 @@ def procrustes(X, Y, points_to_transform, scaling=True, reflection='best'):
 
     """
 
-    n,m = X.shape
-    ny,my = Y.shape
+    n,m = reference.shape
+    ny,my = points.shape
 
-    muX = X.mean(0)
-    muY = Y.mean(0)
+    muX = reference.mean(0)
+    muY = points.mean(0)
 
-    X0 = X - muX
-    Y0 = Y - muY
+    X0 = reference - muX
+    Y0 = points - muY
 
     ssX = (X0**2.).sum()
     ssY = (Y0**2.).sum()
@@ -141,7 +170,11 @@ def procrustes(X, Y, points_to_transform, scaling=True, reflection='best'):
     tform = {'rotation':T, 'scale':b, 'translation':c}
     Z = b * np.dot(points_to_transform, T) + c
 
-    return Z, d
+    X = b * np.dot(points, T) + c
+    error = np.sum((points - X)**2)
+    norm = ((reference - reference.mean(0))**2).sum()
+
+    return Z, error / norm
 
 def get_nearest_neighbor_point_estimator(reference):
     nbrs = NearestNeighbors(n_neighbors=1, algorithm='auto').fit(reference)
@@ -158,4 +191,28 @@ def get_marker_using_angles_estimator(reference):
         point_landmarks = landmarks.get_using_angles(outline)
         return point_landmarks, reference_landmarks
     return get_landmarks
+
+def get_marker_using_space_partitioning_estimator(reference):
+    reference_landmarks = landmarks.get_using_space_partitioning(reference)
+    def get_landmarks(outline):
+        point_landmarks = landmarks.get_using_space_partitioning(outline)
+        return point_landmarks, reference_landmarks
+    return get_landmarks
+
+def get_spline_points_estimator(reference, num_evaluations=50):
+    def extract_spline(points):
+        y = points[:, 0].flatten()
+        x = points[:, 1].flatten()
+        tck, u = splprep([y, x], s=0)
+        coords = splev(np.linspace(0, 1, num_evaluations), tck)
+        spline_points = np.zeros((num_evaluations, 2))
+        spline_points[:, 0] = coords[0]
+        spline_points[:, 1] = coords[1]
+        return spline_points
+    reference_spline = extract_spline(reference)
+    def get_landmarks(outline):
+        point_spline = extract_spline(outline)
+        return point_spline, reference_spline
+    return get_landmarks
+
 

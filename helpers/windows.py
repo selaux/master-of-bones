@@ -444,6 +444,7 @@ class RegistrationWindow(VTKWindow):
         self.register_fn = register_fn
         self.estimators = estimators
         self.reference_estimators = reference_estimators
+        self.initial_registration_done = False
 
         self.initialize_actors()
 
@@ -571,6 +572,7 @@ class RegistrationWindow(VTKWindow):
 
             self.update_actor_data()
             self.update_info_panel()
+            self.initial_registration_done = True
         except:
             print(traceback.format_exc())
 
@@ -589,7 +591,8 @@ class RegistrationWindow(VTKWindow):
         for actor in self.registered_actors:
             self.ren.AddActor(actor)
         self.update_actor_visibility()
-        self.ren.ResetCamera()
+        if not self.initial_registration_done:
+            self.ren.ResetCamera()
         self.vtkWidget.GetRenderWindow().Render()
 
     def update_info_panel(self):
