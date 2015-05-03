@@ -484,7 +484,7 @@ class RegistrationWindow(VTKWindow):
         return dh.get_outline_actor({
             'points': points,
             'edges': edges
-        }, (0, 0, 0), 0xFFFF, False)
+        }, ch.get_classed_color(outline['class']), 0xFFFF, False)
 
     def initialize_actors(self):
         self.registered_actors = map(partial(self.get_actor_for_property, 'points'), self.bones)

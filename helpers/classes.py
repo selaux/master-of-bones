@@ -1,5 +1,8 @@
 # coding=utf-8
 
+import vtk
+from random import random
+
 CLASSES = [
     {
         'name': 'Gazella',
@@ -34,6 +37,13 @@ UNKNOWN_CLASS = {
     'name': 'Unknown'
 }
 
+color_lookup = vtk.vtkLookupTable()
+color_lookup.SetTableRange(0, 1)
+color_lookup.SetHueRange(0, 1)
+color_lookup.SetSaturationRange(1, 1)
+color_lookup.SetValueRange(0.8, 0.8)
+color_lookup.SetAlphaRange(1, 1)
+color_lookup.Build()
 
 def get_class(filename):
     for c in CLASSES:
@@ -53,6 +63,18 @@ def get_class_name(id):
         if c['id'] == id:
             return c['name']
     return UNKNOWN_CLASS['name']
+
+def get_classed_color(id):
+    class_map = {
+        0: 0,
+        1: 0.37,
+        2: 0.675,
+        3: 0.17
+    }
+    color = [0.0, 0.0, 0.0]
+    seed = class_map[id] + (random() * .1 - 0.05)
+    color_lookup.GetColor(seed, color)
+    return color
 
 def filter_by_classes(things, allowed_classes):
     new_things = filter(lambda x: x['class'] in allowed_classes, things)
