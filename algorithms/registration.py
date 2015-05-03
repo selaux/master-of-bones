@@ -8,9 +8,15 @@ from scipy.interpolate import splprep, splev
 def append_standard_size_and_position(bone):
     centroid = np.mean(bone['points'], axis=0)
     result = bone['points'] - np.tile(centroid, (bone['points'].shape[0], 1))
+    result_markers = bone['markers'] - np.tile(centroid, (bone['markers'].shape[0], 1))
+
     scale_factor = np.sqrt(np.sum(np.power(result, 2)) / result.shape[0])
     result = np.divide(result, scale_factor)
+    result_markers = np.divide(result_markers, scale_factor)
+
     bone['registered'] = result
+    bone['registered_markers'] = result_markers
+
     return bone
 
 
@@ -29,8 +35,9 @@ def estimate_transform(bones, estimator, init_reference_estimator, iterations, p
             bone['error'] = 0
         for j in range(iterations):
             from_points, to_points = reference_estimator(bone)
-            result = estimator(to_points, from_points, bone['registered'])
-            bone['registered'] = result[0]
+            result = estimator(to_points, from_points, bone, ['registered', 'registered_markers'])
+            bone['registered'] = result[0][0]
+            bone['registered_markers'] = result[0][1]
             bone['error'] = result[1]
             progress['value'] += 1
             if progress['callback']:
@@ -46,27 +53,27 @@ def get_error(points, reference, tform):
     return error / norm
 
 
-def affine(reference, points, points_to_transform):
+def affine(reference, points, bone, properties_to_transform):
     tform = tf.estimate_transform('affine', points, reference)
-    transformed = tform(points_to_transform)
+    transformed = list(map(tform, [ bone[p] for p in properties_to_transform  ]))
     error = get_error(points, reference, tform)
     return transformed, error
 
 
-def similarity(reference, points, points_to_transform):
+def similarity(reference, points, bone, properties_to_transform):
     tform = tf.estimate_transform('similarity', points, reference)
-    transformed = tform(points_to_transform)
+    transformed = list(map(tform, [ bone[p] for p in properties_to_transform  ]))
     error = get_error(points, reference, tform)
     return transformed, error
 
 
-def projective(reference, points, points_to_transform):
+def projective(reference, points, bone, properties_to_transform):
     tform = tf.estimate_transform('projective', points, reference)
-    transformed = tform(points_to_transform)
+    transformed = list(map(tform, [ bone[p] for p in properties_to_transform  ]))
     error = get_error(points, reference, tform)
     return transformed, error
 
-def procrustes(reference, points, points_to_transform, scaling=True, reflection=False):
+def procrustes(reference, points, bone, properties_to_transform, scaling=True, reflection=False):
     """
     A port of MATLAB's `procrustes` function to Numpy.
 
@@ -173,14 +180,14 @@ def procrustes(reference, points, points_to_transform, scaling=True, reflection=
     c = muX - b*np.dot(muY, T)
 
     #transformation values
-    tform = {'rotation':T, 'scale':b, 'translation':c}
-    Z = b * np.dot(points_to_transform, T) + c
+    # tform = {'rotation':T, 'scale':b, 'translation':c}
+    Z = list(map(lambda p:  (b * np.dot(bone[p], T) + c), properties_to_transform))
 
     X = b * np.dot(points, T) + c
     error = np.sum((points - X)**2)
     norm = ((reference - reference.mean(0))**2).sum()
 
-    return Z, error / norm
+    return Z, (error / norm)
 
 def get_nearest_neighbor_point_estimator(reference):
     nbrs = NearestNeighbors(n_neighbors=1, algorithm='auto').fit(reference['registered'])
@@ -202,6 +209,20 @@ def get_marker_using_space_partitioning_estimator(reference):
     reference_landmarks = landmarks.get_using_space_partitioning(reference['registered'])
     def get_landmarks(outline):
         point_landmarks = landmarks.get_using_space_partitioning(outline['registered'])
+        return point_landmarks, reference_landmarks
+    return get_landmarks
+
+def get_manual_markers(reference):
+    reference_landmarks = reference['registered_markers']
+    def get_landmarks(outline):
+        point_landmarks = outline['registered_markers']
+        return point_landmarks, reference_landmarks
+    return get_landmarks
+
+def get_manual_markers_5_to_9(reference):
+    reference_landmarks = reference['registered_markers'][4:8, :]
+    def get_landmarks(outline):
+        point_landmarks = outline['registered_markers'][4:8, :]
         return point_landmarks, reference_landmarks
     return get_landmarks
 

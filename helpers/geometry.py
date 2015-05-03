@@ -80,6 +80,20 @@ def extract_outline_edges(simplices):
 
     return np.array(outline, dtype=np.int)
 
+def get_centroid_and_scale(points):
+    centroid = np.mean(points, axis=0)
+    result = points - np.tile(centroid, (points.shape[0], 1))
+    scale_factor = np.sqrt(np.sum(np.power(result, 2)) / result.shape[0])
+    return centroid, scale_factor
+
+def normalize_outline_with_markers(outline):
+    centroid, scale = get_centroid_and_scale(outline['points'])
+    markers = np.array(map(lambda i: outline['markers'][i], range(1, 12)))
+
+    outline['points'], outline['edges'] = normalize_outline(outline['points'], outline['edges'])
+    markers = markers - np.tile(centroid, (markers.shape[0], 1))
+    outline['markers'] = np.divide(markers, scale)
+
 def normalize_outline(points, ordered_edges):
     centroid = np.mean(points, axis=0)
     result = points - np.tile(centroid, (points.shape[0], 1))
