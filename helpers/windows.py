@@ -556,6 +556,10 @@ class RegistrationWindow(VTKWindow):
         self.iterations_button = QtGui.QSpinBox()
         self.iterations_button.setValue(1)
         layout.addRow('Iterations', self.iterations_button)
+
+        self.independent_scaling_button = QtGui.QCheckBox()
+        layout.addRow('Axis independent scaling', self.independent_scaling_button)
+
         self.parameters_box.setLayout(layout)
         self.al.addWidget(self.parameters_box)
 
@@ -568,8 +572,9 @@ class RegistrationWindow(VTKWindow):
             estimator = list([ e for i, e in enumerate(self.estimators) if self.estimators_buttons[i].isChecked() ])[0]['fn']
             reference_estimator = list([ r for i, r in enumerate(self.reference_estimators) if self.reference_estimators_buttons[i].isChecked() ])[0]['fn']
             iterations = self.iterations_button.value()
+            independent_scaling = self.independent_scaling_button.isChecked()
 
-            self.register_fn(bones, estimator, reference_estimator, iterations, progress_callback=self.update_progress_bar)
+            self.register_fn(bones, estimator, reference_estimator, iterations, progress_callback=self.update_progress_bar, independent_scaling=independent_scaling)
 
             QtGui.QApplication.processEvents()
             self.calc_button.setEnabled(True)

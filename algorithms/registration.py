@@ -1,3 +1,4 @@
+from functools import partial
 import numpy as np
 import landmarks
 from sklearn.neighbors import NearestNeighbors
@@ -5,23 +6,33 @@ from skimage import transform as tf
 from scipy.interpolate import splprep, splev
 
 
-def append_standard_size_and_position(bone):
-    centroid = np.mean(bone['points'], axis=0)
-    result = bone['points'] - np.tile(centroid, (bone['points'].shape[0], 1))
-    result_markers = bone['markers'] - np.tile(centroid, (bone['markers'].shape[0], 1))
+def append_standard_size_and_position(source_property, from_properties, to_properties, bone, independent_scaling=False):
+    centroid = np.mean(bone[source_property], axis=0)
+    moved_src = bone[source_property] - np.tile(centroid, (bone[source_property].shape[0], 1))
+    if independent_scaling:
+        scale_factor_0 = np.sqrt(np.sum(np.power(moved_src[:, 0], 2)) / moved_src.shape[0])
+        scale_factor_1 = np.sqrt(np.sum(np.power(moved_src[:, 1], 2)) / moved_src.shape[0])
+    else:
+        scale_factor = np.sqrt(np.sum(np.power(moved_src, 2)) / moved_src.shape[0])
+        scale_factor_0 = scale_factor
+        scale_factor_1 = scale_factor
 
-    scale_factor = np.sqrt(np.sum(np.power(result, 2)) / result.shape[0])
-    result = np.divide(result, scale_factor)
-    result_markers = np.divide(result_markers, scale_factor)
-
-    bone['registered'] = result
-    bone['registered_markers'] = result_markers
+    for p_from, p_to in zip(from_properties, to_properties):
+        result = bone[p_from] - np.tile(centroid, (bone[p_from].shape[0], 1))
+        result[:, 0] = np.divide(result[:, 0], scale_factor_0)
+        result[:, 1] = np.divide(result[:, 1], scale_factor_1)
+        bone[p_to] = result
 
     return bone
 
 
-def estimate_transform(bones, estimator, init_reference_estimator, iterations, progress_callback=None):
-    bones = map(append_standard_size_and_position, bones)
+def estimate_transform(bones, estimator, init_reference_estimator, iterations, progress_callback=None, independent_scaling=False):
+    bones = map(partial(
+            append_standard_size_and_position,
+            'points', ['points', 'markers'],
+            ['registered', 'registered_markers'],
+            independent_scaling=independent_scaling),
+        bones)
     reference = max(bones, key=lambda o: o['registered'].shape[0])
     reference_estimator = init_reference_estimator(reference)
     progress = {

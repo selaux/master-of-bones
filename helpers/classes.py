@@ -71,7 +71,7 @@ def simple_hash(string, modulo=64):
         hash_value = int(hash_value) * 0x100000001b3
     return hash_value % modulo
 
-def get_classed_color(id, label = None):
+def get_classed_color(id, label=None):
     class_map = {
         0: 0,
         1: 0.37,
