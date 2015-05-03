@@ -451,18 +451,20 @@ class RegistrationWindow(VTKWindow):
         self.sl = QtGui.QVBoxLayout()
         self.init_outline_checkboxes()
         self.init_class_selector()
+
         self.progress_bar = QtGui.QProgressBar()
-        self.sl.insertWidget(-1, self.progress_bar)
-        self.hl.insertLayout(0, self.sl)
+        self.sl.insertWidget(0, self.progress_bar)
 
         self.calc_button = QtGui.QPushButton('Calculate')
-        self.vl.insertWidget(0, self.calc_button)
+        self.sl.insertWidget(0, self.calc_button)
 
         self.al = QtGui.QHBoxLayout()
         self.init_estimators()
         self.init_reference_estimators()
         self.init_algorithm_parameter_inputs()
-        self.vl.insertLayout(0, self.al)
+        self.sl.insertLayout(0, self.al)
+
+        self.hl.insertLayout(0, self.sl)
 
         self.error_label = QtGui.QLabel('Mean Error:')
         self.vl.insertWidget(-1, self.error_label)
@@ -484,7 +486,7 @@ class RegistrationWindow(VTKWindow):
         return dh.get_outline_actor({
             'points': points,
             'edges': edges
-        }, ch.get_classed_color(outline['class']), 0xFFFF, False)
+        }, outline['color'], 0xFFFF, False)
 
     def initialize_actors(self):
         self.registered_actors = map(partial(self.get_actor_for_property, 'points'), self.bones)

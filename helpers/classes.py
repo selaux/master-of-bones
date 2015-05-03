@@ -64,7 +64,14 @@ def get_class_name(id):
             return c['name']
     return UNKNOWN_CLASS['name']
 
-def get_classed_color(id):
+def simple_hash(string, modulo=64):
+    hash_value = 0xcbf29ce484222325
+    for b in string:
+        hash_value = hash_value ^ ord(b)
+        hash_value = int(hash_value) * 0x100000001b3
+    return hash_value % modulo
+
+def get_classed_color(id, label = None):
     class_map = {
         0: 0,
         1: 0.37,
@@ -72,7 +79,12 @@ def get_classed_color(id):
         3: 0.17
     }
     color = [0.0, 0.0, 0.0]
-    seed = class_map[id] + (random() * .1 - 0.05)
+    if label is None:
+        additional = random() * .1 - 0.05
+    else:
+        additional = (simple_hash(label, modulo=64) / 64.0) * .1 - 0.05
+
+    seed = class_map[id] + additional
     color_lookup.GetColor(seed, color)
     return color
 

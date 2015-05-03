@@ -12,12 +12,14 @@ def load_single_file(filename):
     label = ''.join([i if ord(i) < 128 else ' ' for i in basename])
     cls, cls_label = ch.get_class(basename)
     cls_short = ch.get_class_short(cls)
+    color = ch.get_classed_color(cls, label=basename)
 
     content['label'] = label
     content['filename'] = basename
     content['class'] = cls
     content['class_label'] = cls_label
     content['class_short'] = cls_short
+    content['color'] = color
 
     return content
 
