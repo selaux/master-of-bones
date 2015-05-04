@@ -1,86 +1,13 @@
-# coding=utf-8
-
-import pickle
-import gzip
-import traceback
 import vtk
 import numpy as np
-import geometry as gh
-import display as dh
-import classes as ch
-from functools import partial
+import gzip
+import pickle
+import traceback
 from PyQt4 import QtCore, QtGui
-from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+from ..to_vtk import get_outline_actor
+from .. import geometry as gh
+from VTKWindow import VTKWindow
 
-class VTKWindow(QtGui.QMainWindow):
-
-    def __init__(self, parent = None, title=None):
-        QtGui.QMainWindow.__init__(self, parent)
-        if title:
-            self.setWindowTitle(title)
-        else:
-            self.setWindowTitle('Visualization')
-
-        self.vl = QtGui.QVBoxLayout()
-        self.hl = QtGui.QHBoxLayout()
-        self.frame = QtGui.QFrame()
-        self.vtkWidget = QVTKRenderWindowInteractor(self.frame)
-        self.vl.addWidget(self.vtkWidget)
-        self.hl.insertLayout(-1, self.vl)
-
-        self.ren = vtk.vtkRenderer()
-        self.vtkWidget.GetRenderWindow().AddRenderer(self.ren)
-        self.vtkWidget.GetRenderWindow().LineSmoothingOn()
-        self.vtkWidget.GetRenderWindow().PolygonSmoothingOn()
-        self.vtkWidget.GetRenderWindow().PointSmoothingOn()
-        self.vtkWidget.GetRenderWindow().SetMultiSamples(8)
-        self.iren = self.vtkWidget.GetRenderWindow().GetInteractor()
-        self.ren.GetActiveCamera().ParallelProjectionOn()
-        self.intstyle = vtk.vtkInteractorStyleRubberBand2D()
-        self.iren.SetInteractorStyle(self.intstyle)
-        self.ren.SetBackground(1.0, 1.0, 1.0)
-
-        self.frame.setLayout(self.hl)
-        self.setCentralWidget(self.frame)
-
-    def render_actors(self, actors, legends=[]):
-        for actor in actors:
-            self.ren.AddActor(actor)
-
-        if len(legends) > 0:
-            legend = vtk.vtkLegendBoxActor()
-            legend.SetNumberOfEntries(len(legends))
-            legend.GetEntryTextProperty().SetFontSize(25)
-            legend.GetPositionCoordinate().SetCoordinateSystemToNormalizedViewport()
-            legend.GetPositionCoordinate().SetValue(0, 0)
-            legend.GetPosition2Coordinate().SetCoordinateSystemToDisplay()
-            legend.GetPosition2Coordinate().SetValue(250, len(legends)*30)
-            for i, l in enumerate(legends):
-                legend.SetEntry(i, l[2], l[0], l[1])
-            self.ren.AddActor(legend)
-
-        scale = vtk.vtkLegendScaleActor()
-        scale.SetLabelModeToXYCoordinates()
-        scale.LegendVisibilityOff()
-        scale.LeftAxisVisibilityOff()
-        scale.BottomAxisVisibilityOff()
-        scale.SetRightBorderOffset(50)
-        scale.GetRightAxis().GetProperty().SetColor(0, 0, 0)
-        scale.GetRightAxis().GetLabelTextProperty().SetFontSize(10)
-        scale.GetRightAxis().GetLabelTextProperty().ShadowOff()
-        scale.GetRightAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
-        scale.GetTopAxis().GetProperty().SetColor(0, 0, 0)
-        scale.GetTopAxis().GetLabelTextProperty().SetFontSize(10)
-        scale.GetTopAxis().GetLabelTextProperty().ShadowOff()
-        scale.GetTopAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
-        self.ren.AddActor(scale)
-
-        self.ren.ResetCamera()
-
-        self.showMaximized()
-        self.show()
-        self.activateWindow()
-        self.iren.Initialize()
 
 class TriangulationWindow(VTKWindow):
     def __init__(self, bones, do_triangulation):
@@ -109,7 +36,7 @@ class TriangulationWindow(VTKWindow):
         self.bl.insertWidget(-1, self.toggle_area_effect_button)
         self.undo_button = self.get_new_button('Undo Last Step', 'edit-undo')
         self.bl.insertWidget(-1, self.undo_button)
-        self.show_outline_button = self.get_new_button('Show Outline', 'zoom-in')
+        self.show_outline_button = self.get_new_button('Show Outline', 'zoom-in', checkable=True)
         self.bl.insertWidget(-1, self.show_outline_button)
         self.mark_as_done_button = self.get_new_button('Mark as done', 'emblem-readonly', checkable=True)
         self.bl.insertWidget(-1, self.mark_as_done_button)
@@ -132,7 +59,12 @@ class TriangulationWindow(VTKWindow):
         self.marker_labels_actor = vtk.vtkActor2D()
         self.marker_labels_actor.VisibilityOff()
         self.initialize_actors()
-        self.render_actors([self.image_actor, self.triangle_actor, self.marker_actor, self.marker_labels_actor])
+        self.render_actors([
+            self.image_actor,
+            self.triangle_actor,
+            self.marker_actor,
+            self.marker_labels_actor
+        ])
         self.update_current_data(including_image=True)
         self.vtkWidget.GetRenderWindow().Render()
         self.ren.ResetCamera()
@@ -146,7 +78,7 @@ class TriangulationWindow(VTKWindow):
         self.mark_as_done_button.clicked.connect(self.mark_as_done)
         self.save_button.clicked.connect(self.save_current)
         self.undo_button.clicked.connect(self.undo)
-        self.show_outline_button.clicked.connect(self.show_outline)
+        self.show_outline_button.clicked.connect(self.trigger_outline)
 
     def get_new_button(self, label, icon, checkable=False):
         button = QtGui.QPushButton('')
@@ -165,6 +97,8 @@ class TriangulationWindow(VTKWindow):
         self.triangle_actor.GetProperty().SetRepresentationToWireframe()
         self.triangle_actor.GetProperty().SetLineWidth(1.5)
 
+        self.outline_actor = None
+
         self.marker_mapper.SetInputData(self.marker_data)
         self.marker_actor.SetMapper(self.marker_mapper)
         self.marker_actor.GetProperty().SetPointSize(10)
@@ -181,6 +115,19 @@ class TriangulationWindow(VTKWindow):
 
     def update_current_data(self, including_image):
         tri = self.do_triangulation(self.current['bone_pixels'])
+
+        outline_points, outline_edges = gh.extract_outline(tri.points, tri.simplices)
+        if self.outline_actor:
+            self.ren.RemoveActor(self.outline_actor)
+        self.outline_actor = get_outline_actor({
+            'points': outline_points,
+            'edges': outline_edges
+        }, (255, 0, 0), 0xFFFF, False)
+        self.ren.AddActor(self.outline_actor)
+        if self.show_outline_button.isChecked():
+            self.outline_actor.VisibilityOn()
+        else:
+            self.outline_actor.VisibilityOff()
 
         points = vtk.vtkPoints()
         for point in tri.points:
@@ -265,13 +212,13 @@ class TriangulationWindow(VTKWindow):
         except:
             print(traceback.format_exc())
 
-    def show_outline(self):
-        tri = self.do_triangulation(self.current['bone_pixels'])
-        outline_points, outline_edges = gh.extract_outline(tri.points, tri.simplices)
-        dh.outline({
-            'points': outline_points,
-            'edges': outline_edges
-        })
+    def trigger_outline(self):
+        if self.outline_actor:
+            if self.show_outline_button.isChecked():
+                self.outline_actor.VisibilityOn()
+            else:
+                self.outline_actor.VisibilityOff()
+            self.vtkWidget.GetRenderWindow().Render()
 
     def save_current(self):
         try:
@@ -436,183 +383,6 @@ class TriangulationWindow(VTKWindow):
         except:
             print(traceback.format_exc())
 
-class RegistrationWindow(VTKWindow):
-    def __init__(self, bones, register_fn, estimators, reference_estimators):
-        VTKWindow.__init__(self, title='Registration Helper')
-
-        self.bones = bones
-        self.register_fn = register_fn
-        self.estimators = estimators
-        self.reference_estimators = reference_estimators
-        self.initial_registration_done = False
-
-        self.initialize_actors()
-
-        self.sl = QtGui.QVBoxLayout()
-        self.init_outline_checkboxes()
-        self.init_class_selector()
-
-        self.progress_bar = QtGui.QProgressBar()
-        self.sl.insertWidget(0, self.progress_bar)
-
-        self.calc_button = QtGui.QPushButton('Calculate')
-        self.sl.insertWidget(0, self.calc_button)
-
-        self.al = QtGui.QHBoxLayout()
-        self.init_estimators()
-        self.init_reference_estimators()
-        self.init_algorithm_parameter_inputs()
-        self.sl.insertLayout(0, self.al)
-
-        self.hl.insertLayout(0, self.sl)
-
-        self.error_label = QtGui.QLabel('Mean Error:')
-        self.vl.insertWidget(-1, self.error_label)
-
-        self.render_actors(self.registered_actors)
-        self.vtkWidget.GetRenderWindow().Render()
-        self.ren.ResetCamera()
-
-        self.update_actor_visibility()
-        self.calc_button.clicked.connect(self.calculate)
-
-    def get_actor_for_property(self, property, outline):
-        points = outline[property]
-        num_points = points.shape[0]
-        edges = np.zeros((num_points, 2), dtype=np.int)
-        edges[:, 0] = range(num_points)
-        edges[:, 1] = range(1, num_points+1)
-        edges[-1, 1] = 0
-        return dh.get_outline_actor({
-            'points': points,
-            'edges': edges
-        }, outline['color'], 0xFFFF, False)
-
-    def initialize_actors(self):
-        self.registered_actors = map(partial(self.get_actor_for_property, 'points'), self.bones)
-
-    def init_outline_checkboxes(self):
-        layout = QtGui.QVBoxLayout()
-        scroll_area = QtGui.QScrollArea()
-        self.outlines_box = QtGui.QGroupBox('Selected Outlines')
-        self.outlines_buttons = map(lambda e: QtGui.QCheckBox(e['filename'].decode('utf-8')), self.bones)
-        for b in self.outlines_buttons:
-            b.toggled.connect(self.update_actor_visibility)
-            layout.addWidget(b)
-        self.outlines_box.setLayout(layout)
-        scroll_area.setWidget(self.outlines_box)
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setFixedHeight(500)
-        self.sl.addWidget(scroll_area)
-
-    def init_class_selector(self):
-        classes = list(set([b['class'] for b in self.bones]))
-        class_labels = list([ch.get_class_name(c) for c in classes])
-
-        layout = QtGui.QVBoxLayout()
-        self.classes_box = QtGui.QGroupBox('Select / Deselect Classes')
-        for i, c in enumerate(classes):
-            b = QtGui.QCheckBox(class_labels[i])
-
-            def select_class(b, cls):
-                try:
-                    checked = b.isChecked()
-                    to_check = map(lambda o: o['class'] == cls, self.bones)
-                    for i in range(len(self.outlines_buttons)):
-                        if to_check[i]:
-                            self.outlines_buttons[i].setChecked(checked)
-                except:
-                    print(traceback.format_exc())
-
-            b.toggled.connect(partial(select_class, b, c))
-            b.toggle()
-            layout.addWidget(b)
-        self.classes_box.setLayout(layout)
-        self.sl.insertWidget(0, self.classes_box)
-
-    def init_estimators(self):
-        layout = QtGui.QVBoxLayout()
-        self.estimators_box = QtGui.QGroupBox('Transformation Type')
-        self.estimators_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.estimators)
-        self.estimators_buttons[0].setChecked(True)
-        for b in self.estimators_buttons:
-            layout.addWidget(b)
-        self.estimators_box.setLayout(layout)
-        self.al.addWidget(self.estimators_box)
-
-    def init_reference_estimators(self):
-        layout = QtGui.QVBoxLayout()
-        self.reference_estimators_box = QtGui.QGroupBox('Selected Reference Points')
-        self.reference_estimators_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.reference_estimators)
-        self.reference_estimators_buttons[0].setChecked(True)
-        for b in self.reference_estimators_buttons:
-            layout.addWidget(b)
-        self.reference_estimators_box.setLayout(layout)
-        self.al.addWidget(self.reference_estimators_box)
-
-    def init_algorithm_parameter_inputs(self):
-        layout = QtGui.QFormLayout()
-        self.parameters_box = QtGui.QGroupBox('Algorithm Parameters')
-        self.iterations_button = QtGui.QSpinBox()
-        self.iterations_button.setValue(1)
-        layout.addRow('Iterations', self.iterations_button)
-
-        self.independent_scaling_button = QtGui.QCheckBox()
-        layout.addRow('Axis independent scaling', self.independent_scaling_button)
-
-        self.parameters_box.setLayout(layout)
-        self.al.addWidget(self.parameters_box)
-
-    def calculate(self):
-        try:
-            self.calc_button.setEnabled(False)
-            QtGui.QApplication.processEvents()
-
-            bones = list([ o for i, o in enumerate(self.bones) if self.outlines_buttons[i].isChecked() ])
-            estimator = list([ e for i, e in enumerate(self.estimators) if self.estimators_buttons[i].isChecked() ])[0]['fn']
-            reference_estimator = list([ r for i, r in enumerate(self.reference_estimators) if self.reference_estimators_buttons[i].isChecked() ])[0]['fn']
-            iterations = self.iterations_button.value()
-            independent_scaling = self.independent_scaling_button.isChecked()
-
-            self.register_fn(bones, estimator, reference_estimator, iterations, progress_callback=self.update_progress_bar, independent_scaling=independent_scaling)
-
-            QtGui.QApplication.processEvents()
-            self.calc_button.setEnabled(True)
-
-            self.update_actor_data()
-            self.update_info_panel()
-            self.initial_registration_done = True
-        except:
-            print(traceback.format_exc())
-
-    def update_progress_bar(self, progress, max_progress):
-        self.progress_bar.setMaximum(max_progress)
-        self.progress_bar.setValue(progress)
-        QtGui.QApplication.processEvents()
-
-    def update_actor_visibility(self):
-        for i, actor in enumerate(self.registered_actors):
-            if self.outlines_buttons[i].isChecked():
-                actor.VisibilityOn()
-            else:
-                actor.VisibilityOff()
-        self.vtkWidget.GetRenderWindow().Render()
-
-    def update_actor_data(self):
-        for actor in self.registered_actors:
-            self.ren.RemoveActor(actor)
-        self.registered_actors = map(partial(self.get_actor_for_property, 'registered'), self.bones)
-        for actor in self.registered_actors:
-            self.ren.AddActor(actor)
-        self.update_actor_visibility()
-        if not self.initial_registration_done:
-            self.ren.ResetCamera()
-        self.vtkWidget.GetRenderWindow().Render()
-
-    def update_info_panel(self):
-        mean_error = np.mean([ o['error'] for o in self.bones ])
-        self.error_label.setText('Mean Error: {0}'.format(mean_error))
-
 
 class BonesListModel(QtCore.QAbstractListModel):
     def __init__(self, datain, parent=None):
@@ -647,71 +417,3 @@ class BonesListModel(QtCore.QAbstractListModel):
         if role == QtCore.Qt.DisplayRole:
             row = index.row()
             return self.listdata[row]['filename'].decode('utf-8')
-
-def create_single_legend_actor(color, line_style):
-    points = vtk.vtkPoints()
-    raw_points = [
-         [0,0],
-         [1,0],
-         [0,0.25],
-         [1,0.25],
-         [0, 0.5],
-         [1, 0.5],
-         [0, 0.75],
-         [1, 0.75],
-         [0,1],
-         [1,1],
-         [0.5, 1],
-         [0.5, 0]
-    ]
-    for point in raw_points:
-        points.InsertNextPoint([ point[1], point[0], 1.0 ])
-
-    p1 = [
-        [0,2,3],
-        [0,3,1]
-    ]
-    p2 = [
-        [2,4,5],
-        [2,5,3]
-    ]
-    p3 = [
-        [4,6,7],
-        [4,7,5]
-    ]
-    p4 = [
-        [6,8,9],
-        [6,9,7]
-    ]
-    triangles_raw = [
-        [0, 10, 11],
-        [0, 9, 10]
-    ]
-    triangles_raw += p1 + p2 + p3 + p4
-    if line_style == 0xF0F0:
-        triangles_raw = p1 + p3
-    elif line_style == 0xFF00:
-        triangles_raw = p1 + p2
-    elif line_style == 0x000F:
-        triangles_raw = p4
-    triangles = vtk.vtkCellArray()
-    for t in triangles_raw:
-        triangle = vtk.vtkTriangle()
-        triangle.GetPointIds().SetId(0, t[0])
-        triangle.GetPointIds().SetId(1, t[1])
-        triangle.GetPointIds().SetId(2, t[2])
-        triangles.InsertNextCell(triangle)
-    polydata = vtk.vtkPolyData()
-    polydata.SetPoints(points)
-    polydata.SetPolys(triangles)
-    return polydata
-
-
-def show_window(window):
-    app = QtCore.QCoreApplication.instance()
-    if not hasattr(app, 'references') or not isinstance(app.references, set):
-        app.references = set()
-    app.references.add(window)
-    def remove(app, window, event):
-        app.references.remove(window)
-    window.connect(window, QtCore.SIGNAL('triggered()'), partial(remove, app, window))

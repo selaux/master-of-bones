@@ -1,15 +1,12 @@
 import itertools
-import numpy as np
-import sys
-from time import time
+import windows
+reload(windows)
 from skimage.color import label2rgb
 from skimage.transform import resize
-import vtk
-from windows import show_window, create_single_legend_actor, VTKWindow, TriangulationWindow, RegistrationWindow
-from matplotlib.widgets import RectangleSelector
+from to_vtk import get_outline_actor, create_single_legend_actor
+from windows import *
+from show import show_window
 from matplotlib.colors import colorConverter
-from matplotlib.collections import LineCollection
-from vtk.util.vtkConstants import *
 
 ALL_COLORS = [
     'r',
@@ -55,67 +52,6 @@ def features(plt, image, features):
     else:
         feature(plt, image, features)
 
-def get_outline_actor(outline, base_color, line_style, show_direction):
-    colors = vtk.vtkUnsignedCharArray()
-    colors.SetNumberOfComponents(3)
-    colors.SetName("Colors")
-
-    points = vtk.vtkPoints()
-    for point in outline['points']:
-        points.InsertNextPoint([ point[1], point[0], 1.0 ])
-    lines = vtk.vtkCellArray()
-
-    for i, edge in enumerate(outline['edges']):
-        line = vtk.vtkLine()
-        line.GetPointIds().SetId(0, edge[0])
-        line.GetPointIds().SetId(1, edge[1])
-        lines.InsertNextCell(line)
-
-        color = tuple([int(255 * c) for c in base_color])
-        if show_direction:
-            color = (
-                color[0] - color[0] * i / len(outline['edges']),
-                color[1] - color[1] * i / len(outline['edges']),
-                color[2] - color[2] * i / len(outline['edges'])
-            )
-        colors.InsertNextTuple3(*color)
-
-    linesPolyData = vtk.vtkPolyData()
-    linesPolyData.SetPoints(points)
-    linesPolyData.SetLines(lines)
-    linesPolyData.GetCellData().SetScalars(colors)
-
-    mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputData(linesPolyData)
-
-    actor = vtk.vtkActor()
-    actor.GetProperty().SetLineWidth(2.0)
-    actor.GetProperty().SetLineStipplePattern(line_style)
-    actor.SetMapper(mapper)
-
-    return actor
-
-def get_points_actor(pts):
-    points = vtk.vtkPoints()
-    vertices = vtk.vtkCellArray()
-    for i, p in enumerate(pts):
-        points.InsertNextPoint([p[1], p[0], 1])
-        vertices.InsertNextCell(1)
-        vertices.InsertCellPoint(i)
-
-    polyData = vtk.vtkPolyData()
-    polyData.SetPoints(points)
-    polyData.SetVerts(vertices)
-
-    mapper = vtk.vtkPolyDataMapper()
-    mapper.SetInputData(polyData)
-
-    actor = vtk.vtkActor()
-    actor.SetMapper(mapper)
-    actor.GetProperty().SetPointSize(10)
-    actor.GetProperty().SetColor(1.0, 0, 0)
-
-    return actor
 
 def outline(outline, show_direction=False, title=None):
     window = VTKWindow(title=title)
@@ -128,6 +64,7 @@ def outline(outline, show_direction=False, title=None):
     ])
 
     return window
+
 
 def outlines(outlines, show_direction=False, title=None, color_by_class=False):
     window = VTKWindow(title=title)
@@ -151,32 +88,11 @@ def outlines(outlines, show_direction=False, title=None, color_by_class=False):
 
     return window
 
-def to_vtk_image(image):
-    image = np.flipud(image.copy()).astype('uint8')
-    print(image)
-    print(image.shape)
-
-    start = time()
-    imageString = image.tostring()
-    imageImporter = vtk.vtkImageImport()
-    imageImporter.CopyImportVoidPointer(imageString, len(imageString))
-    imageImporter.SetDataScalarTypeToUnsignedChar()
-    imageImporter.SetNumberOfScalarComponents(3)
-    imageImporter.SetDataExtent(0,image.shape[1]-1,
-                                0,image.shape[0]-1,
-                                0,0)
-    imageImporter.SetWholeExtent(0,image.shape[1]-1,
-                                 0,image.shape[0]-1,
-                                 0,0)
-    imageImporter.Update()
-    interval = time() - start
-    print(interval)
-
-    return imageImporter
 
 def triangulation(bones, do_triangulation):
     window = TriangulationWindow(bones, do_triangulation)
     show_window(window)
+
 
 def registration(bones, register_fn, estimators, reference_estimators):
     window = RegistrationWindow(bones, register_fn, estimators, reference_estimators)
