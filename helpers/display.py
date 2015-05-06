@@ -1,10 +1,8 @@
 import itertools
 import windows
-reload(windows)
 from skimage.color import label2rgb
 from skimage.transform import resize
 from to_vtk import get_outline_actor, create_single_legend_actor
-from windows import *
 from show import show_window
 from matplotlib.colors import colorConverter
 
@@ -54,7 +52,7 @@ def features(plt, image, features):
 
 
 def outline(outline, show_direction=False, title=None):
-    window = VTKWindow(title=title)
+    window = windows.VTKWindow(title=title)
     show_window(window)
     base_color = (1.0, 0.0, 0.0)
     line_style = 0xFFFF
@@ -67,7 +65,7 @@ def outline(outline, show_direction=False, title=None):
 
 
 def outlines(outlines, show_direction=False, title=None, color_by_class=False):
-    window = VTKWindow(title=title)
+    window = windows.VTKWindow(title=title)
     show_window(window)
 
     actors = []
@@ -90,10 +88,17 @@ def outlines(outlines, show_direction=False, title=None, color_by_class=False):
 
 
 def triangulation(bones, do_triangulation):
-    window = TriangulationWindow(bones, do_triangulation)
+    window = windows.TriangulationWindow(bones, do_triangulation)
     show_window(window)
+    return window
 
 
 def registration(bones, register_fn, estimators, reference_estimators):
-    window = RegistrationWindow(bones, register_fn, estimators, reference_estimators)
+    window = windows.RegistrationWindow(bones, register_fn, estimators, reference_estimators)
     show_window(window)
+    return window
+
+def comparison(bones, compare_fn, window_space_functions, feature_functions):
+    window = windows.ComparisonWindow(bones, compare_fn, window_space_functions, feature_functions)
+    show_window(window)
+    return window

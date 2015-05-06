@@ -23,6 +23,30 @@ def get_points_actor(pts):
 
     return actor
 
+def get_line_actor(pts):
+    points = vtk.vtkPoints()
+    for p in pts:
+        points.InsertNextPoint([p[1], p[0], 1])
+
+    lines = vtk.vtkCellArray()
+    for i in range(0, pts.shape[0]-1):
+        line = vtk.vtkLine()
+        line.GetPointIds().SetId(0, i)
+        line.GetPointIds().SetId(1, i+1)
+        lines.InsertNextCell(line)
+
+    polyData = vtk.vtkPolyData()
+    polyData.SetPoints(points)
+    polyData.SetLines(lines)
+
+    mapper = vtk.vtkPolyDataMapper()
+    mapper.SetInputData(polyData)
+
+    actor = vtk.vtkActor()
+    actor.SetMapper(mapper)
+
+    return actor
+
 def get_outline_actor(outline, base_color, line_style, show_direction):
     colors = vtk.vtkUnsignedCharArray()
     colors.SetNumberOfComponents(3)

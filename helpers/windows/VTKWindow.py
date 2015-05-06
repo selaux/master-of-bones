@@ -14,7 +14,7 @@ class VTKWindow(QtGui.QMainWindow):
         self.vl = QtGui.QVBoxLayout()
         self.hl = QtGui.QHBoxLayout()
         self.frame = QtGui.QFrame()
-        self.vtkWidget = QVTKRenderWindowInteractor(self.frame)
+        self.vtkWidget, self.ren, self.iren, self.intstyle = self.init_vtk_widget(self.frame)
         self.vl.addWidget(self.vtkWidget)
         self.hl.insertLayout(-1, self.vl)
 
@@ -33,6 +33,42 @@ class VTKWindow(QtGui.QMainWindow):
         self.frame.setLayout(self.hl)
         self.setCentralWidget(self.frame)
 
+    def init_vtk_widget(self, widget):
+        vtk_widget = QVTKRenderWindowInteractor(widget)
+        renderer = vtk.vtkRenderer()
+        vtk_widget.GetRenderWindow().AddRenderer(renderer)
+
+        renderer.SetBackground(1.0, 1.0, 1.0)
+
+        interactor = vtk_widget.GetRenderWindow().GetInteractor()
+        interactor_style = vtk.vtkInteractorStyleRubberBand2D()
+        interactor.SetInteractorStyle(interactor_style)
+
+        vtk_widget.GetRenderWindow().LineSmoothingOn()
+        vtk_widget.GetRenderWindow().PolygonSmoothingOn()
+        vtk_widget.GetRenderWindow().PointSmoothingOn()
+        vtk_widget.GetRenderWindow().SetMultiSamples(8)
+
+        return vtk_widget, renderer, interactor, interactor_style
+
+    def init_scale(self):
+        scale = vtk.vtkLegendScaleActor()
+        scale.SetLabelModeToXYCoordinates()
+        scale.LegendVisibilityOff()
+        scale.LeftAxisVisibilityOff()
+        scale.BottomAxisVisibilityOff()
+        scale.SetRightBorderOffset(50)
+        scale.GetRightAxis().GetProperty().SetColor(0, 0, 0)
+        scale.GetRightAxis().GetLabelTextProperty().SetFontSize(10)
+        scale.GetRightAxis().GetLabelTextProperty().ShadowOff()
+        scale.GetRightAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
+        scale.GetTopAxis().GetProperty().SetColor(0, 0, 0)
+        scale.GetTopAxis().GetLabelTextProperty().SetFontSize(10)
+        scale.GetTopAxis().GetLabelTextProperty().ShadowOff()
+        scale.GetTopAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
+
+        return scale
+
     def render_actors(self, actors, legends=[]):
         for actor in actors:
             self.ren.AddActor(actor)
@@ -49,21 +85,7 @@ class VTKWindow(QtGui.QMainWindow):
                 legend.SetEntry(i, l[2], l[0], l[1])
             self.ren.AddActor(legend)
 
-        scale = vtk.vtkLegendScaleActor()
-        scale.SetLabelModeToXYCoordinates()
-        scale.LegendVisibilityOff()
-        scale.LeftAxisVisibilityOff()
-        scale.BottomAxisVisibilityOff()
-        scale.SetRightBorderOffset(50)
-        scale.GetRightAxis().GetProperty().SetColor(0, 0, 0)
-        scale.GetRightAxis().GetLabelTextProperty().SetFontSize(10)
-        scale.GetRightAxis().GetLabelTextProperty().ShadowOff()
-        scale.GetRightAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
-        scale.GetTopAxis().GetProperty().SetColor(0, 0, 0)
-        scale.GetTopAxis().GetLabelTextProperty().SetFontSize(10)
-        scale.GetTopAxis().GetLabelTextProperty().ShadowOff()
-        scale.GetTopAxis().GetLabelTextProperty().SetColor(0.2, 0.2, 0.2)
-        self.ren.AddActor(scale)
+        self.ren.AddActor(self.init_scale())
 
         self.ren.ResetCamera()
 

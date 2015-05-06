@@ -29,3 +29,11 @@ def load_files(directory, filter_unfinished=True):
     if filter_unfinished:
         loaded = filter(lambda x: 'done' in x and x['done'], loaded)
     return loaded
+
+def save_files(directory, outlines):
+    for outline in outlines:
+        save_single_file(directory + outline['filename'], outline)
+
+def save_single_file(path, outline):
+    with gzip.open(path, 'wb') as f:
+        pickle.dump(outline, f)
