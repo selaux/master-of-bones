@@ -86,7 +86,7 @@ def extract_window_space_by_length(tck, degrees, window_size, number_of_evaluati
             if total_space[j] == 0:
                 param_for_spline = total_space[i]
             else:
-                param_for_spline = total_space[i] * (1-dist_from_i) + total_space[j] * dist_from_i
+                param_for_spline = total_space[i] * (1-norm_dist_from_i) + total_space[j] * norm_dist_from_i
             break
 
     if param_for_spline is None:

@@ -1,4 +1,4 @@
-from math import degrees
+from math import degrees, radians
 import vtk
 import numpy as np
 from PyQt4 import QtCore, QtGui
@@ -38,8 +38,11 @@ class ComparisonWindow(VTKWindow):
         self.window_space_functions = window_space_functions
         self.feature_functions = feature_functions
 
+        self.fl_frame = QtGui.QFrame()
+        self.fl_frame.setFixedWidth(400)
         self.fl = QtGui.QVBoxLayout()
-        self.hl.insertLayout(-1, self.fl)
+        self.fl_frame.setLayout(self.fl)
+        self.hl.addWidget(self.fl_frame)
 
         self.window_widget = QtGui.QFrame()
         self.window_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
@@ -65,8 +68,11 @@ class ComparisonWindow(VTKWindow):
         self.comparison_data = vtk.vtkPolyData()
         self.comparison_mapper = vtk.vtkPolyDataMapper()
         self.comparison_actor = vtk.vtkActor()
+        self.detail_angle_data = vtk.vtkPolyData()
+        self.detail_angle_mapper = vtk.vtkPolyDataMapper()
+        self.detail_angle_actor = vtk.vtkActor()
         self.initialize_actors()
-        self.render_actors([self.comparison_actor])
+        self.render_actors([self.comparison_actor, self.detail_angle_actor])
 
         self.window_renderer.AddActor(self.init_scale())
 
@@ -117,6 +123,10 @@ class ComparisonWindow(VTKWindow):
 
     def init_algorithm_parameters(self):
         layout = QtGui.QFormLayout()
+        self.angle_spinbox = QtGui.QSpinBox()
+        self.angle_spinbox.setValue(5)
+        layout.addRow('Evaluate every x degrees', self.angle_spinbox)
+
         self.window_size_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.window_size_slider.setMinimum(0)
         self.window_size_slider.setMaximum(100)
@@ -145,6 +155,13 @@ class ComparisonWindow(VTKWindow):
         self.comparison_actor.GetProperty().SetRepresentationToWireframe()
         self.comparison_actor.GetProperty().SetLineWidth(3)
 
+        self.detail_angle_mapper.SetInputData(self.detail_angle_data)
+        self.detail_angle_actor.SetMapper(self.detail_angle_mapper)
+        self.detail_angle_actor.GetProperty().SetRepresentationToWireframe()
+        self.detail_angle_actor.GetProperty().SetLineWidth(1.5)
+        self.detail_angle_actor.GetProperty().SetColor(0, 0, 0)
+
+
     def get_window_size(self):
         return self.MIN_WINDOW_SIZE + self.MAX_WINDOW_SIZE * self.window_size_slider.value() / float(self.window_size_slider.maximum())
 
@@ -159,10 +176,12 @@ class ComparisonWindow(VTKWindow):
             use_pca = self.use_pca_checkbox.isChecked()
             number_of_pca_components = self.number_of_pca_components_spinbox.value()
             number_of_spline_evaluations = self.number_of_spline_evaluations_slider.value()
+            step_size = self.angle_spinbox.value()
 
             kwargs = {
                 'feature_fn': feature_fn,
                 'extract_window_fn': extract_window_fn,
+                'step_size': step_size,
                 'progress_callback': self.update_progress_bar,
                 'window_size': window_size,
                 'number_of_evaluations': number_of_spline_evaluations,
@@ -243,31 +262,49 @@ class ComparisonWindow(VTKWindow):
             print(traceback.format_exc())
 
     def update_detailed_data(self, angle):
-        angles = np.array([m['angle'] for m in self.results])
-        closest = np.argmin(np.abs(angles - angle))
-        evaluation = self.results[closest]
+        try:
+            angles = np.array([m['angle'] for m in self.results])
+            closest = np.argmin(np.abs(angles - angle))
+            evaluation = self.results[closest]
+            # current_angle = angles[closest]
+            # y, x = gh.pol2cart(2, radians(current_angle))
+            #
+            # points = vtk.vtkPoints()
+            # points.InsertNextPoint([0, 0, 1.0])
+            # points.InsertNextPoint([x, y, 1.0])
+            # lines = vtk.vtkCellArray()
+            # line = vtk.vtkLine()
+            # line.GetPointIds().SetId(0, 0)
+            # line.GetPointIds().SetId(1, 1)
+            # lines.InsertNextCell(line)
+            # self.detail_angle_data.SetPoints(points)
+            # self.detail_angle_data.SetLines(lines)
+            # self.detail_angle_data.Modified()
 
-        if self.window_actors:
-            for actor in self.window_actors:
-                self.window_renderer.RemoveActor(actor)
+            if self.window_actors:
+                for actor in self.window_actors:
+                    self.window_renderer.RemoveActor(actor)
 
-        self.window_actors = []
-        for i, bone in enumerate(self.bones):
-            spline_params = bone['spline_params']
-            window = evaluation['windows'][i, :]
-            points = evaluate_spline(window, spline_params)
-            features = evaluation['features'][i, :]
+            self.window_actors = []
+            for i, bone in enumerate(self.bones):
+                spline_params = bone['spline_params']
+                window = evaluation['windows'][i, :]
+                points = evaluate_spline(window, spline_params)
+                features = evaluation['features'][i, :]
 
-            actor = get_line_actor(points)
-            actor.GetProperty().SetRepresentationToWireframe()
-            actor.GetProperty().SetLineWidth(1.5)
-            actor.GetProperty().SetColor(bone['color'][0], bone['color'][1], bone['color'][2])
+                actor = get_line_actor(points)
+                actor.GetProperty().SetRepresentationToWireframe()
+                actor.GetProperty().SetLineWidth(1.5)
+                actor.GetProperty().SetColor(bone['color'][0], bone['color'][1], bone['color'][2])
 
-            self.window_actors.append(actor)
-            self.window_renderer.AddActor(actor)
+                self.window_actors.append(actor)
+                self.window_renderer.AddActor(actor)
 
-        self.window_renderer.ResetCamera()
-        self.window_vtk_widget.GetRenderWindow().Render()
+            self.window_renderer.ResetCamera()
+            self.vtkWidget.GetRenderWindow().Render()
+            self.window_vtk_widget.GetRenderWindow().Render()
+        except:
+            print(traceback.format_exc())
 
     def on_click(self, obj, event):
         if self.results:

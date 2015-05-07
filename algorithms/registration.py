@@ -26,13 +26,14 @@ def append_standard_size_and_position(source_property, from_properties, to_prope
     return bone
 
 
-def estimate_transform(bones, estimator, init_reference_estimator, iterations, progress_callback=None, independent_scaling=False):
-    bones = map(partial(
-            append_standard_size_and_position,
-            'points', ['points', 'markers'],
-            ['registered', 'registered_markers'],
-            independent_scaling=independent_scaling),
-        bones)
+def estimate_transform(bones, estimator, init_reference_estimator, iterations, progress_callback=None, independent_scaling=False, continue_registration=False):
+    if not continue_registration:
+        bones = map(partial(
+                append_standard_size_and_position,
+                'points', ['points', 'markers'],
+                ['registered', 'registered_markers'],
+                independent_scaling=independent_scaling),
+                bones)
     reference = max(bones, key=lambda o: o['registered'].shape[0])
     reference_estimator = init_reference_estimator(reference)
     progress = {
