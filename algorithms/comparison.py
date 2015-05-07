@@ -23,7 +23,7 @@ def do_single_comparison(angle, outlines, feature_fn, extract_window_fn, window_
     for outline in outlines:
         window = extract_window_fn(outline['spline_params'], angle, window_size, number_of_evaluations)
         windows.append(window)
-    features = feature_fn(map(lambda o: o['spline_params'], outlines), windows)
+    features = feature_fn(outlines, windows)
     windows = np.array(windows)
     features = np.array(features)
 
@@ -112,18 +112,18 @@ def extract_window_space_by_length(tck, degrees, window_size, number_of_evaluati
     return window_space
 
 
-def feature_flatten_splines(spline_params, window_spaces):
-    outline_points = [evaluate_spline(w, s) for w, s in zip(window_spaces, spline_params)]
+def feature_flatten_splines(outlines, window_spaces):
+    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
     return np.array([s.flatten() for s in outline_points])
 
 
-def feature_use_distance_to_center(spline_params, window_spaces):
-    outline_points = [evaluate_spline(w, s) for w, s in zip(window_spaces, spline_params)]
+def feature_use_distance_to_center(outlines, window_spaces):
+    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
     return np.array([np.linalg.norm(o, axis=1) for o in outline_points])
 
 
-def feature_use_dist_center_and_curvature(spline_params, window_spaces):
-    outline_points = [evaluate_spline(w, s) for w, s in zip(window_spaces, spline_params)]
+def feature_use_dist_center_and_curvature(outlines, window_spaces):
+    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
 
     def curvature(x, y):
         dalpha = np.pi/1000
@@ -143,8 +143,8 @@ def feature_use_dist_center_and_curvature(spline_params, window_spaces):
     return features
 
 
-def feature_use_deviation_from_mean(spline_params, window_spaces):
-    outline_points = [evaluate_spline(w, s) for w, s in zip(window_spaces, spline_params)]
+def feature_use_deviation_from_mean(outlines, window_spaces):
+    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
 
     mean = np.mean(outline_points, axis=0)
     features = []
@@ -153,9 +153,19 @@ def feature_use_deviation_from_mean(spline_params, window_spaces):
     return features
 
 
-def feature_use_spline_derivatives(spline_params, window_spaces):
-    spline_derivatives = [ np.array(spalde(w, s)).flatten() for w, s in zip(window_spaces, spline_params) ]
+def feature_use_spline_derivatives(outlines, window_spaces):
+    spline_derivatives = [ np.array(spalde(w, s['spline_params'])).flatten() for w, s in zip(window_spaces, outlines) ]
     return spline_derivatives
+
+
+def feature_use_distances_to_markers(outlines, window_spaces):
+    window_centers = [np.median(w) for w in window_spaces]
+    spline_centers = [np.array(evaluate_spline([w], s['spline_params'])[0, :]) for w, s in zip(window_centers, outlines)]
+
+    vectors_to_markers = np.array([ s['markers'] - np.tile(c, (s['markers'].shape[0], 1)) for c, s in zip(spline_centers, outlines) ])
+    norms = np.linalg.norm(vectors_to_markers, axis=2)
+
+    return norms
 
 
 def wrap_with_pca(fn, n_components):
