@@ -72,7 +72,7 @@ class RegistrationWindow(VTKWindow):
         self.outlines_box.setLayout(layout)
         scroll_area.setWidget(self.outlines_box)
         scroll_area.setWidgetResizable(True)
-        scroll_area.setFixedHeight(500)
+        scroll_area.setFixedHeight(300)
         self.sl.addWidget(scroll_area)
 
     def init_class_selector(self):

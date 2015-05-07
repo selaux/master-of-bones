@@ -7,6 +7,7 @@ from VTKWindow import VTKWindow
 from algorithms.splines import evaluate_spline
 from helpers import geometry as gh
 from helpers import features as fh
+from helpers import classes as ch
 import matplotlib.cm as cmx
 from helpers.to_vtk import get_line_actor
 
@@ -19,8 +20,8 @@ class ComparisonWindow(VTKWindow):
         self.MAX_WINDOW_SIZE = 1.5
         self.separability_properties = [
             {
-                'label': 'Precision * Margin',
-                'property': 'rm',
+                'label': 'Mean Confidence',
+                'property': 'mean_confidence',
             },
             {
                 'label': 'Margin',
@@ -29,6 +30,10 @@ class ComparisonWindow(VTKWindow):
             {
                 'label': 'Precision',
                 'property': 'recall',
+            },
+            {
+                'label': 'Precision * Margin',
+                'property': 'rm',
             }
         ]
 
@@ -104,6 +109,13 @@ class ComparisonWindow(VTKWindow):
 
     def init_view_properties(self):
         layout = QtGui.QFormLayout()
+
+        self.max_separability_metric_label = QtGui.QLabel()
+        layout.addRow('Maximum Value', self.max_separability_metric_label)
+
+        self.min_separability_metric_label = QtGui.QLabel()
+        layout.addRow('Minimum Value', self.min_separability_metric_label)
+
         self.show_metric_box = QtGui.QComboBox()
         for e in self.separability_properties:
             self.show_metric_box.addItem(e['label'])
@@ -111,12 +123,16 @@ class ComparisonWindow(VTKWindow):
         self.show_metric_box.setCurrentIndex(0)
         layout.addRow('Shown Metric', self.show_metric_box)
 
+        mbs_layout = QtGui.QHBoxLayout()
+        mbs_layout.addWidget(QtGui.QLabel(ch.get_class_name(self.get_compared_classes()[1])))
         self.mean_bone_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.mean_bone_slider.setMinimum(0)
         self.mean_bone_slider.setMaximum(100)
         self.mean_bone_slider.setValue(50)
         self.mean_bone_slider.valueChanged.connect(self.update_overview_data)
-        layout.addRow('Shift Mean Bone', self.mean_bone_slider)
+        mbs_layout.addWidget(self.mean_bone_slider)
+        mbs_layout.addWidget(QtGui.QLabel(ch.get_class_name(self.get_compared_classes()[0])))
+        layout.addRow('Shift Mean Bone', mbs_layout)
 
         self.vl.addLayout(layout)
 
@@ -127,17 +143,36 @@ class ComparisonWindow(VTKWindow):
         self.angle_spinbox.setValue(5)
         layout.addRow('Evaluate every x degrees', self.angle_spinbox)
 
+        window_size_layout = QtGui.QHBoxLayout()
         self.window_size_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.window_size_slider.setMinimum(0)
         self.window_size_slider.setMaximum(100)
         self.window_size_slider.setValue(50)
-        layout.addRow('Window Size', self.window_size_slider)
+        window_size_layout.addWidget(self.window_size_slider)
+        self.window_size_label = QtGui.QLabel()
+        self.window_size_label.setFixedWidth(30)
+        window_size_layout.addWidget(self.window_size_label)
+        def set_label_window_size():
+            self.window_size_label.setText(str(self.get_window_size()))
+        self.window_size_slider.valueChanged.connect(set_label_window_size)
+        layout.addRow('Window Size', window_size_layout)
+        set_label_window_size()
 
+        spline_eval_layout = QtGui.QHBoxLayout()
         self.number_of_spline_evaluations_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.number_of_spline_evaluations_slider.setMinimum(3)
         self.number_of_spline_evaluations_slider.setMaximum(100)
         self.number_of_spline_evaluations_slider.setValue(25)
-        layout.addRow('Number of Spline Evaluations', self.number_of_spline_evaluations_slider)
+        spline_eval_layout.addWidget(self.number_of_spline_evaluations_slider)
+        self.spline_evals_label = QtGui.QLabel()
+        self.spline_evals_label.setFixedWidth(30)
+        spline_eval_layout.addWidget(self.spline_evals_label)
+        def set_label_spline():
+            self.spline_evals_label.setText(str(self.number_of_spline_evaluations_slider.value()))
+        self.number_of_spline_evaluations_slider.valueChanged.connect(set_label_spline)
+        set_label_spline()
+
+        layout.addRow('Number of Spline Evaluations', spline_eval_layout)
 
         self.use_pca_checkbox = QtGui.QCheckBox()
         self.use_pca_checkbox.setChecked(True)
@@ -161,6 +196,8 @@ class ComparisonWindow(VTKWindow):
         self.detail_angle_actor.GetProperty().SetLineWidth(1.5)
         self.detail_angle_actor.GetProperty().SetColor(0, 0, 0)
 
+    def get_compared_classes(self):
+        return 2, 3
 
     def get_window_size(self):
         return self.MIN_WINDOW_SIZE + self.MAX_WINDOW_SIZE * self.window_size_slider.value() / float(self.window_size_slider.maximum())
@@ -177,6 +214,7 @@ class ComparisonWindow(VTKWindow):
             number_of_pca_components = self.number_of_pca_components_spinbox.value()
             number_of_spline_evaluations = self.number_of_spline_evaluations_slider.value()
             step_size = self.angle_spinbox.value()
+            class1, class2 = self.get_compared_classes()
 
             kwargs = {
                 'feature_fn': feature_fn,
@@ -189,7 +227,7 @@ class ComparisonWindow(VTKWindow):
                 'pca_components': number_of_pca_components
             }
 
-            self.results = self.compare_fn(self.bones, 2, 3, **kwargs)
+            self.results = self.compare_fn(self.bones, class1, class2, **kwargs)
 
             QtGui.QApplication.processEvents()
             self.calc_button.setEnabled(True)
@@ -223,11 +261,13 @@ class ComparisonWindow(VTKWindow):
                 colors.SetName("Colors")
                 vertices = vtk.vtkCellArray()
                 lines = vtk.vtkCellArray()
-                mean_outline = self.get_current_mean_outline(2, 3)
+                mean_outline = self.get_current_mean_outline(self.get_compared_classes()[0], self.get_compared_classes()[1])
                 angles = np.array([m['angle'] for m in self.results])
                 shown_property = self.separability_properties[self.show_metric_box.currentIndex()]['property']
-                print(shown_property)
                 separabilities = fh.normalize(np.array([ m[shown_property] for m in self.results ]))
+
+                self.min_separability_metric_label.setText(str(np.min(np.array([ m[shown_property] for m in self.results ]))))
+                self.max_separability_metric_label.setText(str(np.max(np.array([ m[shown_property] for m in self.results ]))))
 
                 for i, point in enumerate(mean_outline):
                     points.InsertNextPoint([point[1], point[0], 1.0])

@@ -8,9 +8,19 @@ import helpers.geometry as gh
 import helpers.classes as ch
 import helpers.features as fh
 
+
 def get_recall(svc, features, known_classes):
     predicted_classes = svc.predict(features)
     return float(np.count_nonzero(predicted_classes == known_classes)) / float(known_classes.shape[0])
+
+
+def get_mean_confidence(svc, features, known_classes):
+    confidences = svc.decision_function(features)
+    predicted_classes = svc.predict(features)
+    equals_predicted_classes = (predicted_classes == known_classes)
+    weights = np.full_like(equals_predicted_classes, -1, dtype=np.float)
+    weights[equals_predicted_classes] = 1
+    return np.mean(np.abs(confidences) * weights)
 
 
 def get_margin(svc):
@@ -33,6 +43,7 @@ def do_single_comparison(angle, outlines, feature_fn, extract_window_fn, window_
     recall = get_recall(svc, features, classes)
     margin = get_margin(svc)
     rm = recall*margin
+    mean_confidence = get_mean_confidence(svc, features, classes)
 
     return {
         'angle': angle,
@@ -40,6 +51,7 @@ def do_single_comparison(angle, outlines, feature_fn, extract_window_fn, window_
         'features': features,
         'rm': rm,
         'recall': recall,
+        'mean_confidence': mean_confidence,
         'margin': margin
     }
 
