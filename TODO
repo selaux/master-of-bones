@@ -1,14 +1,11 @@
-# Hintergründe rausnehmen
-# Punkte (wie in Präsentation) manuell auswählen
 # Semilandmarks bei Registrierung einfügen
-# Warum Links oben keine Abweichung?
-# Größeres Fenster
-# Spline-Vektoren als Features
-# Nochmal 10 Knochen / Klasse triangulieren
-# Fehlermaß für Registrierung
 
-# Spiegeln: Per Hand
-# Affine Transformation ausprobieren -> estimate_transform
-# Herausfinden warum es mit der Distanz nicht funktioniert
-# Bessere Visualisierung für
-# Features: Abweichung vom Durchschnittsknochen
+----------- Features ---------------
+# Messbar
+# Verhältnisse von Distanzen (z.B. Distanz zu Markern o.ä.)
+
+-------------------------------------
+- Trainingssatz & Testsatz aufteilen (zusätzliche Knochen triangulieren)
+- Distanzen zwischen Markern (automatisch)
+- Tupel von Distanzen zwischen Markern (automatisch)
+- Ausschnitt -> Fourier Trafo -> Curvature (Abstand vom Zentrum) ? Funktioniert nicht
