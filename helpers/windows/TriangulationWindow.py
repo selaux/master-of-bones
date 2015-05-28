@@ -280,10 +280,27 @@ class TriangulationWindow(VTKWindow):
             if reply == QtGui.QMessageBox.Yes:
                 self.save_current()
 
+    def reshape_bone_pixels_if_necessary(self, x, y):
+        bone_pixels = self.current['bone_pixels']
+
+        print(y, bone_pixels.shape[0])
+        if y <= 0:
+            print("IncSize", bone_pixels.shape[0], bone_pixels.shape[0]-y)
+            old = bone_pixels
+            bone_pixels = np.zeros((bone_pixels.shape[0]-y, old.shape[1]))
+            bone_pixels[-y:old.shape[0]-y, :] = old
+        if x >= bone_pixels.shape[1]:
+            print("IncSize", bone_pixels.shape[1], x)
+            old = bone_pixels
+            bone_pixels = np.zeros((old.shape[0], x+1))
+            bone_pixels[:, 0:old.shape[1]] = old
+
+        self.current['bone_pixels'] = bone_pixels
+
+        return bone_pixels
+
     def area_selected(self, *args):
         try:
-            bone_pixels = self.current['bone_pixels']
-
             start_display_x, start_display_y = self.intstyle.GetStartPosition()
             end_display_x, end_display_y = self.intstyle.GetEndPosition()
 
@@ -297,6 +314,11 @@ class TriangulationWindow(VTKWindow):
 
             low_x, low_y = min(start_world_x, end_world_x), min(start_world_y, end_world_y)
             high_x, high_y = max(start_world_x, end_world_x), max(start_world_y, end_world_y)
+
+
+
+            self.reshape_bone_pixels_if_necessary(low_x, low_y)
+            bone_pixels = self.reshape_bone_pixels_if_necessary(high_x, high_y)
 
             low_y, high_y = bone_pixels.shape[0] - high_y, bone_pixels.shape[0] - low_y
 
@@ -357,8 +379,13 @@ class TriangulationWindow(VTKWindow):
                     else:
                         y = bone_pixels.shape[0] - y
 
+                    x = int(x)
+                    y = int(y)
+                    bone_pixels = self.reshape_bone_pixels_if_necessary(x, y)
+
                     self.last_step = bone_pixels.copy()
-                    bone_pixels[int(y), int(x)] = set_to
+                    bone_pixels[y, x] = set_to
+                    self.current['bone_pixels'] = bone_pixels
 
                     self.current_modified = True
                     self.update_current_data(including_image=False)
