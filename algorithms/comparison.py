@@ -123,11 +123,34 @@ def extract_window_space_by_length(tck, degrees, window_size, number_of_evaluati
         window_width = np.cumsum(np.linalg.norm(window_spline - np.roll(window_spline, -1, axis=0), axis=1))[-2]
     return window_space
 
+def curvature(x, y):
+    dalpha = np.pi/1000
+    xd1 = np.gradient(x)
+    xd2 = np.gradient(xd1)
+    yd1 = np.gradient(y)
+    yd2 = np.gradient(yd1)
+    return np.abs(xd1*yd2 - yd1*xd2) / np.power(xd1**2 + yd1**2, 3./2)
 
 def feature_flatten_splines(outlines, window_spaces):
     outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
     return np.array([s.flatten() for s in outline_points])
 
+def feature_use_curvature_of_dist_from_center(outlines, window_spaces):
+    BORDER_FREQUENCY = 8
+    distances = feature_use_distance_to_center(outlines, window_spaces)
+
+    frequencies = np.fft.fftfreq(distances[0].size, 0.05)
+    fourier_transforms = np.array([
+        np.fft.fft(d) for d in distances
+    ])
+    filtered = np.logical_or(frequencies > BORDER_FREQUENCY, frequencies < -BORDER_FREQUENCY)
+    fourier_transforms[:,  filtered] = 0
+    inverse_fourier_transforms = np.array([
+        np.fft.ifft(ft) for ft in fourier_transforms
+    ]).real
+
+    c = np.array([curvature(w, ift) for w, ift in zip(window_spaces, inverse_fourier_transforms)])
+    return c
 
 def feature_use_distance_to_center(outlines, window_spaces):
     outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
@@ -137,20 +160,12 @@ def feature_use_distance_to_center(outlines, window_spaces):
 def feature_use_dist_center_and_curvature(outlines, window_spaces):
     outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
 
-    def curvature(x, y):
-        dalpha = np.pi/1000
-        xd1 = np.gradient(x)
-        xd2 = np.gradient(xd1)
-        yd1 = np.gradient(y)
-        yd2 = np.gradient(yd1)
-        return np.abs(xd1*yd2 - yd1*xd2) / np.power(xd1**2 + yd1**2, 3./2)
-
     distances = np.array([ np.array([ np.linalg.norm(p) for p in o ]) for o in outline_points ])
     distances = fh.normalize(distances)
-    curvature = np.array([curvature(o[:, 0], o[:, 1]) for o in outline_points])
-    curvature = fh.normalize(curvature)
+    c = np.array([curvature(o[:, 0], o[:, 1]) for o in outline_points])
+    c = fh.normalize(c)
 
-    features = np.hstack((distances, curvature))
+    features = np.hstack((distances, c))
 
     return features
 
