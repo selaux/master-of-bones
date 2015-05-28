@@ -21,8 +21,8 @@ def get_using_angles(outline):
                 'method': 'max'
             },
             {
-                'a_min': 160,
-                'a_max': 200,
+                'a_min': 170,
+                'a_max': 190,
                 'method': 'max'
             },
             {

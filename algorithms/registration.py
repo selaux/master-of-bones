@@ -18,10 +18,13 @@ def append_standard_size_and_position(source_property, from_properties, to_prope
         scale_factor_1 = scale_factor
 
     for p_from, p_to in zip(from_properties, to_properties):
-        result = bone[p_from] - np.tile(centroid, (bone[p_from].shape[0], 1))
-        result[:, 0] = np.divide(result[:, 0], scale_factor_0)
-        result[:, 1] = np.divide(result[:, 1], scale_factor_1)
-        bone[p_to] = result
+        if len(bone[p_from]) > 0:
+            result = bone[p_from] - np.tile(centroid, (bone[p_from].shape[0], 1))
+            result[:, 0] = np.divide(result[:, 0], scale_factor_0)
+            result[:, 1] = np.divide(result[:, 1], scale_factor_1)
+            bone[p_to] = result
+        else:
+            bone[p_to] = bone[p_from]
 
     return bone
 
@@ -47,9 +50,11 @@ def estimate_transform(bones, estimator, init_reference_estimator, iterations, p
             bone['error'] = 0
         for j in range(iterations):
             from_points, to_points = reference_estimator(bone)
-            result = estimator(to_points, from_points, bone, ['registered', 'registered_markers'])
+            #TODO: Fix this
+            #result = estimator(to_points, from_points, bone, ['registered', 'registered_markers'])
+            result = estimator(to_points, from_points, bone, ['registered'])
             bone['registered'] = result[0][0]
-            bone['registered_markers'] = result[0][1]
+            #bone['registered_markers'] = result[0][1]
             bone['error'] = result[1]
             progress['value'] += 1
             if progress['callback']:
