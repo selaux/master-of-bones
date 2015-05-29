@@ -102,3 +102,8 @@ def comparison(bones, compare_fn, window_space_functions, feature_functions):
     window = windows.ComparisonWindow(bones, compare_fn, window_space_functions, feature_functions)
     show_window(window)
     return window
+
+def synthetic_model_generation():
+    window = windows.SyntheticGenerationWindow()
+    show_window(window)
+    return window

@@ -2,3 +2,4 @@ from VTKWindow import VTKWindow
 from ComparisonWindow import ComparisonWindow
 from RegistrationWindow import RegistrationWindow
 from TriangulationWindow import TriangulationWindow
+from SyntheticGenerationWindow import SyntheticGenerationWindow
