@@ -7,6 +7,19 @@ from scipy.interpolate import splprep, splev
 
 
 def append_standard_size_and_position(source_property, from_properties, to_properties, bone, independent_scaling=False):
+    """
+    Applies a transformations to all from_properties in bone and puts the results in the to_properties of bone
+    The transformation is defined by moving the points of source_property in bone into the center of the coordinate
+    system and scaling the result to have a mean square error of 1
+    When setting independent_scaling to True, the x and y dimensions are scaled independent of each other, meaning
+    they each have a mean square error of 1
+    :param source_property: The property that defines the transformation
+    :param from_properties: Array of properties that are transfromed
+    :param to_properties: Array of properties that the results are stored in (has to have the same length as from_properties)
+    :param bone: The bone that is considered
+    :param independent_scaling: Defines wether axes are scaled independent of each other
+    :return:
+    """
     centroid = np.mean(bone[source_property], axis=0)
     moved_src = bone[source_property] - np.tile(centroid, (bone[source_property].shape[0], 1))
     if independent_scaling:
@@ -30,13 +43,26 @@ def append_standard_size_and_position(source_property, from_properties, to_prope
 
 
 def estimate_transform(bones, estimator, init_reference_estimator, iterations, progress_callback=None, independent_scaling=False, continue_registration=False):
+    """
+    Estimates a transform that fits all {bones} onto each other based on the transformation estimator {estimator}
+    (defines a transformation type that is estimated), a point-to-point  reference estimator defined by {init_reference_estimator}
+    (defines which points are used to estimate the transformation)
+    :param bones: bones that are registered
+    :param estimator: defines the type of the transformation that is estimated
+    :param init_reference_estimator: defines the points used to estimate the transformation
+    :param iterations: defines the number of iterations (1 iteration = estimate_references -> estimate_transform)
+    :param progress_callback: progress callback that is called after each iteration
+    :param independent_scaling: Wether the initial normalization of the bone should use axis independent scaling (see append_standard_size_and_position)
+    :param continue_registration: Wether an already begun registration should be contued ('registered' is then used instead of 'points' in the bone dict)
+    :return: Nothing the registerd outlines are stored in bone['registered']
+    """
     if not continue_registration:
         bones = map(partial(
-                append_standard_size_and_position,
-                'points', ['points', 'markers'],
-                ['registered', 'registered_markers'],
-                independent_scaling=independent_scaling),
-                bones)
+            append_standard_size_and_position,
+            'points', ['points', 'markers'],
+            ['registered', 'registered_markers'],
+            independent_scaling=independent_scaling
+        ), bones)
     reference = max(bones, key=lambda o: o['registered'].shape[0])
     reference_estimator = init_reference_estimator(reference)
     progress = {
@@ -50,7 +76,7 @@ def estimate_transform(bones, estimator, init_reference_estimator, iterations, p
             bone['error'] = 0
         for j in range(iterations):
             from_points, to_points = reference_estimator(bone)
-            #TODO: Fix this
+            #TODO: Fix this (registered_markers does not exist for all bones, because its manually defined)
             #result = estimator(to_points, from_points, bone, ['registered', 'registered_markers'])
             result = estimator(to_points, from_points, bone, ['registered'])
             bone['registered'] = result[0][0]
@@ -64,20 +90,39 @@ def estimate_transform(bones, estimator, init_reference_estimator, iterations, p
         do_registration(bone, progress)
 
 def get_error(points, reference, tform):
+    """
+    Returns the mean square error for the transform tform and the points points with respect to the reference
+    """
     transformed = tform(points)
     error = np.sum((points - transformed)**2)
     norm = ((reference - reference.mean(0))**2).sum()
     return error / norm
 
 
+"""
+The following are transformation types that are passed into estimate_transform as the estimator. They all estimate
+a transformation for a single point and applies it to properties_to_transform the applied transformations are then
+returned, additional to the mean_square_error if the registration
+:param reference: A reference that all bones should be transformed onto (currently it's the bone with the most points)
+:param points: The points that are transformed onto the reference
+:param bone: the bone that is considered
+:param properties_to_transform: the properties of the bone the transformation should be applied to
+:return:
+"""
 def affine(reference, points, bone, properties_to_transform):
+    """
+    Estimates a affine transform
+    """
     tform = tf.estimate_transform('affine', points, reference)
-    transformed = list(map(tform, [ bone[p] for p in properties_to_transform  ]))
+    transformed = list(map(tform, [ bone[p] for p in properties_to_transform ]))
     error = get_error(points, reference, tform)
     return transformed, error
 
 
 def similarity(reference, points, bone, properties_to_transform):
+    """
+    Estimates a similarity transform
+    """
     tform = tf.estimate_transform('similarity', points, reference)
     transformed = list(map(tform, [ bone[p] for p in properties_to_transform  ]))
     error = get_error(points, reference, tform)
@@ -85,6 +130,9 @@ def similarity(reference, points, bone, properties_to_transform):
 
 
 def projective(reference, points, bone, properties_to_transform):
+    """
+    Estimates a projective transform
+    """
     tform = tf.estimate_transform('projective', points, reference)
     transformed = list(map(tform, [ bone[p] for p in properties_to_transform  ]))
     error = get_error(points, reference, tform)
@@ -92,45 +140,7 @@ def projective(reference, points, bone, properties_to_transform):
 
 def procrustes(reference, points, bone, properties_to_transform, scaling=True, reflection=False):
     """
-    A port of MATLAB's `procrustes` function to Numpy.
-
-    Procrustes analysis determines a linear transformation (translation,
-    reflection, orthogonal rotation and scaling) of the points in Y to best
-    conform them to the points in matrix X, using the sum of squared errors
-    as the goodness of fit criterion.
-
-        d, Z, [tform] = procrustes(X, Y)
-
-    Inputs:
-    ------------
-    X, Y
-        matrices of target and input coordinates. they must have equal
-        numbers of  points (rows), but Y may have fewer dimensions
-        (columns) than X.
-
-    scaling
-        if False, the scaling component of the transformation is forced
-        to 1
-
-    reflection
-        if 'best' (default), the transformation solution may or may not
-        include a reflection component, depending on which fits the data
-        best. setting reflection to True or False forces a solution with
-        reflection or no reflection respectively.
-
-    Outputs
-    ------------
-    d
-        the residual sum of squared errors, normalized according to a
-        measure of the scale of X, ((X - X.mean(0))**2).sum()
-
-    Z
-        the matrix of transformed Y-values
-
-    tform
-        a dict specifying the rotation, translation and scaling that
-        maps X --> Y
-
+    Estimates a procrustes transform
     """
 
     n,m = reference.shape
@@ -206,7 +216,16 @@ def procrustes(reference, points, bone, properties_to_transform, scaling=True, r
 
     return Z, (error / norm)
 
+
+"""
+The following functions are reference estimators, they are initialized with the reference that all bones are
+registered onto and return a function that returns two arrays of points that define the registration (one reference
+array and one array of points that are registered to the reference).
+"""
 def get_nearest_neighbor_point_estimator(reference):
+    """
+    Returns the nearest neighbors as points to register
+    """
     nbrs = NearestNeighbors(n_neighbors=1, algorithm='auto').fit(reference['registered'])
     def get_neighbors(outline):
         distances, indices = nbrs.kneighbors(outline['registered'])
@@ -216,6 +235,9 @@ def get_nearest_neighbor_point_estimator(reference):
 
 
 def get_marker_using_angles_estimator(reference):
+    """
+    Returns the landmarks extracted by angle (see landmarks.py) to register
+    """
     reference_landmarks = landmarks.get_using_angles(reference['registered'])
     def get_landmarks(outline):
         point_landmarks = landmarks.get_using_angles(outline['registered'])
@@ -223,6 +245,9 @@ def get_marker_using_angles_estimator(reference):
     return get_landmarks
 
 def get_marker_using_space_partitioning_estimator(reference):
+    """
+    Returns the landmarks extracted by space partitioning (see landmarks.py) to register
+    """
     reference_landmarks = landmarks.get_using_space_partitioning(reference['registered'])
     def get_landmarks(outline):
         point_landmarks = landmarks.get_using_space_partitioning(outline['registered'])
@@ -230,6 +255,9 @@ def get_marker_using_space_partitioning_estimator(reference):
     return get_landmarks
 
 def get_manual_markers(reference):
+    """
+    Returns the manually defined landmarks to register
+    """
     reference_landmarks = reference['registered_markers']
     def get_landmarks(outline):
         point_landmarks = outline['registered_markers']
@@ -237,6 +265,9 @@ def get_manual_markers(reference):
     return get_landmarks
 
 def get_manual_markers_5_to_9(reference):
+    """
+    Returns thhe manually defined landmarks 5-9 out of 11 to register
+    """
     reference_landmarks = reference['registered_markers'][4:8, :]
     def get_landmarks(outline):
         point_landmarks = outline['registered_markers'][4:8, :]
@@ -244,6 +275,9 @@ def get_manual_markers_5_to_9(reference):
     return get_landmarks
 
 def get_spline_points_estimator(reference, num_evaluations=250):
+    """
+    Evaluates 250 spline points and use them to register
+    """
     def extract_spline(points):
         y = points[:, 0].flatten()
         x = points[:, 1].flatten()

@@ -96,12 +96,12 @@ def to_vtk_image(image):
     imageImporter.CopyImportVoidPointer(imageString, len(imageString))
     imageImporter.SetDataScalarTypeToUnsignedChar()
     imageImporter.SetNumberOfScalarComponents(3)
-    imageImporter.SetDataExtent(0,image.shape[1]-1,
-                                0,image.shape[0]-1,
-                                0,0)
-    imageImporter.SetWholeExtent(0,image.shape[1]-1,
-                                 0,image.shape[0]-1,
-                                 0,0)
+    imageImporter.SetDataExtent(0, image.shape[1]-1,
+                                0, image.shape[0]-1,
+                                0, 0)
+    imageImporter.SetWholeExtent(0, image.shape[1]-1,
+                                 0, image.shape[0]-1,
+                                 0, 0)
     imageImporter.Update()
 
     return imageImporter

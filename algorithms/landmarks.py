@@ -4,77 +4,106 @@ from helpers import geometry as gh
 from scipy.signal import argrelextrema
 
 def get_using_angles(outline):
-        landmark_definitions = [
-            {
-                'a_min': 30,
-                'a_max': 90,
-                'method': 'max'
-            },
-            {
-                'a_min': 80,
-                'a_max': 100,
-                'method': 'min'
-            },
-            {
-                'a_min': 90,
-                'a_max': 150,
-                'method': 'max'
-            },
-            {
-                'a_min': 170,
-                'a_max': 190,
-                'method': 'max'
-            },
-            {
-                'a_min': 210,
-                'a_max': 270,
-                'method': 'max'
-            },
-            {
-                'a_min': 260,
-                'a_max': 280,
-                'method': 'min'
-            },
-            {
-                'a_min': 270,
-                'a_max': 330,
-                'method': 'max'
-            }
-        ]
-        landmarks = []
-        rho = 2
-        centroid = np.mean(outline, axis=0)
+    """
+    Automatically find landmarks in outline of the bone using the angular definition of the landmarks
+    A angular definition looks like this:
+    {
+        'a_min': x,
+        'a_max': y,
+        'method': min / max
+    }
+    That means look for a landmark that lies between angle x and y and is defined by a minimum/maximum in the distance
+    to the coordinate center between these two angles
+    :param outline:
+    :return: np.array(num_landmarksx2)
+    """
+    landmark_definitions = [
+        {
+            'a_min': 30,
+            'a_max': 90,
+            'method': 'max'
+        },
+        {
+            'a_min': 80,
+            'a_max': 100,
+            'method': 'min'
+        },
+        {
+            'a_min': 90,
+            'a_max': 150,
+            'method': 'max'
+        },
+        {
+            'a_min': 170,
+            'a_max': 190,
+            'method': 'max'
+        },
+        {
+            'a_min': 210,
+            'a_max': 270,
+            'method': 'max'
+        },
+        {
+            'a_min': 260,
+            'a_max': 280,
+            'method': 'min'
+        },
+        {
+            'a_min': 270,
+            'a_max': 330,
+            'method': 'max'
+        }
+    ]
+    landmarks = []
+    rho = 2
+    centroid = np.mean(outline, axis=0)
 
-        for definition in landmark_definitions:
-            intersects_for_angles = []
-            method = np.argmax if definition['method'] == 'max' else np.argmin
+    for definition in landmark_definitions:
+        intersects_for_angles = []
+        method = np.argmax if definition['method'] == 'max' else np.argmin
 
-            for angle in range(definition['a_min'], definition['a_max']):
-                startpoint = centroid
-                endpoint = gh.pol2cart(rho, radians(angle)) + centroid
+        for angle in range(definition['a_min'], definition['a_max']):
+            startpoint = centroid
+            endpoint = gh.pol2cart(rho, radians(angle)) + centroid
 
-                intersect = None
-                for i in range(outline.shape[0]):
-                    j = i+1 if i != outline.shape[0]-1 else 0
-                    p1 = outline[i, :]
-                    p2 = outline[j, :]
+            intersect = None
+            for i in range(outline.shape[0]):
+                j = i+1 if i != outline.shape[0]-1 else 0
+                p1 = outline[i, :]
+                p2 = outline[j, :]
 
-                    intersect = gh.seg_intersect(p1, p2, startpoint, endpoint)
-                    if intersect is not None:
-                        break
-                if intersect is None:
-                    raise Exception('No Intersect.')
-                else:
-                    intersects_for_angles.append(intersect)
+                intersect = gh.seg_intersect(p1, p2, startpoint, endpoint)
+                if intersect is not None:
+                    break
+            if intersect is None:
+                raise Exception('No Intersect.')
+            else:
+                intersects_for_angles.append(intersect)
 
-            intersects_for_angles = np.array(intersects_for_angles)
-            distances = np.linalg.norm(intersects_for_angles - np.tile(centroid, (intersects_for_angles.shape[0], 1)), axis=1)
+        intersects_for_angles = np.array(intersects_for_angles)
+        distances = np.linalg.norm(intersects_for_angles - np.tile(centroid, (intersects_for_angles.shape[0], 1)), axis=1)
 
-            landmarks.append(intersects_for_angles[method(distances), :])
+        landmarks.append(intersects_for_angles[method(distances), :])
 
-        return np.array(landmarks)
+    return np.array(landmarks)
 
 def get_using_space_partitioning(outline_points):
+    """
+    Find landmarks in outline_points using the space partitioning definition of these landmarks.
+    A space paritioning definition looks like this
+    {
+        'x_min': -1,
+        'x_max': 0.25,
+        'y_min': -1.5,
+        'y_max': -0.75,
+        'method': 'min',
+        'dim': 'y'
+    }
+    That means cut out the rectangle defined by x_min, x_max, y_min, y_max and look for a landmark that is
+    defined by a minimum/maximum of the cut-out bone in dimension x/y
+    :param outline_points:
+    :return:
+    """
     landmark_definitions = [
         {
             'x_min': -1,
