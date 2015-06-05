@@ -98,8 +98,8 @@ def registration(bones, register_fn, estimators, reference_estimators):
     show_window(window)
     return window
 
-def comparison(bones, compare_fn, window_space_functions, feature_functions):
-    window = windows.ComparisonWindow(bones, compare_fn, window_space_functions, feature_functions)
+def comparison(bones, compare_fn, window_extractors, feature_functions):
+    window = windows.ComparisonWindow(bones, compare_fn, window_extractors, feature_functions)
     show_window(window)
     return window
 

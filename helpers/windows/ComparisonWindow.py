@@ -13,7 +13,7 @@ from helpers.to_vtk import get_line_actor
 
 
 class ComparisonWindow(VTKWindow):
-    def __init__(self, bones, compare_fn, window_space_functions, feature_functions):
+    def __init__(self, bones, compare_fn, window_extractors, feature_functions):
         VTKWindow.__init__(self, title='Comparison Helper')
 
         self.MIN_WINDOW_SIZE = 0.1
@@ -40,7 +40,7 @@ class ComparisonWindow(VTKWindow):
         self.bones = bones
         self.results = None
         self.compare_fn = compare_fn
-        self.window_space_functions = window_space_functions
+        self.window_extractors = window_extractors
         self.feature_functions = feature_functions
 
         self.fl_frame = QtGui.QFrame()
@@ -90,7 +90,7 @@ class ComparisonWindow(VTKWindow):
     def init_window_extractions(self):
         layout = QtGui.QVBoxLayout()
         self.window_extraction_box = QtGui.QGroupBox('Window Extraction Type')
-        self.window_extraction_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.window_space_functions)
+        self.window_extraction_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.window_extractors)
         self.window_extraction_buttons[0].setChecked(True)
         for b in self.window_extraction_buttons:
             layout.addWidget(b)
@@ -208,7 +208,7 @@ class ComparisonWindow(VTKWindow):
             QtGui.QApplication.processEvents()
 
             feature_fn = list([f for i, f in enumerate(self.feature_functions) if self.feature_fn_buttons[i].isChecked()])[0]['fn']
-            extract_window_fn = list([e for i, e in enumerate(self.window_space_functions) if self.window_extraction_buttons[i].isChecked()])[0]['fn']
+            window_extractor = list([e for i, e in enumerate(self.window_extractors) if self.window_extraction_buttons[i].isChecked()])[0]['fn']
             window_size = self.get_window_size()
             use_pca = self.use_pca_checkbox.isChecked()
             number_of_pca_components = self.number_of_pca_components_spinbox.value()
@@ -218,7 +218,7 @@ class ComparisonWindow(VTKWindow):
 
             kwargs = {
                 'feature_fn': feature_fn,
-                'extract_window_fn': extract_window_fn,
+                'window_extractor': window_extractor,
                 'step_size': step_size,
                 'progress_callback': self.update_progress_bar,
                 'window_size': window_size,
