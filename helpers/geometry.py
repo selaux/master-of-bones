@@ -202,6 +202,20 @@ def seg_intersect(a1, a2, b1, b2):
             return None
         return a1 + si * u
 
+def curvature(x, y):
+    """
+    Calculate the curvature for the points that are represented by x and y
+    :param x: array of x coordinates
+    :param y: array of y coordinates
+    :return:
+    """
+    dalpha = np.pi/1000
+    xd1 = np.gradient(x)
+    xd2 = np.gradient(xd1)
+    yd1 = np.gradient(y)
+    yd2 = np.gradient(yd1)
+    return np.abs(xd1*yd2 - yd1*xd2) / np.power(xd1**2 + yd1**2, 3./2)
+
 def angle(v1, v2):
     cosang = np.dot(v1, v2)
     sinang = np.linalg.norm(np.cross(v1, v2))

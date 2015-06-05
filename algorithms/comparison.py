@@ -183,20 +183,6 @@ def extract_window_space_by_length(tck, angle, window_size, number_of_evaluation
         window_width = np.cumsum(np.linalg.norm(window_spline - np.roll(window_spline, -1, axis=0), axis=1))[-2]
     return window_space
 
-def curvature(x, y):
-    """
-    Calculate the curvature for the points that are represented by x and y
-    :param x: array of x coordinates
-    :param y: array of y coordinates
-    :return:
-    """
-    dalpha = np.pi/1000
-    xd1 = np.gradient(x)
-    xd2 = np.gradient(xd1)
-    yd1 = np.gradient(y)
-    yd2 = np.gradient(yd1)
-    return np.abs(xd1*yd2 - yd1*xd2) / np.power(xd1**2 + yd1**2, 3./2)
-
 """
 The following functions are functions that extract features for all bones at once. They all
 have the following signature.
@@ -233,7 +219,7 @@ def feature_use_curvature_of_dist_from_center(outlines, window_spaces):
         np.fft.ifft(ft) for ft in fourier_transforms
     ]).real
 
-    c = np.array([curvature(w, ift) for w, ift in zip(window_spaces, inverse_fourier_transforms)])
+    c = np.array([gh.curvature(w, ift) for w, ift in zip(window_spaces, inverse_fourier_transforms)])
     return c
 
 def feature_use_distance_to_center(outlines, window_spaces):
@@ -257,7 +243,7 @@ def feature_use_dist_center_and_curvature(outlines, window_spaces):
 
     distances = np.array([ np.array([ np.linalg.norm(p) for p in o ]) for o in outline_points ])
     distances = fh.normalize(distances)
-    c = np.array([curvature(o[:, 0], o[:, 1]) for o in outline_points])
+    c = np.array([gh.curvature(o[:, 0], o[:, 1]) for o in outline_points])
     c = fh.normalize(c)
 
     features = np.hstack((distances, c))
