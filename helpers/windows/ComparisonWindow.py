@@ -13,7 +13,7 @@ from helpers.to_vtk import get_line_actor
 
 
 class ComparisonWindow(VTKWindow):
-    def __init__(self, bones, compare_fn, window_extractors, feature_functions):
+    def __init__(self, bones, compare_fn, window_extractors, feature_extractors):
         VTKWindow.__init__(self, title='Comparison Helper')
 
         self.MIN_WINDOW_SIZE = 0.1
@@ -41,7 +41,7 @@ class ComparisonWindow(VTKWindow):
         self.results = None
         self.compare_fn = compare_fn
         self.window_extractors = window_extractors
-        self.feature_functions = feature_functions
+        self.feature_extractors = feature_extractors
 
         self.fl_frame = QtGui.QFrame()
         self.fl_frame.setFixedWidth(400)
@@ -100,7 +100,7 @@ class ComparisonWindow(VTKWindow):
     def init_feature_functions(self):
         layout = QtGui.QVBoxLayout()
         self.feature_fn_box = QtGui.QGroupBox('Features')
-        self.feature_fn_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.feature_functions)
+        self.feature_fn_buttons = map(lambda e: QtGui.QRadioButton(e['label']), self.feature_extractors)
         self.feature_fn_buttons[0].setChecked(True)
         for b in self.feature_fn_buttons:
             layout.addWidget(b)
@@ -207,7 +207,7 @@ class ComparisonWindow(VTKWindow):
             self.calc_button.setEnabled(False)
             QtGui.QApplication.processEvents()
 
-            feature_fn = list([f for i, f in enumerate(self.feature_functions) if self.feature_fn_buttons[i].isChecked()])[0]['fn']
+            feature_extractor = list([f for i, f in enumerate(self.feature_extractors) if self.feature_fn_buttons[i].isChecked()])[0]['fn']
             window_extractor = list([e for i, e in enumerate(self.window_extractors) if self.window_extraction_buttons[i].isChecked()])[0]['fn']
             window_size = self.get_window_size()
             use_pca = self.use_pca_checkbox.isChecked()
@@ -217,7 +217,7 @@ class ComparisonWindow(VTKWindow):
             class1, class2 = self.get_compared_classes()
 
             kwargs = {
-                'feature_fn': feature_fn,
+                'feature_extractor': feature_extractor,
                 'window_extractor': window_extractor,
                 'step_size': step_size,
                 'progress_callback': self.update_progress_bar,

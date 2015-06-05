@@ -15,6 +15,8 @@ class WindowExtractor:
     Base class to extract the section that is evaluated around a certain evaluation point with size {window_size}
     and the number of points inside the window being {number_of_evaluations}
     For 2D the evaluation point could be an angle
+    For 3D it could be a tuple of two angles
+    extract_window_space needs to be implemented for this class to work
     """
     __metaclass__ = ABCMeta
 
@@ -88,22 +90,43 @@ class WindowExtractor2DByWindowLength(WindowExtractor):
         return window_space
 
 
-"""
-The following functions are functions that extract features for all bones at once. They all
-have the following signature.
-They all return an numpy array with len(bones) observations and a variable number of features per observation
-:param outlines: Array of the outlines of all bones (ATM these are dicts, mostly spline_params are used in the feature functions)
-:param window_spaces: Array of the windows that are evaluated for each bone
-"""
-def feature_flatten_splines(outlines, window_spaces):
+class FeatureCalculation:
+    """
+    This is the base class for functions that extract features for all bones at once.
+    They all return an numpy array with len(bones) observations and a variable number of features per observation
+    use_pca: Wether the function should be wrapped inside a pca to reduce the number of dimensions
+    number_of_pca_components: How many pca components should be considered
+    calculate_raw_features needs to be implemented for this class to work
+    """
+    __metaclass__ = ABCMeta
+
+    def __init__(self, use_pca, number_of_pca_components):
+        self.use_pca = use_pca
+        self.number_of_pca_components = number_of_pca_components
+
+    def calculate_features(self, bones, windows):
+        features = self.calculate_raw_features(bones, windows)
+        if self.use_pca:
+            pca = PCA(self.number_of_pca_components)
+            reduced = pca.fit_transform(features)
+            return reduced
+        else:
+            return features
+
+    @abstractmethod
+    def calculate_raw_features(self, bones, windows):
+        raise NotImplementedError
+
+class FeatureFlattenSplines(FeatureCalculation):
     """
     Evaluate the spline at all points defined by the respective windows spline parameters
     Then return a flattened version of these points as the feature vector for each bone
     """
-    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
-    return np.array([s.flatten() for s in outline_points])
+    def calculate_raw_features(self, bones, windows):
+        outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(windows, bones)]
+        return np.array([s.flatten() for s in outline_points])
 
-def feature_use_curvature_of_dist_from_center(outlines, window_spaces):
+class FeatureCurvatureOfDistanceFromCenter(FeatureCalculation):
     """
     Evaluate the spline at all points defined by the respective windows spline parameters
     Then calculate the distance to the center of the coordinate system.
@@ -111,109 +134,92 @@ def feature_use_curvature_of_dist_from_center(outlines, window_spaces):
     frequencies are removed. The result is transformed back into spatial space and the curvature of
     the obtained curve is returned
     """
-    BORDER_FREQUENCY = 8
-    distances = feature_use_distance_to_center(outlines, window_spaces)
+    def calculate_raw_features(self, bones, windows):
+        distance_to_center_feature = FeatureDistanceToCenter(False, 0)
 
-    frequencies = np.fft.fftfreq(distances[0].size, 0.05)
-    fourier_transforms = np.array([
-                                      np.fft.fft(d) for d in distances
-                                      ])
-    filtered = np.logical_or(frequencies > BORDER_FREQUENCY, frequencies < -BORDER_FREQUENCY)
-    fourier_transforms[:,  filtered] = 0
-    inverse_fourier_transforms = np.array([
-                                              np.fft.ifft(ft) for ft in fourier_transforms
-                                              ]).real
+        BORDER_FREQUENCY = 8
+        distances = distance_to_center_feature.calculate_raw_features(bones, windows)
 
-    c = np.array([gh.curvature(w, ift) for w, ift in zip(window_spaces, inverse_fourier_transforms)])
-    return c
+        frequencies = np.fft.fftfreq(distances[0].size, 0.05)
+        fourier_transforms = np.array([np.fft.fft(d) for d in distances])
+        filtered = np.logical_or(frequencies > BORDER_FREQUENCY, frequencies < -BORDER_FREQUENCY)
+        fourier_transforms[:,  filtered] = 0
+        inverse_fourier_transforms = np.array([np.fft.ifft(ft) for ft in fourier_transforms]).real
 
-def feature_use_distance_to_center(outlines, window_spaces):
+        c = np.array([gh.curvature(w, ift) for w, ift in zip(windows, inverse_fourier_transforms)])
+        return c
+
+class FeatureDistanceToCenter(FeatureCalculation):
     """
     Evaluate the spline at all points defined by the respective windows spline parameters
     Then calculate the distance to the center of the coordinate system for each point in each observation
     and return this curve as the features
     """
-    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
-    return np.array([np.linalg.norm(o, axis=1) for o in outline_points])
+    def calculate_raw_features(self, bones, windows):
+        outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(windows, bones)]
+        return np.array([np.linalg.norm(o, axis=1) for o in outline_points])
 
-
-def feature_use_dist_center_and_curvature(outlines, window_spaces):
+class FeatureDistanceToCenterAndCurvature(FeatureCalculation):
     """
     Evaluate the spline at all points defined by the respective windows spline parameters
     Then calculate the distance to the center of the coordinate system for each point in each observation
     Also calculate the curvature for each point in each observation
     Return [distance_to_center, curvature] for each point in each observation as features
     """
-    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
+    def calculate_raw_features(self, bones, windows):
+        outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(windows, bones)]
 
-    distances = np.array([ np.array([ np.linalg.norm(p) for p in o ]) for o in outline_points ])
-    distances = fh.normalize(distances)
-    c = np.array([gh.curvature(o[:, 0], o[:, 1]) for o in outline_points])
-    c = fh.normalize(c)
+        distances = np.array([ np.array([ np.linalg.norm(p) for p in o ]) for o in outline_points ])
+        distances = fh.normalize(distances)
+        c = np.array([gh.curvature(o[:, 0], o[:, 1]) for o in outline_points])
+        c = fh.normalize(c)
 
-    features = np.hstack((distances, c))
+        features = np.hstack((distances, c))
 
-    return features
+        return features
 
-
-def feature_use_deviation_from_mean(outlines, window_spaces):
+class FeatureFlattenedDeviationVectorFromMeanBone(FeatureCalculation):
     """
     Evaluate the spline at all points defined by the respective windows spline parameters
     Calculate the mean of all evaluated windows
     Use the flattened vector from point to mean for each point in each observation as features
     """
-    outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(window_spaces, outlines)]
+    def calculate_raw_features(self, bones, windows):
+        outline_points = [evaluate_spline(w, s['spline_params']) for w, s in zip(windows, bones)]
 
-    mean = np.mean(outline_points, axis=0)
-    features = []
-    for o in outline_points:
-        features.append((o - mean).flatten())
-    return features
+        mean = np.mean(outline_points, axis=0)
+        features = []
+        for o in outline_points:
+            features.append((o - mean).flatten())
+        return features
 
-
-def feature_use_spline_derivatives(outlines, window_spaces):
+class FeatureSplineDerivatives(FeatureCalculation):
     """
     Evaluate the spline derivatives for each point in each observation an return them as features
     """
-    spline_derivatives = [np.array(spalde(w, s['spline_params'])).flatten() for w, s in zip(window_spaces, outlines)]
-    return spline_derivatives
+    def calculate_raw_features(self, bones, windows):
+        spline_derivatives = [np.array(spalde(w, s['spline_params'])).flatten() for w, s in zip(windows, bones)]
+        return spline_derivatives
 
-
-def feature_use_distances_to_markers(outlines, window_spaces):
+class FeatureDistancesToMarkers(FeatureCalculation):
     """
     Evaluate the spline at all points defined by the respective windows spline parameters
     Calculate the median point for each window
     Calculate the distance to each manually defined marker from the median for each observation and return it as
     features
     """
-    window_centers = [np.median(w) for w in window_spaces]
-    spline_centers = [
-        np.array(evaluate_spline([w], s['spline_params'])[0, :]) for w, s in zip(window_centers, outlines)
-        ]
+    def calculate_raw_features(self, bones, windows):
+        window_centers = [np.median(w) for w in windows]
+        spline_centers = [
+            np.array(evaluate_spline([w], s['spline_params'])[0, :]) for w, s in zip(window_centers, bones)
+            ]
 
-    vectors_to_markers = np.array(
-        [s['markers'] - np.tile(c, (s['markers'].shape[0], 1)) for c, s in zip(spline_centers, outlines)]
-    )
-    norms = np.linalg.norm(vectors_to_markers, axis=2)
+        vectors_to_markers = np.array(
+            [s['markers'] - np.tile(c, (s['markers'].shape[0], 1)) for c, s in zip(spline_centers, bones)]
+        )
+        norms = np.linalg.norm(vectors_to_markers, axis=2)
 
-    return norms
-
-
-def wrap_with_pca(fn, n_components):
-    """
-    Return a function that represents {fn}, but wrapped by a principal component analysis that is executed
-    on the features after they are calculated. The values of {n_components} of the PCA are returned as the new features
-    for each observation
-    :param fn: The feature function that should be wrapped
-    :param n_components: The number of components that should be returned
-    :return: function
-    """
-    def feature_fn(spline_params, window_spaces):
-        features = fn(spline_params, window_spaces)
-        pca = PCA(n_components)
-        reduced = pca.fit_transform(features)
-        return reduced
-    return feature_fn
+        return norms
 
 
 """
@@ -280,7 +286,7 @@ class ComparisonIterator2D:
 
 
 
-def do_single_comparison(evaluation_point, outlines, feature_fn, window_extractor, window_size, number_of_evaluations):
+def do_single_comparison(evaluation_point, outlines, feature_extractor, window_extractor, window_size, number_of_evaluations):
     """
     Do a comparison of the two classes at a certain angle
     :param evaluation_point: Angle at which the bones are evaluated
@@ -301,11 +307,11 @@ def do_single_comparison(evaluation_point, outlines, feature_fn, window_extracto
     """
     windows = []
     classes = np.array(map(lambda o: o['class'], outlines))
-    window_extractor = window_extractor(evaluation_point, window_size, number_of_evaluations)
+    window_extractor_instance = window_extractor(evaluation_point, window_size, number_of_evaluations)
     for outline in outlines:
-        window = window_extractor.extract_window_space(outline)
+        window = window_extractor_instance.extract_window_space(outline)
         windows.append(window)
-    features = feature_fn(outlines, windows)
+    features = feature_extractor.calculate_features(outlines, windows)
     windows = np.array(windows)
     features = np.array(features)
 
@@ -328,7 +334,7 @@ def do_single_comparison(evaluation_point, outlines, feature_fn, window_extracto
     }
 
 
-def do_comparison(outlines, class1, class2, step_size=5, feature_fn=None, window_extractor=None, window_size=.75, number_of_evaluations=25, use_pca=True, pca_components=4, progress_callback=None):
+def do_comparison(outlines, class1, class2, step_size=5, feature_extractor=None, window_extractor=None, window_size=.75, number_of_evaluations=25, use_pca=True, pca_components=4, progress_callback=None):
     """
     Does a single comparison every {step_size} degrees for classes {class1} and {class2}
     :param outlines: Array of outlines of all bones (ATM these are dicts)
@@ -349,12 +355,18 @@ def do_comparison(outlines, class1, class2, step_size=5, feature_fn=None, window
     outlines = ch.filter_by_classes(outlines, [class1, class2])
     for outline in outlines:
         outline['spline_params'] = get_spline_params(outline['points'])[0]
+    feature_extractor_instance = feature_extractor(use_pca, pca_components)
 
     result = []
     for i, angle in enumerate(iterator):
-        if use_pca:
-            feature_fn = wrap_with_pca(feature_fn, pca_components)
-        result.append(do_single_comparison(angle, outlines, feature_fn=feature_fn, window_extractor=window_extractor, window_size=window_size, number_of_evaluations=number_of_evaluations))
+        result.append(do_single_comparison(
+            angle,
+            outlines,
+            feature_extractor=feature_extractor_instance,
+            window_extractor=window_extractor,
+            window_size=window_size,
+            number_of_evaluations=number_of_evaluations)
+        )
         if progress_callback:
             progress_callback(i, len(iterator)-1)
     return result
