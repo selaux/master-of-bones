@@ -1,16 +1,10 @@
-from math import degrees, radians
+from math import degrees
 import vtk
-import numpy as np
 from PyQt4 import QtCore, QtGui
 import traceback
 from VTKWindow import VTKWindow
-from algorithms.splines import evaluate_spline
 from helpers import geometry as gh
-from helpers import features as fh
 from helpers import classes as ch
-import matplotlib.cm as cmx
-from helpers.to_vtk import get_line_actor
-
 
 class ComparisonWindow(VTKWindow):
     def __init__(self, bones, compare_fn, window_extractors, feature_extractors):
@@ -18,24 +12,6 @@ class ComparisonWindow(VTKWindow):
 
         self.MIN_WINDOW_SIZE = 0.1
         self.MAX_WINDOW_SIZE = 1.5
-        self.separability_properties = [
-            {
-                'label': 'Mean Confidence',
-                'property': 'mean_confidence',
-            },
-            {
-                'label': 'Margin',
-                'property': 'margin',
-            },
-            {
-                'label': 'Precision',
-                'property': 'recall',
-            },
-            {
-                'label': 'Precision * Margin',
-                'property': 'rm',
-            }
-        ]
 
         self.bones = bones
         self.results = None
@@ -117,8 +93,6 @@ class ComparisonWindow(VTKWindow):
         layout.addRow('Minimum Value', self.min_separability_metric_label)
 
         self.show_metric_box = QtGui.QComboBox()
-        for e in self.separability_properties:
-            self.show_metric_box.addItem(e['label'])
         self.show_metric_box.currentIndexChanged.connect(self.update_overview_data)
         self.show_metric_box.setCurrentIndex(0)
         layout.addRow('Shown Metric', self.show_metric_box)
@@ -232,6 +206,7 @@ class ComparisonWindow(VTKWindow):
             QtGui.QApplication.processEvents()
             self.calc_button.setEnabled(True)
 
+            self.reset_overview()
             self.update_overview_data()
             self.update_detailed_data(90)
         except:
@@ -242,59 +217,31 @@ class ComparisonWindow(VTKWindow):
         self.progress_bar.setValue(progress)
         QtGui.QApplication.processEvents()
 
-    def get_current_mean_outline(self, class1, class2):
-        space = np.linspace(0, 1, 250)
+    def reset_overview(self):
+        if self.results:
+            old_metric_index = self.show_metric_box.currentIndex()
+            old_metric_index = old_metric_index if old_metric_index != -1 else 0
+            self.show_metric_box.clear()
+            for m in self.results.single_results[0].get_performance_indicators():
+                self.show_metric_box.addItem(m['label'])
+            self.show_metric_box.setCurrentIndex(old_metric_index)
 
-        class1bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == class1])
-        class1part = self.mean_bone_slider.value() / 100.0
-        class2bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == class2])
-        class2part = 1 - class1part
-
-        return np.mean(class1bones, axis=0) * class1part + np.mean(class2bones, axis=0) * class2part
+            self.ren.RemoveActor(self.comparison_actor)
+            self.comparison_actor = self.results.actor
+            self.ren.AddActor(self.comparison_actor)
+            self.update_overview_data()
 
     def update_overview_data(self):
         try:
             if self.results:
-                points = vtk.vtkPoints()
-                colors = vtk.vtkUnsignedCharArray()
-                colors.SetNumberOfComponents(3)
-                colors.SetName("Colors")
-                vertices = vtk.vtkCellArray()
-                lines = vtk.vtkCellArray()
-                mean_outline = self.get_current_mean_outline(self.get_compared_classes()[0], self.get_compared_classes()[1])
-                angles = np.array([m['angle'] for m in self.results])
-                shown_property = self.separability_properties[self.show_metric_box.currentIndex()]['property']
-                separabilities = fh.normalize(np.array([ m[shown_property] for m in self.results ]))
+                ratio = self.mean_bone_slider.value() / 100.0
+                performance_indicator_index = self.show_metric_box.currentIndex()
+                min_indicator, max_indicator = self.results.get_min_and_max_performance_indicators(performance_indicator_index)
 
-                self.min_separability_metric_label.setText(str(np.min(np.array([ m[shown_property] for m in self.results ]))))
-                self.max_separability_metric_label.setText(str(np.max(np.array([ m[shown_property] for m in self.results ]))))
+                self.min_separability_metric_label.setText(str(min_indicator))
+                self.max_separability_metric_label.setText(str(max_indicator))
 
-                for i, point in enumerate(mean_outline):
-                    points.InsertNextPoint([point[1], point[0], 1.0])
-                    vertex = vtk.vtkVertex()
-                    vertex.GetPointIds().SetId(0, i)
-                    vertices.InsertNextCell(vertex)
-
-                    rho, phi = gh.cart2pol(point[0], point[1])
-                    phi = degrees(phi) + 360 if phi < 0 else degrees(phi)
-                    closest = np.argmin(np.abs(angles - phi))
-                    separability = separabilities[closest]
-                    raw_color = cmx.gnuplot(separability)
-                    color = (int(raw_color[0] * 255), int(raw_color[1] * 255), int(raw_color[2] * 255))
-                    colors.InsertNextTuple3(*color)
-
-                for i in range(0, mean_outline.shape[0]):
-                    j = i+1 if i+1 < mean_outline.shape[0] else 0
-                    line = vtk.vtkLine()
-                    line.GetPointIds().SetId(0, i)
-                    line.GetPointIds().SetId(1, j)
-                    lines.InsertNextCell(line)
-
-                self.comparison_data.SetPoints(points)
-                self.comparison_data.SetLines(lines)
-                self.comparison_data.SetVerts(vertices)
-                self.comparison_data.GetPointData().SetScalars(colors)
-                self.comparison_data.Modified()
+                self.results.update_actor(ratio, performance_indicator_index)
 
                 self.ren.ResetCamera()
                 self.vtkWidget.GetRenderWindow().Render()
@@ -303,41 +250,14 @@ class ComparisonWindow(VTKWindow):
 
     def update_detailed_data(self, angle):
         try:
-            angles = np.array([m['angle'] for m in self.results])
-            closest = np.argmin(np.abs(angles - angle))
-            evaluation = self.results[closest]
-            # current_angle = angles[closest]
-            # y, x = gh.pol2cart(2, radians(current_angle))
-            #
-            # points = vtk.vtkPoints()
-            # points.InsertNextPoint([0, 0, 1.0])
-            # points.InsertNextPoint([x, y, 1.0])
-            # lines = vtk.vtkCellArray()
-            # line = vtk.vtkLine()
-            # line.GetPointIds().SetId(0, 0)
-            # line.GetPointIds().SetId(1, 1)
-            # lines.InsertNextCell(line)
-            # self.detail_angle_data.SetPoints(points)
-            # self.detail_angle_data.SetLines(lines)
-            # self.detail_angle_data.Modified()
+            single_result = self.results.get_closest_single_result(angle)
 
             if self.window_actors:
                 for actor in self.window_actors:
                     self.window_renderer.RemoveActor(actor)
 
-            self.window_actors = []
-            for i, bone in enumerate(self.bones):
-                spline_params = bone['spline_params']
-                window = evaluation['windows'][i, :]
-                points = evaluate_spline(window, spline_params)
-                features = evaluation['features'][i, :]
-
-                actor = get_line_actor(points)
-                actor.GetProperty().SetRepresentationToWireframe()
-                actor.GetProperty().SetLineWidth(1.5)
-                actor.GetProperty().SetColor(bone['color'][0], bone['color'][1], bone['color'][2])
-
-                self.window_actors.append(actor)
+            self.window_actors = single_result.get_windows_actors()
+            for actor in self.window_actors:
                 self.window_renderer.AddActor(actor)
 
             self.window_renderer.ResetCamera()

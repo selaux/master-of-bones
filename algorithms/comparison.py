@@ -1,13 +1,16 @@
 from abc import ABCMeta, abstractmethod
-from math import radians, floor
+from math import radians, floor, degrees
 import numpy as np
 from scipy.interpolate import splev, spalde
 from sklearn.decomposition import PCA
 from sklearn.svm import LinearSVC
+import vtk
+from helpers.to_vtk import get_line_actor
 from splines import get_spline_params, evaluate_spline
 import helpers.geometry as gh
 import helpers.classes as ch
 import helpers.features as fh
+import matplotlib.cm as cmx
 
 
 class WindowExtractor:
@@ -222,42 +225,6 @@ class FeatureDistancesToMarkers(FeatureCalculation):
         return norms
 
 
-"""
-The following three functions are functions that return indicators for the separability of the
-two classes with respect to the calculated features they all have the following signature
-:param svc: The trained svc
-:param features: The features passed into training the svc
-:param known_classes: The classes passed into training the svc
-:return: float
-"""
-def get_recall(svc, features, known_classes):
-    """
-    Get the recall of the svc
-    """
-    predicted_classes = svc.predict(features)
-    return float(np.count_nonzero(predicted_classes == known_classes)) / float(known_classes.shape[0])
-
-
-def get_mean_confidence(svc, features, known_classes):
-    """
-    Get the mean confidence (accumulated distance of all observations to the maximum-margin hyperplane weighted by
-    the correctness of the classification of the respective observation)
-    """
-    confidences = svc.decision_function(features)
-    predicted_classes = svc.predict(features)
-    equals_predicted_classes = (predicted_classes == known_classes)
-    weights = np.full_like(equals_predicted_classes, -1, dtype=np.float)
-    weights[equals_predicted_classes] = 1
-    return np.mean(np.abs(confidences) * weights)
-
-
-def get_margin(svc, features, classes):
-    """
-    Get the margin of the maximum-margin hyperplane of the svc
-    """
-    return 2 / np.linalg.norm(svc.coef_)
-
-
 class ComparisonIterator2D:
     """
     Iterates for the 2D comparison, returns an angle every {step_size} degrees, that needs to be evaluated
@@ -284,13 +251,102 @@ class ComparisonIterator2D:
             return current_step
 
 
+class SingleComparisonResult:
+    """
+    Class to store the result of a comparison at a single evaluation point.
+    This is an abstract class. get_windows_actors needs to be implemented to make this work
+    An evaluation point in 2D is an angle
+    An evaluation point in 3D is a tuple of angles
+    """
+    __metaclass__ = ABCMeta
 
+    def __init__(self, evaluation_point, bones, windows, features, svc):
+        self.evaluation_point = evaluation_point
+        self.bones = bones
+        self.windows = windows
+        self.features = features
+        self.svc = svc
 
-def do_single_comparison(evaluation_point, outlines, feature_extractor, window_extractor, window_size, number_of_evaluations):
+        self.recall = self.get_recall_indicator()
+        self.mean_confidence = self.get_mean_confidence_indicator()
+        self.margin = self.get_margin_indicator()
+        self.rm = self.margin * self.recall
+
+    def get_recall_indicator(self):
+        """
+        Get the recall of the svc
+        """
+        classes = np.array(map(lambda o: o['class'], self.bones))
+        predicted_classes = self.svc.predict(self.features)
+        return float(np.count_nonzero(predicted_classes == classes)) / float(classes.shape[0])
+
+    def get_mean_confidence_indicator(self):
+        """
+        Get the mean confidence (accumulated distance of all observations to the maximum-margin hyperplane weighted by
+        the correctness of the classification of the respective observation)
+        """
+        classes = np.array(map(lambda o: o['class'], self.bones))
+        confidences = self.svc.decision_function(self.features)
+        predicted_classes = self.svc.predict(self.features)
+        equals_predicted_classes = (predicted_classes == classes)
+        weights = np.full_like(equals_predicted_classes, -1, dtype=np.float)
+        weights[equals_predicted_classes] = 1
+        return np.mean(np.abs(confidences) * weights)
+
+    def get_margin_indicator(self):
+        """
+        Get the margin of the maximum-margin hyperplane of the svc
+        """
+        return 2 / np.linalg.norm(self.svc.coef_)
+
+    def get_performance_indicators(self):
+        """
+        Return an array of all performance indicators of the algorithm at this evaluation_point
+        """
+        return [
+            {
+                'label': 'Mean Confidence',
+                'value': self.mean_confidence,
+            },
+            {
+                'label': 'Margin',
+                'value': self.margin,
+            },
+            {
+                'label': 'Precision',
+                'value': self.recall,
+            },
+            {
+                'label': 'Precision * Margin',
+                'value': self.rm,
+            }
+        ]
+
+    @abstractmethod
+    def get_windows_actors(self):
+        raise NotImplementedError
+
+class SingleComparisonResult2D(SingleComparisonResult):
+    def get_windows_actors(self):
+        actors = []
+        for i, bone in enumerate(self.bones):
+            spline_params = bone['spline_params']
+            window = self.windows[i, :]
+            points = evaluate_spline(window, spline_params)
+
+            actor = get_line_actor(points)
+            actor.GetProperty().SetRepresentationToWireframe()
+            actor.GetProperty().SetLineWidth(1.5)
+            actor.GetProperty().SetColor(bone['color'][0], bone['color'][1], bone['color'][2])
+
+            actors.append(actor)
+        return actors
+
+def do_single_comparison(evaluation_point, bones, feature_extractor, window_extractor, window_size, number_of_evaluations):
     """
     Do a comparison of the two classes at a certain angle
     :param evaluation_point: Angle at which the bones are evaluated
-    :param outlines: Array of outlines of all bones (ATM these are dicts)
+    :param bones: Array of outlines of all bones (ATM these are dicts)
     :param feature_fn: The function that calculates the features for the extracted windows
     :param extract_window_fn: The function to extract the window around the angle for each bone that is then compared
     :param window_size: The width/size of the window around angle that is compared
@@ -306,33 +362,116 @@ def do_single_comparison(evaluation_point, outlines, feature_extractor, window_e
     }
     """
     windows = []
-    classes = np.array(map(lambda o: o['class'], outlines))
+    classes = np.array(map(lambda o: o['class'], bones))
     window_extractor_instance = window_extractor(evaluation_point, window_size, number_of_evaluations)
-    for outline in outlines:
+    for outline in bones:
         window = window_extractor_instance.extract_window_space(outline)
         windows.append(window)
-    features = feature_extractor.calculate_features(outlines, windows)
+    features = feature_extractor.calculate_features(bones, windows)
     windows = np.array(windows)
     features = np.array(features)
 
     svc = LinearSVC()
     svc.fit(features, classes)
 
-    recall = get_recall(svc, features, classes)
-    margin = get_margin(svc, features, classes)
-    rm = recall*margin
-    mean_confidence = get_mean_confidence(svc, features, classes)
+    return SingleComparisonResult2D(evaluation_point, bones, windows, features, svc)
 
-    return {
-        'angle': evaluation_point,
-        'windows': windows,
-        'features': features,
-        'rm': rm,
-        'recall': recall,
-        'mean_confidence': mean_confidence,
-        'margin': margin
-    }
+class ComparisonResult:
+    """
+    Class to encapsulate the comparison result for all evaluation points it has to implement
+    get_closest_single_result: Should return the closest result for a evaluation point
+    (used to display the windows for this point)
+    update_actor Should update points / edges / faces / colors of the actor that represents this comparison
+    """
+    __metaclass__ = ABCMeta
 
+    def __init__(self, class1, class2, bones):
+        self.class1 = class1
+        self.class2 = class2
+        self.bones = bones
+        self.single_results = []
+
+        self.actor = vtk.vtkActor()
+        self.actor_data = vtk.vtkPolyData()
+        self.actor_mapper = vtk.vtkPolyDataMapper()
+        self.actor_mapper.SetInputData(self.actor_data)
+        self.actor.SetMapper(self.actor_mapper)
+        self.actor.GetProperty().SetRepresentationToWireframe()
+        self.actor.GetProperty().SetLineWidth(3)
+
+    def add_single_result(self, result):
+        self.single_results.append(result)
+
+    @abstractmethod
+    def get_closest_single_result(self, evaluation_point):
+        raise NotImplementedError
+
+    @abstractmethod
+    def update_actor(self, ratio, index_of_performance_indicator):
+        raise NotImplementedError
+
+
+class ComparisonResult2D(ComparisonResult):
+    def get_morphed_outline(self, ratio):
+        space = np.linspace(0, 1, 250)
+        class1bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == self.class1])
+        class2bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == self.class2])
+        class1part = ratio
+        class2part = 1 - ratio
+
+        return np.mean(class1bones, axis=0) * class1part + np.mean(class2bones, axis=0) * class2part
+
+    def get_color_for_angle(self, angle, index_of_performance_indicator):
+        max_indicator = max(map(lambda c: c.get_performance_indicators()[index_of_performance_indicator]['value'], self.single_results))
+        closest = self.get_closest_single_result(angle)
+        indicator = closest.get_performance_indicators()[index_of_performance_indicator]['value'] / max_indicator
+        raw_color = cmx.gnuplot(indicator)
+        color = (int(raw_color[0] * 255), int(raw_color[1] * 255), int(raw_color[2] * 255))
+        return color
+
+    def get_closest_single_result(self, angle):
+        angles = np.array([m.evaluation_point for m in self.single_results])
+        closest = np.argmin(np.abs(angles - angle))
+        return self.single_results[closest]
+
+    def get_min_and_max_performance_indicators(self, index_of_performance_indicator):
+        indicators = np.array([m.get_performance_indicators()[index_of_performance_indicator]['value'] for m in self.single_results])
+        min = np.min(indicators)
+        max = np.max(indicators)
+        return min, max
+
+    def update_actor(self, ratio, index_of_performance_indicator):
+        points = vtk.vtkPoints()
+        colors = vtk.vtkUnsignedCharArray()
+        colors.SetNumberOfComponents(3)
+        colors.SetName("Colors")
+        vertices = vtk.vtkCellArray()
+        lines = vtk.vtkCellArray()
+        mean_outline = self.get_morphed_outline(ratio)
+
+        for i, point in enumerate(mean_outline):
+            points.InsertNextPoint([point[1], point[0], 1.0])
+            vertex = vtk.vtkVertex()
+            vertex.GetPointIds().SetId(0, i)
+            vertices.InsertNextCell(vertex)
+
+            rho, phi = gh.cart2pol(point[0], point[1])
+            phi = degrees(phi) + 360 if phi < 0 else degrees(phi)
+            color = self.get_color_for_angle(phi, index_of_performance_indicator)
+            colors.InsertNextTuple3(*color)
+
+        for i in range(0, mean_outline.shape[0]):
+            j = i+1 if i+1 < mean_outline.shape[0] else 0
+            line = vtk.vtkLine()
+            line.GetPointIds().SetId(0, i)
+            line.GetPointIds().SetId(1, j)
+            lines.InsertNextCell(line)
+
+        self.actor_data.SetPoints(points)
+        self.actor_data.SetLines(lines)
+        self.actor_data.SetVerts(vertices)
+        self.actor_data.GetPointData().SetScalars(colors)
+        self.actor_data.Modified()
 
 def do_comparison(outlines, class1, class2, step_size=5, feature_extractor=None, window_extractor=None, window_size=.75, number_of_evaluations=25, use_pca=True, pca_components=4, progress_callback=None):
     """
@@ -347,7 +486,7 @@ def do_comparison(outlines, class1, class2, step_size=5, feature_extractor=None,
     :param number_of_evaluations: see do_single_comparison
     :param use_pca: Wether all features are passed into a principal component analysis before training the svc
     :param pca_components: The number of pca components used to train the svc when use_pca is True
-    :param progress_callback: A progress callback that is called whenever a single comparison at an angle is finished
+    :param progress_callback: A progress callback that is called whenever a single comparison at an evaluation_point is finished
     :return:
     """
     print(window_size, number_of_evaluations, use_pca, pca_components)
@@ -357,10 +496,10 @@ def do_comparison(outlines, class1, class2, step_size=5, feature_extractor=None,
         outline['spline_params'] = get_spline_params(outline['points'])[0]
     feature_extractor_instance = feature_extractor(use_pca, pca_components)
 
-    result = []
-    for i, angle in enumerate(iterator):
-        result.append(do_single_comparison(
-            angle,
+    result = ComparisonResult2D(class1, class2, outlines)
+    for i, evaluation_point in enumerate(iterator):
+        result.add_single_result(do_single_comparison(
+            evaluation_point,
             outlines,
             feature_extractor=feature_extractor_instance,
             window_extractor=window_extractor,
