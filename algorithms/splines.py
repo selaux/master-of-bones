@@ -24,7 +24,7 @@ def get_spline_params(points):
     :param points: Points to represent with a spline (must be in order)
     :return:
     """
-    distances = np.linalg.norm(points - np.roll(points, -1), axis=1)
+    distances = np.linalg.norm(points - np.roll(points, -1, axis=0), axis=1)
     distances = np.cumsum(distances / np.sum(distances))
     distances = np.append([0.0], distances)
 
