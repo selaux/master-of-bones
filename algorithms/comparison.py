@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from math import radians, floor, degrees
+from math import radians, floor, degrees, sqrt
 import numpy as np
 from scipy.interpolate import splev, spalde
 from sklearn.decomposition import PCA
@@ -297,7 +297,7 @@ class SingleComparisonResult:
         """
         Get the margin of the maximum-margin hyperplane of the svc
         """
-        return 2 / np.linalg.norm(self.svc.coef_)
+        return np.linalg.norm(self.svc.coef_)
 
     def get_performance_indicators(self):
         """
@@ -413,7 +413,7 @@ class ComparisonResult:
 
 class ComparisonResult2D(ComparisonResult):
     def get_morphed_outline(self, ratio):
-        space = np.linspace(0, 1, 250)
+        space = np.linspace(0, 1, 500)
         class1bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == self.class1])
         class2bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == self.class2])
         class1part = ratio
@@ -422,10 +422,14 @@ class ComparisonResult2D(ComparisonResult):
         return np.mean(class1bones, axis=0) * class1part + np.mean(class2bones, axis=0) * class2part
 
     def get_color_for_angle(self, angle, index_of_performance_indicator):
-        max_indicator = max(map(lambda c: c.get_performance_indicators()[index_of_performance_indicator]['value'], self.single_results))
+        pi = map(lambda c: c.get_performance_indicators()[index_of_performance_indicator]['value'], self.single_results)
+        pi = np.array(pi)
+        min_incidator = min(pi)
+        pi = pi - min(pi)
+        max_indicator = max(pi)
         closest = self.get_closest_single_result(angle)
-        indicator = closest.get_performance_indicators()[index_of_performance_indicator]['value'] / max_indicator
-        raw_color = cmx.gnuplot(indicator)
+        indicator = (closest.get_performance_indicators()[index_of_performance_indicator]['value'] - min_incidator) / max_indicator
+        raw_color = cmx.gnuplot(sqrt(indicator))
         color = (int(raw_color[0] * 255), int(raw_color[1] * 255), int(raw_color[2] * 255))
         return color
 

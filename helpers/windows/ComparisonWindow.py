@@ -11,7 +11,7 @@ class ComparisonWindow(VTKWindow):
         VTKWindow.__init__(self, title='Comparison Helper')
 
         self.MIN_WINDOW_SIZE = 0.1
-        self.MAX_WINDOW_SIZE = 1.5
+        self.MAX_WINDOW_SIZE = 1
 
         self.bones = bones
         self.results = None
@@ -171,6 +171,7 @@ class ComparisonWindow(VTKWindow):
         self.detail_angle_actor.GetProperty().SetColor(0, 0, 0)
 
     def get_compared_classes(self):
+        return 4, 5
         return 2, 3
 
     def get_window_size(self):
@@ -231,6 +232,9 @@ class ComparisonWindow(VTKWindow):
             self.ren.AddActor(self.comparison_actor)
             self.update_overview_data()
 
+            self.ren.ResetCamera()
+            self.vtkWidget.GetRenderWindow().Render()
+
     def update_overview_data(self):
         try:
             if self.results:
@@ -243,7 +247,6 @@ class ComparisonWindow(VTKWindow):
 
                 self.results.update_actor(ratio, performance_indicator_index)
 
-                self.ren.ResetCamera()
                 self.vtkWidget.GetRenderWindow().Render()
         except:
             print(traceback.format_exc())
