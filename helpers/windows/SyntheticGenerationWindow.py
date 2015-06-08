@@ -119,7 +119,7 @@ class SyntheticGenerationWindow(VTKWindow):
 
         return layout
 
-    def calculate_class(self, form):
+    def get_kwargs(self, form):
         min_points = form.min_points_layout.slider.mapped_value()
         max_points = form.max_points_layout.slider.mapped_value()
         eccentricity = form.eccentricity_layout.slider.mapped_value()
@@ -135,15 +135,19 @@ class SyntheticGenerationWindow(VTKWindow):
             'std_dev_std_dev': float(p['std_dev_std_dev'].replace(',', '.'))
         }, form.table_model.special_points)
 
-        return map(lambda x: generate_ellipse(
-            eccentricity,
-            min_points,
-            max_points,
-            std_dev_angle,
-            std_dev_radius,
-            std_dev_transformation,
-            special_points
-        ), range(form.number_of_observations.value()))
+        return {
+            'ratio': eccentricity,
+            'min_number_of_points': min_points,
+            'max_number_of_points': max_points,
+            'std_dev_angle': std_dev_angle,
+            'std_dev_radius': std_dev_radius,
+            'std_dev_transformation': std_dev_transformation,
+            'special_points': special_points
+        }
+
+    def calculate_class(self, form):
+        keyword_arguments = self.get_kwargs(form)
+        return map(lambda x: generate_ellipse(**keyword_arguments), range(form.number_of_observations.value()))
 
     def generate(self):
         try:

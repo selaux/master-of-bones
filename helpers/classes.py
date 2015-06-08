@@ -29,6 +29,22 @@ CLASSES = [
             'Ma',
             'MiZ'
         ]
+    },
+    {
+        'name': 'Synthetic 1',
+        'short': 'S1',
+        'id': 4,
+        'identifiers': [
+            'S1'
+        ]
+    },
+    {
+        'name': 'Synthetic 2',
+        'short': 'S2',
+        'id': 5,
+        'identifiers': [
+            'S2'
+        ]
     }
 ]
 UNKNOWN_CLASS = {
@@ -76,7 +92,9 @@ def get_classed_color(id, label=None):
         0: 0,
         1: 0.37,
         2: 0.675,
-        3: 0.17
+        3: 0.17,
+        4: 0,
+        5: 0.37
     }
     color = [0.0, 0.0, 0.0]
     if label is None:
