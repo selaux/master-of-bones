@@ -3,3 +3,5 @@ Docs
 .idea
 .ipynb_checkpoints
 *.pyc
+tree.dot
+venv
