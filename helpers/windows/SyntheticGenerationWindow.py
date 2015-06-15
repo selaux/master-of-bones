@@ -1,3 +1,5 @@
+import os
+import json
 from functools import partial
 import traceback
 from PyQt4 import QtGui, QtCore
@@ -5,6 +7,7 @@ import numpy as np
 from VTKWindow import VTKWindow
 from algorithms.generation import generate_ellipse
 from helpers.to_vtk import get_outline_actor
+import helpers.loading as lh
 
 
 class SyntheticGenerationWindow(VTKWindow):
@@ -29,10 +32,14 @@ class SyntheticGenerationWindow(VTKWindow):
         self.generate_button = QtGui.QPushButton('Generate Models')
         self.fl.addWidget(self.generate_button)
 
+        self.save_button = QtGui.QPushButton('Save Models')
+        self.fl.addWidget(self.save_button)
+
         self.actors = []
         self.render_actors(self.actors)
 
         self.generate_button.clicked.connect(self.generate)
+        self.save_button.clicked.connect(self.store_data)
 
     def init_algorithm_parameters(self, clsObj):
         def add_point():
@@ -179,6 +186,40 @@ class SyntheticGenerationWindow(VTKWindow):
 
         self.ren.ResetCamera()
         self.vtkWidget.GetRenderWindow().Render()
+
+    def get_outlines_in_save_format(self):
+        def get_save_format(class_filename, definition):
+            model_index, points = definition
+            num_points = points.shape[0]
+            edges = np.zeros((num_points, 2))
+            edges[:, 0] = range(0, num_points)
+            edges[:, -1] = range(1, num_points+1)
+            edges[-1, 1] = 0
+
+            return {
+                'filename': '{0}_{1}.pkl'.format(class_filename, model_index),
+                'done': True,
+                'points': points,
+                'edges': edges
+            }
+
+        return map(partial(get_save_format, 'S1'), enumerate(self.bones1)) + map(partial(get_save_format, 'S2'), enumerate(self.bones2))
+
+    def store_data(self):
+        directory = str(QtGui.QFileDialog.getExistingDirectory(
+            self,
+            'Open Directory for Comparison',
+            os.getcwd(),
+            QtGui.QFileDialog.ShowDirsOnly | QtGui.QFileDialog.DontResolveSymlinks
+        ))
+
+        if len(directory) > 0:
+            with open(os.path.join(directory, 'algorithm_parameters.json'), 'w') as f:
+                json.dump({
+                    'class1': self.get_kwargs(self.class1_form),
+                    'class2': self.get_kwargs(self.class2_form)
+                }, f, indent=2)
+            lh.save_files(directory, self.get_outlines_in_save_format())
 
 class SpecialPointsTableModel(QtCore.QAbstractTableModel):
     properties_map = {
