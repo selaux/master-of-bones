@@ -3,7 +3,9 @@ import traceback
 import numpy as np
 from VTKWindow import VTKWindow
 from PyQt4 import QtGui
+import os
 from ..to_vtk import get_outline_actor
+import helpers.loading as lh
 
 
 class RegistrationWindow(VTKWindow):
@@ -39,12 +41,16 @@ class RegistrationWindow(VTKWindow):
         self.error_label = QtGui.QLabel('Mean Error:')
         self.vl.insertWidget(-1, self.error_label)
 
+        self.save_button = QtGui.QPushButton('Save Result')
+        self.vl.addWidget(self.save_button)
+
         self.render_actors(self.registered_actors)
         self.vtkWidget.GetRenderWindow().Render()
         self.ren.ResetCamera()
 
         self.update_actor_visibility()
         self.calc_button.clicked.connect(self.calculate)
+        self.save_button.clicked.connect(self.store_data)
 
     def get_actor_for_property(self, property, outline):
         points = outline[property]
@@ -186,3 +192,40 @@ class RegistrationWindow(VTKWindow):
     def update_info_panel(self):
         mean_error = np.mean([ o['error'] for o in self.bones ])
         self.error_label.setText('Mean Error: {0}'.format(mean_error))
+
+    def get_outlines_in_save_format(self):
+        def get_save_format(outline):
+            num_points = outline['registered'].shape[0]
+            edges = np.zeros((num_points, 2))
+            edges[:, 0] = range(0, num_points)
+            edges[:, -1] = range(1, num_points+1)
+            edges[-1, 1] = 0
+            # Fixme: Handle markers and missing markers
+            #markers = dict([(i,outline['registered_markers'][i-1,:]) for i in range(1, 12)])
+
+            points = outline['registered']
+            # Fixme: Do Normalization for Direction only
+            # points, edges = gh.normalize_outline(outline['registered'], edges)
+
+            outline_to_save = {
+                'filename': outline['filename'],
+                'done': True,
+                'points': points,
+                #    'markers': markers,
+                'edges': edges
+            }
+
+            return outline_to_save
+
+        return list(map(get_save_format, self.bones))
+
+    def store_data(self):
+        directory = str(QtGui.QFileDialog.getExistingDirectory(
+            self,
+            'Open Directory for Comparison',
+            os.getcwd(),
+            QtGui.QFileDialog.ShowDirsOnly | QtGui.QFileDialog.DontResolveSymlinks
+        ))
+
+        if len(directory) > 0:
+            lh.save_files(directory, self.get_outlines_in_save_format())
