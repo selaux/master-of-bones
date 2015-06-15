@@ -19,6 +19,8 @@ class ComparisonWindow(VTKWindow):
         self.window_extractors = window_extractors
         self.feature_extractors = feature_extractors
 
+        self.classes_in_data = list(set(map(lambda b: b['class'], self.bones)))
+
         self.fl_frame = QtGui.QFrame()
         self.fl_frame.setFixedWidth(400)
         self.fl = QtGui.QVBoxLayout()
@@ -32,15 +34,18 @@ class ComparisonWindow(VTKWindow):
         self.window_actors = None
         self.fl.insertWidget(-1, self.window_widget)
 
+        # Fixme: Implement Feature Widget (shows features of current window)
         # self.feature_widget = QtGui.QFrame()
         # self.feature_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         # self.feature_vtk_widget, self.feature_renderer, self.feature_interactor, self.feature_istyle = self.init_vtk_widget(self.feature_widget)
         # self.fl.insertWidget(-1, self.feature_widget)
 
-        self.init_view_properties()
+        self.init_compared_classes()
         self.init_window_extractions()
         self.init_feature_functions()
         self.init_algorithm_parameters()
+        self.init_view_properties()
+
         self.calc_button = QtGui.QPushButton('Calculate')
         self.fl.addWidget(self.calc_button)
         self.progress_bar = QtGui.QProgressBar()
@@ -62,6 +67,19 @@ class ComparisonWindow(VTKWindow):
 
         self.iren.AddObserver('LeftButtonPressEvent', self.on_click, 0.0)
         self.calc_button.clicked.connect(self.calculate)
+
+    def init_compared_classes(self):
+        self.classes_box = QtGui.QGroupBox('Select Compared Classes')
+        self.classes_checkboxes = []
+        classes_layout = QtGui.QVBoxLayout()
+        for i, c in enumerate(self.classes_in_data):
+            b = QtGui.QCheckBox(ch.get_class_name(c))
+            if i < 2:
+                b.setChecked(True)
+            self.classes_checkboxes.append(b)
+            classes_layout.addWidget(b)
+        self.classes_box.setLayout(classes_layout)
+        self.fl.addWidget(self.classes_box)
 
     def init_window_extractions(self):
         layout = QtGui.QVBoxLayout()
@@ -113,6 +131,7 @@ class ComparisonWindow(VTKWindow):
 
     def init_algorithm_parameters(self):
         layout = QtGui.QFormLayout()
+
         self.angle_spinbox = QtGui.QSpinBox()
         self.angle_spinbox.setValue(5)
         layout.addRow('Evaluate every x degrees', self.angle_spinbox)
@@ -171,8 +190,15 @@ class ComparisonWindow(VTKWindow):
         self.detail_angle_actor.GetProperty().SetColor(0, 0, 0)
 
     def get_compared_classes(self):
-        return 4, 5
-        return 2, 3
+        classes = list([c for i, c in enumerate(self.classes_in_data) if self.classes_checkboxes[i].isChecked()])
+        if len(classes) != 2:
+            QtGui.QMessageBox.information(
+                self,
+                'Info',
+                'You need to check exactly two classes to compare. Falling back to using defaults.'
+            )
+            return self.classes_in_data[:2]
+        return classes
 
     def get_window_size(self):
         return self.MIN_WINDOW_SIZE + self.MAX_WINDOW_SIZE * self.window_size_slider.value() / float(self.window_size_slider.maximum())
