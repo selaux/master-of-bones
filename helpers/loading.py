@@ -24,15 +24,17 @@ def load_single_file(filename):
     return content
 
 def load_files(directory, filter_unfinished=True):
-    filenames = glob(directory + '*.pkl')
+    filenames = glob(os.path.join(directory, '*.pkl'))
     loaded = map(load_single_file, filenames)
+    print('Loaded {} Files'.format(len(loaded)))
     if filter_unfinished:
         loaded = filter(lambda x: 'done' in x and x['done'], loaded)
+    print('Found {} Files wich have the done flag set'.format(len(loaded)))
     return loaded
 
 def save_files(directory, outlines):
     for outline in outlines:
-        save_single_file(directory + outline['filename'], outline)
+        save_single_file(os.path.join(directory, outline['filename']), outline)
 
 def save_single_file(path, outline):
     with gzip.open(path, 'wb') as f:
