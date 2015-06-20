@@ -4,22 +4,74 @@ Master Thesis about finding local shape variations in sheep bones.
 
 ### Install
 
-#### Step 1
+This has been tested on a new Ubuntu 14.04 box. The requirements outside of PyPi are python2.7, Qt4, PyQt4 and VTK
 
-Install required non-python dependencies: Python 2.7, PyQt4, VTK 6.1
+Install Dependencies:  
+```
+sudo apt-get install git gfortran libqt4-dev libblas-dev liblapack-dev libfreetype6-dev libpng-dev python-dev python-vtk6 python-qt4 python-virtualenv
+```
 
-#### Step 2
+Clone Repo:  
+```
+git clone https://github.com/selaux/master-of-bones.git
+```
 
-Install required python dependencies (in a virtualenv): ```pip install -r requirements.txt```
+Create and Activate Virtualenv:  
+```
+cd master-of-bones && virtualenv ./venv && source ./venv/bin/activate
+```
 
-#### Step 3
+Link global libraries into venv:  
+```
+cp -r /usr/lib/python2.7/dist-packages/PyQt4 ./venv/lib/python2.7/site-packages/
+cp -r /usr/lib/python2.7/dist-packages/sip.so ./venv/lib/python2.7/site-packages/
+cp -r /usr/lib/python2.7/dist-packages/vtk ./venv/lib/python2.7/site-packages/
+```
 
-Start ipython-notebook in this directory: ```iypthon2 notebook```
+Fix VTK installation (https://bugs.launchpad.net/ubuntu/+source/vtk6/+bug/1354127):  
+```
+for link in `ls ./venv/lib/python2.7/site-packages/vtk/vtk*.so`; do target=$(readlink $link).6.0; echo $link; sudo rm $link; sudo ln -s $target $link ; done  
+```
 
-### Important Notebooks
+Install Dependencies (this might take a while):  
+```
+pip install numpy && pip install scipy && pip install -r requirements.txt
+```
 
-Comparison Helper: Actually does the Comparison
+### Important Tools
 
-Registration Helper: Register Bones
+Note: The Virtualenv has to be activated before starting anything:  
+```
+source ./venv/bin/activate
+```
 
-Synthetic Generation: Generate Synthetic Bone Data
+Comparison Helper: Actually does the Comparison  
+```
+python comparison_helper.py
+```
+
+Registration Helper: Register Bones  
+```
+python registration_helper.py
+```
+
+Synthetic Generation Helper: Generate Synthetic Bone Data  
+```
+python synthetic_generation_helper.py
+```
+
+
+# Einleitung
+# Problemdefinition
+- Geometric Morphometrics
+# Verwandte Arbeiten
+# Vorgehensweise
+## Einzelne Schritte -> Welche Möglichkeiten
+## Theoretische Beschreibung
+## Experimente
+### Real-World Data
+### Experimente
+- Graphen-Darstellung -> Kombination mit "Farb-Darstellung"
+## Conclusion 
+   
+-> ca. 80 Seiten
