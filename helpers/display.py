@@ -107,3 +107,8 @@ def synthetic_model_generation():
     window = windows.SyntheticGenerationWindow()
     show_window(window)
     return window
+
+def measurable_differences(bones, compare_fn, landmark_extractors):
+    window = windows.MeasurableDifferencesWindow(bones, compare_fn, landmark_extractors=landmark_extractors)
+    show_window(window)
+    return window

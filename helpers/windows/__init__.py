@@ -3,3 +3,4 @@ from ComparisonWindow import ComparisonWindow
 from RegistrationWindow import RegistrationWindow
 from TriangulationWindow import TriangulationWindow
 from SyntheticGenerationWindow import SyntheticGenerationWindow
+from MeasurableDifferencesWindow import MeasurableDifferencesWindow
