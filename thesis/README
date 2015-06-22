@@ -1,0 +1,24 @@
+dbstmpl v1.1 2010/06/21
+
+dbstmpl ist ein Template fuer Projekt- und Diplomarbeiten an der
+Lehr- und Forschungseinheit fuer Datenbanksysteme. Mittlerweile
+angepasst fuer Bachelor- und Masterarbeiten.
+
+Dateiliste:
+
+dbstmpl.sty  - Latex Package, kann in eigene Arbeiten eingebunden
+               werden
+dbstmpl.bst  - Style-Definition fuer das Literaturverzeichnis
+kopf.eps     - Ein Titelblatt-Header der dem aktuellen Corporate
+               Design der LMU entspricht (wird verwendet, wenn die
+               Arbeit mit dem latex-Kommando gebaut wird)
+kopf.pdf     - Der gleiche Header fuer das pdflatex-Kommando
+logo-dbs.png - Altes DBS-Logo als Beispielbild
+logo-lmu.png - Altes LMU-Logo als Beispielbild
+
+dbsba.tex    - Muster fuer eine Bachelorarbeit
+dbsma.tex    - Muster fuer eine Masterarbeit
+dbstmpl.bib  - Literaturliste fuer die Musterdokumente
+Makefile     - einfaches Makefile mit Linux-Befehlen zum Erzeugen
+               und Löschen der Musterdokumente
+README       - diese Datei

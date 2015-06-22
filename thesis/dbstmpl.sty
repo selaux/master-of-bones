@@ -1,0 +1,144 @@
+%%
+%% dbstmpl.sty
+%% von Stefan Brecheisen, LFE fuer Datenbanksysteme am
+%% Institut fuer Informatik der LMU Muenchen
+%%
+%% kleine Anpassungen an das aktuelle CD von Marisa Thoma
+%%
+%% Dieses Latex-Paket definiert sinnvolle Einstellungen und hilfreiche
+%% Befehle zum Erstellen der Ausarbeitung einer Diplom- oder Projektarbeit
+%% an der LFE fuer Datenbanksysteme.
+%%
+\def\fileversion{v1.1}
+\def\filedate{2010/06/21}
+
+\NeedsTeXFormat{LaTeX2e}
+
+\ProvidesPackage{dbstmpl}[\filedate\space\fileversion]
+
+%%
+%% benoetigte Pakete
+%%
+%% Wenn es englisch sein soll:
+%\RequirePackage[german,english]{babel}
+%% sonst: für deutsche Arbeiten:
+\RequirePackage[english,german]{babel}
+\RequirePackage{german}
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{geometry}
+\RequirePackage{fancyhdr}
+\RequirePackage[nottoc]{tocbibind}
+\RequirePackage{graphicx}
+
+%%
+%% haeufig benutzte Symbole
+%%
+\newcommand{\N}{\mathbb{N}}    % Menge der natuerlichen Zahlen
+\newcommand{\Z}{\mathbb{Z}}    % Menge der ganzen Zahlen
+\newcommand{\Q}{\mathbb{Q}}    % Menge der rationalen Zahlen
+\newcommand{\R}{\mathbb{R}}    % Menge der reellen Zahlen
+\newcommand{\C}{\mathbb{C}}    % Menge der komplexen Zahlen
+
+%%
+%% Einstellungen
+%%
+
+% Seitenraender
+\geometry{body={140mm,210mm},footskip=12mm}
+
+% Gestaltung der Kopf- und Fusszeilen
+\pagestyle{fancy}
+\headheight 14pt
+\fancyhf{}
+\fancyhead[L]{\small\slshape\leftmark}
+\fancyfoot[C]{\thepage}
+
+% subsubsections numerieren und ins Inhaltsverzeichnis aufnehmen
+\setcounter{secnumdepth}{3}
+\setcounter{tocdepth}{3}
+
+%%
+%% Globale Variablen
+%%
+\newtoks\arbeit             % Art der Arbeit
+\newtoks\fach               % Studiengang
+\newtoks\titel              % Titel der Arbeit
+\newtoks\bearbeiter         % Name des Bearbeiters
+\newtoks\betreuer           % Name des Betreuers
+\newtoks\aufgabensteller    % Name des Aufgabenstellers
+\newtoks\abgabetermin       % Datum der Abgabe
+\newtoks\ort                % Wohnort des Bearbeiters
+
+%%
+%% Ausgabe des Deckblatts fuer eine Diplom- oder Projektarbeit.
+%%
+\newcommand{\deckblatt}{
+  \begin{titlepage}
+  ~
+  \vspace{-2cm}
+  \begin{center}
+   \parbox[t]{145.5mm}{ \includegraphics[width=145.5mm]{kopf} }
+  \end{center}
+    
+  \begin{center}
+  
+      \vspace{2.5cm}\Large
+      \the\arbeit
+    
+      {\large in \the\fach}
+
+      \vspace{1cm}\huge
+      \the\titel
+
+      \vspace{1cm}\large
+      \the\bearbeiter
+
+      \vspace{\fill}\normalsize
+      \begin{tabular}{ll}
+        Aufgabensteller: & \the\aufgabensteller\\
+        Betreuer:        & \the\betreuer\\
+        Abgabedatum:     & \the\abgabetermin
+      \end{tabular}
+    
+    \end{center}
+  
+  \end{titlepage}
+}
+
+%%
+%% Ausgabe der Erklaerung ueber die selbstaendige Anfertigung
+%% einer Diplomarbeit
+%%
+\newcommand{\erklaerung}{
+  \begin{titlepage}
+    \vspace*{\fill}
+    \parindent 0cm
+    \begin{center}
+      \textbf{Erkl"arung}
+
+      \vspace{1cm}
+  
+      \begin{minipage}{9.8cm}
+        Hiermit versichere ich, dass ich diese \the\arbeit\ selbst\"andig verfasst und keine anderen als die angegebenen Quellen und Hilfsmittel verwendet habe.
+
+        \vspace{1cm}
+        \the\ort, den \the\abgabetermin
+
+        \vspace{1.5cm}
+        \makebox[9.8cm]{\dotfill}\\
+        \the\bearbeiter
+
+      \end{minipage}
+  
+    \end{center}
+  
+    \vspace*{\fill}
+  \end{titlepage}
+}
+
+\newcommand{\emptypage}{
+\begin{titlepage}
+\vspace*{\fill}
+\end{titlepage}
+}
