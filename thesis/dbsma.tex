@@ -32,194 +32,83 @@ Informatik der LMU M"unchen.
 \tableofcontents
 
 % Hier beginnt der eigentliche Text
-\chapter{Ein Kapitel}
+\chapter{Introduction}
 
-Das ist die Ebene {\tt chapter}.
+\chapter{Related Work}
 
-\section{Ein Abschnitt}
+Book~\cite{da2010shape}
 
-Das ist die Ebene {\tt section}.
+\section{Morphometrics in Zooarcheology}
 
-\subsection{Ein Unterabschnitt}
+\section{Shape Matching in Data Science}
 
-Das ist die Ebene {\tt subsection}.
+\chapter{Mathematical Basics}
 
-\subsubsection{Ein Unterunterabschnitt}
-\label{sec:a}
+\section{Image Segmentation}
 
-Das ist die Ebene {\tt subsubsection}.
+\section{Support Vector Machines}
 
-\subsubsection{Noch ein Unterunterabschnitt}
-\label{sec:b}
+\chapter{Detection of Local Shape Variations Inbetween two Classes of Shapes}
 
-Wer \ref{sec:a} sagt, mu"s auch \ref{sec:b} sagen.
+\section{Overview}
 
-\subsection{Noch ein Unterabschnitt}
+\section{Preprocessing}
 
-Das ist ein gew"ohnlicher Absatz.
+\subsection{Image Segmentation}
 
-\paragraph{Ein Absatz mit Titel}
+\subsection{Triangulation and Outlining}
 
-Das ist die Ebene {\tt paragraph}.
+\subsection{Landmark Extraction}
 
-\subparagraph{Ein Unterabsatz mit Titel}
+\section{Shape Registration}
 
-Das ist die Ebene {\tt subparagraph}.
+\section{Shape Comparison}
 
-\subsection*{Ein nicht numerierter Unterabschnitt}
+\subsection{Selection of Evaluation Windows}
 
-Dieser Unterabscnitt erscheint nicht im Inhaltsverzeichnis.
+\subsection{Feature Extraction}
 
-\section{Beispiele}
-Dieses Beispieldokument wurde mit dem \LaTeX-Paket {\tt dbstmpl.sty} erzeugt.
-{\tt dbstmpl.sty} definiert Befehle zum Erzeugen von einigen
-h"aufig gebrauchten Symbolen.
+\subsection{Dimension Reduction}
 
-\begin{align}
-  \N \subset \Z \subset \Q \subset \R \subset \C
-\end{align}
+\subsection{Calculation of Separability Measures}
 
-Weitere Symbole k\"onnen im {\tt symbols-a4.pdf}-Dokument, das f\"ur
-gew\"ohnlich bei \LaTeX-Distributionen mitgeliefert wird, nachgeschlagen
-werden. Alternativ gibt es diverse Hilfeseiten im Netz.
+\chapter{Detection of Dfferences Inbetween Two Classes of Bones that are Measurable On-Site}
 
-Au"serdem werden automatisch einige zus"atzliche Pakete geladen.
-Mit dem Paket {\tt graphicx} k"onnen Grafiken eingebunden werden.
-Abbildung~\ref{fig:dbslogo} zeigt das Logo der LFE f"ur Datenbanksysteme.
+\section{Definition of Measurable Values}
 
-\begin{figure}
-  \begin{center}
-    \includegraphics[width=2cm]{logo-dbs.png}
-  \end{center}
-  \caption{Altes Logo der LFE f"ur Datenbanksysteme.
-    \label{fig:dbslogo} % Figures und Tables können gelabelt werden.
-    % Es empfiehlt sich, dies in der Caption zu machen
-  }
-\end{figure}
+\section{Training Decision Trees}
 
-{\tt amsmath} erlaubt die bequeme Alignierung von mehrzeiligen Formeln:
+\chapter{Experiments}
 
-\begin{align}
-  f(a,b) &= (a-b)^2 \label{eq:aMinusbSq}\\
-    &= a^2 - 2 a b + b^2 \label{eq:aMinusbSqResolved}
-\end{align}
+\section{Tests on Real-World Data}
 
-Zus\"atzlich k\"onnen diese Formeln auch referenziert werden. In~\eqref{eq:aMinusbSq}
-wird das Problem gestellt und in~\eqref{eq:aMinusbSqResolved} wird es etwas
-aufgel\"ost. Nat\"urlich k\"onnen die Gleichungen auch ohne Klammern
-referenziert werden: \ref{eq:aMinusbSq}, \ref{eq:aMinusbSqResolved}.
+\subsection{Results and Compliance with Former Findings}
 
-Das in diesem Dokument geladene Paket {\tt subfigure} (oben eingebunden durch
-\verb=\usepackage{subfigure}=) erlaubt das Erzeugen von Unterabbildungen.
-Abbildung~\ref{fig:logos} enth"alt zwei Unterabbildungen.
-Abbildung~\ref{fig:logos-a} zeigt nochmal das Logo der LFE f"ur
-Datenbanksysteme, \ref{fig:logos-b} zeigt das Logo der
-Ludwig-Maximilians-Universit"at.
+\subsection{Comparison of Algorithm Parameters}
 
-\begin{figure}
-  \begin{center}
-    \subfigure[Altes DBS-Logo.\label{fig:logos-a}]{
-      \makebox[0.48\textwidth]{
-        \includegraphics[width=2cm]{logo-dbs.png}}}
-    \hspace{\fill}
-    \subfigure[Uraltes LMU-Logo.\label{fig:logos-b}]{
-      \makebox[0.48\textwidth]{
-        \includegraphics[width=5cm]{logo-lmu.png}}}
-  \end{center}
-  \caption{Zwei Logos.}
-  \label{fig:logos}
-\end{figure}
+\subsection{Comparison of Features}
 
-Tabelle~\ref{tab:quadratzahlen} zeigt die ersten f"unf Quadratzahlen.
+\subsection{Comparison of Registration Strategies}
 
-\begin{table}
-  \begin{center}
-  \begin{tabular}{|r|r|}
-    \hline \makebox[1cm]{$x$} & \makebox[1cm]{$x^2$}\\
-    \hline\hline 1 &  1\\
-    \hline 2 &  4\\
-    \hline 3 &  9\\
-    \hline 4 & 16\\
-    \hline 5 & 25\\
-    \hline
-  \end{tabular}
-  \end{center}
-  \caption{Die Zahlen 1 bis 5 und ihre Quadrate.}
-  \label{tab:quadratzahlen}
-\end{table}
+\subsection{Comparison of Separability Measures}
 
-Folgenderma\ss en wird Literatur referenziert.
-DBSCAN~\cite{EKSX96} und OPTICS~\cite{ABKS99} sind Beispiele f\"ur
-dichtebasierte Clusteringverfahren. Diese Eintr\"age werden als
-{\tt bibitem} im {\tt .bbl}-File referenziert. Um dieses File braucht man
-sich erfreulicherweise nicht zu k\"ummern, weil es automatisch aus einer
-Sammlung von BibTeX-Eintr\"agen in einem Literatur-File gebildet werden
-kann. Hier ist wichtig, dass dieses File den BibTeX-Konventionen
-\footnote{{\tt http://www.tex.ac.uk/tex-archive/biblio/bibtex/contrib/doc/btxdoc.pdf}}
-entspricht, sonst kommen kreative Fehlermeldungen. Daf\"ur braucht es
-besagte Literatur-Sammlung -- hier {\tt dbstmpl.bib}
-und einen Literatur-Stil, den man auch selber definieren kann, wie
-etwa {\tt dbstmpl.bst}.
+\section{Tests on Synthetic Data}
 
-\section{Bemerkungen}
+\subsection{Generating Synthetic Data}
 
-Eine "Ubersicht "uber alle Abbildungen und Tabellen einer Arbeit
-verschaffen das Abbildungs- und das Tabellenverzeichnis. Diese
-sollten entweder nach dem Inhaltsverzeichnis oder (wie in diesem
-Dokument) vor dem Literaturverzeichnis eingef"ugt werden.
-Je nach Bedarf und Umfang der Arbeit k"onnen auch Verzeichnisse
-f"ur Definitionen, S"atze oder Lemmata angelegt oder nicht
-ben"otigte Verzeichnisse weggelassen werden.
+\subsection{Influence of Variances in Shape Features}
 
-\appendix
+\subsection{Influence of Errors in Shape Measurement}
 
-\chapter{Ein Anhang}
+\subsection{Influence of Errors in Shape Registration}
 
-Im Anhang kann auf Implementierungsaspekte wie Datenbankschemata
-oder Programmcode eingegangen werden.
+\chapter{Conclusion}
 
-\section{\protect{pdflatex} vs.\ \protect{latex}}
+\section{Summary}
 
-Dieses Dokument wird mit {\tt pdflatex} gebaut. Das ist n\"otig, wenn
-wie hier Bilder im {\tt .jpg}, {\tt .png} oder {\tt .pdf}-Format eingebunden
-werden. Alternativ kann auch alles \"uber das klassische \LaTeX-Kommando
-laufen: \verb=latex dbsba=. Damit wird ein {\tt .dvi} erstellt, welches
-erst mit {\tt dvipdf} zu {\tt .pdf} konvertiert werden muss. Dies
-bedeutet, dass Bilder nur noch als {\tt .eps} eingebunden werden
-k\"onnen. {\em Merke: {\tt .pdf}-affine und {\tt .eps}-Bilder k\"onnen
-NICHT kombiniert werden, also entweder oder.}
+\section{Discussion}
 
-\section{Ich will aber englisch!}
-
-Ihr d\"urft auch gerne englische \the\arbeit en schreiben. Daf\"ur m\"usst
-ihr im Stylefile {\tt dbstmpl.sty} die Zeile
-\verb=\RequirePackage[english,german]{babel}= durch
-\verb=\RequirePackage[german,english]{babel}= austauschen. Dann hei\ss en
-Chapter wieder Chapter und nicht Kapitel, etc.
-
-\section{Ich h\"atte da einen eigenen Stil.}
-
-Ihr k\"onnt auch eigene Stile definieren und verwenden, wenn er die
-Informationen des Deckblatts und die darauffolgende Erkl\"arung
-enth\"alt, sowie die Gnade des Betreuers gefunden hat (es
-empfiehlt sich also, fr\"uhzeitg kurz nachzufragen).
-
-\section{Hilfe?}
-
-Gibt es online zuhauf:
-
-\begin{description}
-  \item[Das \LaTeX Kochbuch]~\\{\tt http://www.uni-giessen.de/hrz/tex/cookbook/cookbook.html}
-  \item[CTAN] {\tt http://www.ctan.org/} zum manuellen Download von Stylefiles
-      und deren Dokumentation
-  \item[Diverse Mathe-Tweaks]~\\ \verb=http://meta.wikimedia.org/wiki/Help:Displaying_a_formula=
-  \item[B\"uchersuche mit BibTeX -Unterst\"utzung] {\tt http://lead.to/amazon/en/}
-  \item[JabRef] Java-basierter BibTeX -Manager {\tt http://jabref.sourceforge.net/}
-  \item[FAQs] {\tt http://www.tex.ac.uk/cgi-bin/texfaq2html}
-\end{description}
-
-Und zur Not versteht auch euer Betreuer vermutlich was davon.
-
+\section{Future Work}
 
 % Abbildungsverzeichnis (kann auch nach dem Inhaltsverzeichnis kommen)
 \listoffigures
