@@ -123,7 +123,7 @@ the outline. $i(\alpha_t)$ is then used as the landmark.
 d(\alpha) = ||i(\alpha)||
 \end{equation}
 
-The definitions for all landmarks when using this method can be found in Appendix \ref{appendix:landmarks-angle}.
+The definitions for all landmarks when using this method can be found in Appendix \ref{appendix:table:landmarks-angle}.
 
 The landmarks found by this method are robustly located across all classes, but have a distinct disadvantage. They are
 not as easily located by hand since they dont lie exactly on the high  points of the outline, but slightly beneath
@@ -182,6 +182,30 @@ will become relevant in Chapter \ref{chapter:measurable-differences}.
 \section{Discussion}
 
 \section{Future Work}
+
+\appendix
+
+\chapter{Landmark Extraction}
+
+\section{Definitions by Angle}
+
+\begin{table}
+    \begin{center}
+        \begin{tabular}{|r|r|r|r|}
+            \hline \makebox[3cm]{Landmark No} & \makebox[1cm]{$\alpha_{min}$} & \makebox[1cm]{$\alpha_{max}$} & \makebox[2cm]{Type} \\
+            \hline\hline 1 &  $30^{\circ}$ & $90^{\circ}$ & maximum \\
+            \hline 2 &  $80^{\circ}$ & $100^{\circ}$ & minimum \\
+            \hline 3 &  $90^{\circ}$ & $150^{\circ}$ & maximum \\
+            \hline 5 &  $170^{\circ}$ & $190^{\circ}$ & maximum \\
+            \hline 6 &  $210^{\circ}$ & $270^{\circ}$ & maximum \\
+            \hline 7 &  $260^{\circ}$ & $280^{\circ}$ & minimum \\
+            \hline 8 &  $270^{\circ}$ & $330^{\circ}$ & maximum \\
+            \hline
+        \end{tabular}
+    \end{center}
+    \caption{Landmark Definitions for the Extraction by Angle.}
+    \label{appendix:table:landmarks-angle}
+\end{table}
 
 % Abbildungsverzeichnis (kann auch nach dem Inhaltsverzeichnis kommen)
 \listoffigures
