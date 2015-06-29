@@ -1,8 +1,11 @@
+from functools import partial
 from abc import ABCMeta, abstractmethod
 from math import radians, floor, degrees, sqrt
 import numpy as np
 from scipy.interpolate import splev, spalde
+from sklearn import cross_validation
 from sklearn.decomposition import PCA
+from sklearn.metrics import accuracy_score, f1_score
 from sklearn.svm import LinearSVC
 import vtk
 from helpers.to_vtk import get_line_actor
@@ -269,6 +272,9 @@ class SingleComparisonResult:
 
         self.recall = self.get_recall_indicator()
         self.mean_confidence = self.get_mean_confidence_indicator()
+        self.mean_cv_accuracy = self.get_mean_cv_accuracy()
+        self.mean_cv_f1score = self.get_mean_cv_f1score()
+        self.margin = self.get_margin_indicator()
         self.margin = self.get_margin_indicator()
         self.rm = self.margin * self.recall
 
@@ -299,6 +305,27 @@ class SingleComparisonResult:
         """
         return np.linalg.norm(self.svc.coef_)
 
+    def do_cross_validation(self, score_fn):
+        classes = np.array(map(lambda o: o['class'], self.bones))
+
+        skf = cross_validation.StratifiedKFold(classes, len(self.bones) / 4)
+        scores = []
+        for train_indices, test_indices in skf:
+            features_train, classes_train = self.features[train_indices], classes[train_indices]
+            features_test, classes_test = self.features[test_indices], classes[test_indices]
+
+            fitted = self.svc.fit(features_train, classes_train)
+            predicted_classes = fitted.predict(features_test)
+
+            scores.append(score_fn(classes_test, predicted_classes))
+        return np.array(scores).mean()
+
+    def get_mean_cv_accuracy(self):
+        return self.do_cross_validation(accuracy_score)
+
+    def get_mean_cv_f1score(self):
+        return self.do_cross_validation(partial(f1_score, pos_label=None, average='macro'))
+
     def get_performance_indicators(self):
         """
         Return an array of all performance indicators of the algorithm at this evaluation_point
@@ -307,6 +334,14 @@ class SingleComparisonResult:
             {
                 'label': 'Mean Confidence',
                 'value': self.mean_confidence,
+            },
+            {
+                'label': 'Mean Cross-Validation Accuracy',
+                'value': self.mean_cv_accuracy,
+            },
+            {
+                'label': 'Mean Cross-Validation F1 Score',
+                'value': self.mean_cv_f1score,
             },
             {
                 'label': 'Margin',
