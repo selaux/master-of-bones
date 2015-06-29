@@ -34,9 +34,9 @@ Informatik der LMU M"unchen.
 % Hier beginnt der eigentliche Text
 \chapter{Introduction}
 
+\chapter{Problem Definition}
+
 \chapter{Related Work}
-
-
 
 \section{Morphometrics in Zooarcheology}
 
@@ -61,7 +61,9 @@ Informatik der LMU M"unchen.
 
 \cite{pedregosa2011scikit}
 
-\chapter{Detection of Local Shape Variations Inbetween Two Classes of Shapes}
+\section{Decision Trees}
+
+\chapter{Detection of Local Shape Variations}
 
 \section{Overview}
 
@@ -81,6 +83,55 @@ Informatik der LMU M"unchen.
 
 \subsection{Landmark Extraction}
 
+As some of the features we propose in this work are landmark based, and the detection of on-site-measurable differences
+is based on landmarks as well, a method to extract these landmarks from the outline of the bone is needed. In contrast to
+our approach, former work on the talus by zooarcheologists was based on manually located landmarks that correspond to
+biological features of the bone. Since our goal was to automate the process as much as possible and some of the landmarks
+are not positioned on the outline of the bone, this was not feasible in our case. We selected landmarks on the outline
+of the bone that could be located automatically and overlap as much as possible with the landmark definitions by the
+zooarcheologists. For this purpose we introduced two methods that extract landmarks from outlines of Tali. The landmarks
+found by these methods have very similar positions but differ in on-site-measurability and stability in-between classes.
+Figure \ref{figure-landmark-methods} shows the results of the three landmark locating methods: manual, with angles and
+with space partitioning. The biological correspondences of the landmarks are as follows.
+
+\begin{itemize}
+\item Landmark 1: Highest point on the lateral crest
+\item Landmark 2: Lowest point in between the crests
+\item Landmark 3: Highest point on the medial crest
+\item Landmark 4: Intersection between the medial outer edge and the medially arcing edge of the medial crest
+\item Landmark 5: Outmost point on the medial apex
+\item Landmark 6: Lowest point on the medial outer edge
+\item Landmark 7: Highest point on the distal depression
+\item Landmark 9: Intersection of the distal articular surface with the Calcaneus
+\item Landmark 10: Lateral end point of the lower muscle attachment line
+\item Landmark 11: Intersection of the two muscle attachment lines
+\item Landmark 12: Proximal end point of the lateral protrusion on the lateral crest
+\end{itemize}
+
+The landmarks that were extracted automatically are landmarks 1, 2, 3, 5, 6, 7. Furthermore we introduced the new
+landmark 8, which has no biological correspondence, but can be located robustly on all bone outlines.
+
+\subsubsection{Extraction by Angle}
+
+When extracting a landmark by angle, the landmark position is defined by a minimum angle $\alpha_{min}$, a maximum
+angle $\alpha_{max}$ and the information wether it is located on a minimum or a maximum turning point.
+The minimum/maximum turning angle $\alpha_{t}$ between $\alpha_{min}$ and $\alpha_{max}$ of the following function
+is calculated, where $i(\alpha)$ is the intersection between a ray from the coordinate center with the angle $\alpha$ and
+the outline. $i(\alpha_t)$ is then used as the landmark.
+
+\begin{equation}
+d(\alpha) = ||i(\alpha)||
+\end{equation}
+
+The definitions for all landmarks when using this method can be found in Appendix \ref{appendix:landmarks-angle}.
+
+The landmarks found by this method are robustly located across all classes, but have a distinct disadvantage. They are
+not as easily located by hand since they dont lie exactly on the high  points of the outline, but slightly beneath
+them  as seen in Figure \ref{figure-landmark-methods}. This makes distances inbetween landmarks harder to measure, which
+will become relevant in Chapter \ref{chapter:measurable-differences}.
+
+\subsubsection{Extraction by Space Partitioning}
+
 \section{Shape Registration}
 
 \section{Shape Comparison}
@@ -93,7 +144,8 @@ Informatik der LMU M"unchen.
 
 \subsection{Calculation of Separability Measures}
 
-\chapter{Detection of Differences Inbetween Two Classes of Bones That Are Measurable On-Site}
+\chapter{Detection of Differences That Are Measurable On-Site}
+\label{chapter:measurable-differences}
 
 \section{Definition of Measurable Values}
 
