@@ -1,5 +1,7 @@
+from inspect import getargspec
+import traceback
 import vtk
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
 
 
@@ -93,3 +95,21 @@ class VTKWindow(QtGui.QMainWindow):
         self.show()
         self.activateWindow()
         self.iren.Initialize()
+
+def error_decorator(fn):
+    inspected = getargspec(fn)
+    num_args = len(inspected.args) - 1
+
+    def catched_fn(self, *args):
+        try:
+            fn(self, *args[:num_args])
+        except SystemExit:
+            self.close()
+        except:
+            QtGui.QMessageBox.critical(
+                self,
+                'An Error Occured',
+                '<b>An unexpected error occured, please report it to the programmer</b><br><code>{0}</code>'.format(traceback.format_exc())
+            )
+    return catched_fn
+

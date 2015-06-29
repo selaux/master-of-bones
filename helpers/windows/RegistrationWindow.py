@@ -1,7 +1,7 @@
 from functools import partial
 import traceback
 import numpy as np
-from VTKWindow import VTKWindow
+from VTKWindow import VTKWindow, error_decorator
 from PyQt4 import QtGui
 import os
 from ..to_vtk import get_outline_actor
@@ -142,28 +142,26 @@ class RegistrationWindow(VTKWindow):
         self.parameters_box.setLayout(layout)
         self.al.addWidget(self.parameters_box)
 
+    @error_decorator
     def calculate(self):
-        try:
-            self.calc_button.setEnabled(False)
-            QtGui.QApplication.processEvents()
+        self.calc_button.setEnabled(False)
+        QtGui.QApplication.processEvents()
 
-            bones = list([ o for i, o in enumerate(self.bones) if self.outlines_buttons[i].isChecked() ])
-            estimator = list([ e for i, e in enumerate(self.estimators) if self.estimators_buttons[i].isChecked() ])[0]['fn']
-            reference_estimator = list([ r for i, r in enumerate(self.reference_estimators) if self.reference_estimators_buttons[i].isChecked() ])[0]['fn']
-            iterations = self.iterations_button.value()
-            independent_scaling = self.independent_scaling_button.isChecked()
-            continue_registration = self.continue_registration_button.isChecked()
+        bones = list([ o for i, o in enumerate(self.bones) if self.outlines_buttons[i].isChecked() ])
+        estimator = list([ e for i, e in enumerate(self.estimators) if self.estimators_buttons[i].isChecked() ])[0]['fn']
+        reference_estimator = list([ r for i, r in enumerate(self.reference_estimators) if self.reference_estimators_buttons[i].isChecked() ])[0]['fn']
+        iterations = self.iterations_button.value()
+        independent_scaling = self.independent_scaling_button.isChecked()
+        continue_registration = self.continue_registration_button.isChecked()
 
-            self.register_fn(bones, estimator, reference_estimator, iterations, progress_callback=self.update_progress_bar, independent_scaling=independent_scaling, continue_registration=continue_registration)
+        self.register_fn(bones, estimator, reference_estimator, iterations, progress_callback=self.update_progress_bar, independent_scaling=independent_scaling, continue_registration=continue_registration)
 
-            QtGui.QApplication.processEvents()
-            self.calc_button.setEnabled(True)
+        QtGui.QApplication.processEvents()
+        self.calc_button.setEnabled(True)
 
-            self.update_actor_data()
-            self.update_info_panel()
-            self.initial_registration_done = True
-        except:
-            print(traceback.format_exc())
+        self.update_actor_data()
+        self.update_info_panel()
+        self.initial_registration_done = True
 
     def update_progress_bar(self, progress, max_progress):
         self.progress_bar.setMaximum(max_progress)

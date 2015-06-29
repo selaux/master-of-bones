@@ -1,10 +1,9 @@
 import os
 import json
 from functools import partial
-import traceback
 from PyQt4 import QtGui, QtCore
 import numpy as np
-from VTKWindow import VTKWindow
+from VTKWindow import VTKWindow, error_decorator
 from algorithms.generation import generate_ellipse
 from helpers.to_vtk import get_outline_actor
 import helpers.loading as lh
@@ -156,13 +155,11 @@ class SyntheticGenerationWindow(VTKWindow):
         keyword_arguments = self.get_kwargs(form)
         return map(lambda x: generate_ellipse(**keyword_arguments), range(form.number_of_observations.value()))
 
+    @error_decorator
     def generate(self):
-        try:
-            self.bones1 = self.calculate_class(self.class1_form)
-            self.bones2 = self.calculate_class(self.class2_form)
-            self.update_data()
-        except:
-            print(traceback.format_exc())
+        self.bones1 = self.calculate_class(self.class1_form)
+        self.bones2 = self.calculate_class(self.class2_form)
+        self.update_data()
 
     def update_data(self):
         def get_actor(color, outline):

@@ -1,8 +1,7 @@
 from math import degrees
 import vtk
 from PyQt4 import QtCore, QtGui
-import traceback
-from VTKWindow import VTKWindow
+from VTKWindow import VTKWindow, error_decorator
 from helpers import geometry as gh
 from helpers import classes as ch
 
@@ -128,7 +127,6 @@ class ComparisonWindow(VTKWindow):
 
         self.vl.addLayout(layout)
 
-
     def init_algorithm_parameters(self):
         layout = QtGui.QFormLayout()
 
@@ -203,41 +201,39 @@ class ComparisonWindow(VTKWindow):
     def get_window_size(self):
         return self.MIN_WINDOW_SIZE + self.MAX_WINDOW_SIZE * self.window_size_slider.value() / float(self.window_size_slider.maximum())
 
+    @error_decorator
     def calculate(self):
-        try:
-            self.calc_button.setEnabled(False)
-            QtGui.QApplication.processEvents()
+        self.calc_button.setEnabled(False)
+        QtGui.QApplication.processEvents()
 
-            feature_extractor = list([f for i, f in enumerate(self.feature_extractors) if self.feature_fn_buttons[i].isChecked()])[0]['fn']
-            window_extractor = list([e for i, e in enumerate(self.window_extractors) if self.window_extraction_buttons[i].isChecked()])[0]['fn']
-            window_size = self.get_window_size()
-            use_pca = self.use_pca_checkbox.isChecked()
-            number_of_pca_components = self.number_of_pca_components_spinbox.value()
-            number_of_spline_evaluations = self.number_of_spline_evaluations_slider.value()
-            step_size = self.angle_spinbox.value()
-            class1, class2 = self.get_compared_classes()
+        feature_extractor = list([f for i, f in enumerate(self.feature_extractors) if self.feature_fn_buttons[i].isChecked()])[0]['fn']
+        window_extractor = list([e for i, e in enumerate(self.window_extractors) if self.window_extraction_buttons[i].isChecked()])[0]['fn']
+        window_size = self.get_window_size()
+        use_pca = self.use_pca_checkbox.isChecked()
+        number_of_pca_components = self.number_of_pca_components_spinbox.value()
+        number_of_spline_evaluations = self.number_of_spline_evaluations_slider.value()
+        step_size = self.angle_spinbox.value()
+        class1, class2 = self.get_compared_classes()
 
-            kwargs = {
-                'feature_extractor': feature_extractor,
-                'window_extractor': window_extractor,
-                'step_size': step_size,
-                'progress_callback': self.update_progress_bar,
-                'window_size': window_size,
-                'number_of_evaluations': number_of_spline_evaluations,
-                'use_pca': use_pca,
-                'pca_components': number_of_pca_components
-            }
+        kwargs = {
+            'feature_extractor': feature_extractor,
+            'window_extractor': window_extractor,
+            'step_size': step_size,
+            'progress_callback': self.update_progress_bar,
+            'window_size': window_size,
+            'number_of_evaluations': number_of_spline_evaluations,
+            'use_pca': use_pca,
+            'pca_components': number_of_pca_components
+        }
 
-            self.results = self.compare_fn(self.bones, class1, class2, **kwargs)
+        self.results = self.compare_fn(self.bones, class1, class2, **kwargs)
 
-            QtGui.QApplication.processEvents()
-            self.calc_button.setEnabled(True)
+        QtGui.QApplication.processEvents()
+        self.calc_button.setEnabled(True)
 
-            self.reset_overview()
-            self.update_overview_data()
-            self.update_detailed_data(90)
-        except:
-            print(traceback.format_exc())
+        self.reset_overview()
+        self.update_overview_data()
+        self.update_detailed_data(90)
 
     def update_progress_bar(self, progress, max_progress):
         self.progress_bar.setMaximum(max_progress)
@@ -261,39 +257,35 @@ class ComparisonWindow(VTKWindow):
             self.ren.ResetCamera()
             self.vtkWidget.GetRenderWindow().Render()
 
+    @error_decorator
     def update_overview_data(self):
-        try:
-            if self.results:
-                ratio = self.mean_bone_slider.value() / 100.0
-                performance_indicator_index = self.show_metric_box.currentIndex()
-                min_indicator, max_indicator = self.results.get_min_and_max_performance_indicators(performance_indicator_index)
+        if self.results:
+            ratio = self.mean_bone_slider.value() / 100.0
+            performance_indicator_index = self.show_metric_box.currentIndex()
+            min_indicator, max_indicator = self.results.get_min_and_max_performance_indicators(performance_indicator_index)
 
-                self.min_separability_metric_label.setText(str(min_indicator))
-                self.max_separability_metric_label.setText(str(max_indicator))
+            self.min_separability_metric_label.setText(str(min_indicator))
+            self.max_separability_metric_label.setText(str(max_indicator))
 
-                self.results.update_actor(ratio, performance_indicator_index)
+            self.results.update_actor(ratio, performance_indicator_index)
 
-                self.vtkWidget.GetRenderWindow().Render()
-        except:
-            print(traceback.format_exc())
-
-    def update_detailed_data(self, angle):
-        try:
-            single_result = self.results.get_closest_single_result(angle)
-
-            if self.window_actors:
-                for actor in self.window_actors:
-                    self.window_renderer.RemoveActor(actor)
-
-            self.window_actors = single_result.get_windows_actors()
-            for actor in self.window_actors:
-                self.window_renderer.AddActor(actor)
-
-            self.window_renderer.ResetCamera()
             self.vtkWidget.GetRenderWindow().Render()
-            self.window_vtk_widget.GetRenderWindow().Render()
-        except:
-            print(traceback.format_exc())
+
+    @error_decorator
+    def update_detailed_data(self, angle):
+        single_result = self.results.get_closest_single_result(angle)
+
+        if self.window_actors:
+            for actor in self.window_actors:
+                self.window_renderer.RemoveActor(actor)
+
+        self.window_actors = single_result.get_windows_actors()
+        for actor in self.window_actors:
+            self.window_renderer.AddActor(actor)
+
+        self.window_renderer.ResetCamera()
+        self.vtkWidget.GetRenderWindow().Render()
+        self.window_vtk_widget.GetRenderWindow().Render()
 
     def on_click(self, obj, event):
         if self.results:

@@ -3,10 +3,9 @@ from helpers.to_vtk import get_outline_actor, get_line_actor
 from sklearn.externals.six import StringIO
 import numpy as np
 import tempfile
-import traceback
 from PyQt4 import QtGui
 import helpers.classes as ch
-from helpers.windows import VTKWindow
+from VTKWindow import VTKWindow, error_decorator
 from widgets import BoneList
 import pydot
 from sklearn import tree
@@ -131,34 +130,32 @@ class MeasurableDifferencesWindow(VTKWindow):
             return self.classes_in_data[:2]
         return classes
 
+    @error_decorator
     def calculate(self):
-        try:
-            tree_criterion = self.tree_criteria[self.tree_criterion_box.currentIndex()]
-            tree_max_depth = self.max_depth_spinbox.value()
-            tree_min_samples_leaf = self.tree_min_samples_leaf_spinbox.value()
-            n_folds = self.num_folds_spinbox.value()
-            class1, class2 = self.get_compared_classes()
-            landmark_extractor = list([f for i, f in enumerate(self.landmark_extractors) if self.landmarks_extraction_buttons[i].isChecked()])[0]['fn']
+        tree_criterion = self.tree_criteria[self.tree_criterion_box.currentIndex()]
+        tree_max_depth = self.max_depth_spinbox.value()
+        tree_min_samples_leaf = self.tree_min_samples_leaf_spinbox.value()
+        n_folds = self.num_folds_spinbox.value()
+        class1, class2 = self.get_compared_classes()
+        landmark_extractor = list([f for i, f in enumerate(self.landmark_extractors) if self.landmarks_extraction_buttons[i].isChecked()])[0]['fn']
 
-            kwargs = {
-                'tree_criterion': tree_criterion,
-                'tree_max_depth': tree_max_depth,
-                'tree_min_samples_leaf': tree_min_samples_leaf,
-                'landmark_extractor': landmark_extractor,
-                'n_folds': n_folds,
-                'progress_callback': self.update_progress_bar
-            }
+        kwargs = {
+            'tree_criterion': tree_criterion,
+            'tree_max_depth': tree_max_depth,
+            'tree_min_samples_leaf': tree_min_samples_leaf,
+            'landmark_extractor': landmark_extractor,
+            'n_folds': n_folds,
+            'progress_callback': self.update_progress_bar
+        }
 
-            self.calc_button.setEnabled(False)
-            self.result = self.compare_fn(self.bones, class1, class2, **kwargs)
+        self.calc_button.setEnabled(False)
+        self.result = self.compare_fn(self.bones, class1, class2, **kwargs)
 
-            self.update_tree_viz()
-            self.update_landmark_ratio_list()
-            self.update_visualization()
+        self.update_tree_viz()
+        self.update_landmark_ratio_list()
+        self.update_visualization()
 
-            self.calc_button.setEnabled(True)
-        except:
-            print(traceback.format_exc())
+        self.calc_button.setEnabled(True)
 
     def update_progress_bar(self, progress, max_progress):
         self.progress_bar.setMaximum(max_progress)
@@ -188,53 +185,44 @@ class MeasurableDifferencesWindow(VTKWindow):
                 self.landmark_ratio_list.addItem(label)
             self.landmark_ratio_list.setCurrentRow(0)
 
+    @error_decorator
     def update_visualization(self):
-        try:
-            current_bone = self.bones[self.bone_list.currentIndex().row()]
-            landmark_combinations = self.result['landmark_combinations'][self.landmark_ratio_list.currentRow()]
-            landmark_combination_1 = landmark_combinations[0]
-            landmark_combination_2 = landmark_combinations[1]
-            ratio = current_bone['landmark_distances'][landmark_combination_1] / current_bone['landmark_distances'][landmark_combination_2]
+        current_bone = self.bones[self.bone_list.currentIndex().row()]
+        landmark_combinations = self.result['landmark_combinations'][self.landmark_ratio_list.currentRow()]
+        landmark_combination_1 = landmark_combinations[0]
+        landmark_combination_2 = landmark_combinations[1]
+        ratio = current_bone['landmark_distances'][landmark_combination_1] / current_bone['landmark_distances'][landmark_combination_2]
 
-            self.ratio_label.setText("Landmark-Distances Ratio: {}".format(ratio))
+        self.ratio_label.setText("Landmark-Distances Ratio: {}".format(ratio))
 
-            for actor in self.actors:
-                self.ren.RemoveActor(actor)
-            self.actors = []
+        for actor in self.actors:
+            self.ren.RemoveActor(actor)
+        self.actors = []
 
-            outline_actor = get_outline_actor({
-                'points': current_bone['points'],
-                'edges': current_bone['edges'].astype(np.int)
-            }, (0, 0, 0), 0xFFFF, False)
-            landmark_combination_1_actor = get_line_actor(np.array([
-                current_bone['landmarks'][landmark_combination_1[0]],
-                current_bone['landmarks'][landmark_combination_1[1]]
-            ]))
-            landmark_combination_1_actor.GetProperty().SetRepresentationToWireframe()
-            landmark_combination_1_actor.GetProperty().SetLineWidth(2)
-            landmark_combination_1_actor.GetProperty().SetColor(255, 0, 0)
-            landmark_combination_2_actor = get_line_actor(np.array([
-                current_bone['landmarks'][landmark_combination_2[0]],
-                current_bone['landmarks'][landmark_combination_2[1]]
-            ]))
-            landmark_combination_2_actor.GetProperty().SetRepresentationToWireframe()
-            landmark_combination_2_actor.GetProperty().SetLineWidth(2)
-            landmark_combination_2_actor.GetProperty().SetColor(0, 255, 0)
+        outline_actor = get_outline_actor({
+            'points': current_bone['points'],
+            'edges': current_bone['edges'].astype(np.int)
+        }, (0, 0, 0), 0xFFFF, False)
+        landmark_combination_1_actor = get_line_actor(np.array([
+            current_bone['landmarks'][landmark_combination_1[0]],
+            current_bone['landmarks'][landmark_combination_1[1]]
+        ]))
+        landmark_combination_1_actor.GetProperty().SetRepresentationToWireframe()
+        landmark_combination_1_actor.GetProperty().SetLineWidth(2)
+        landmark_combination_1_actor.GetProperty().SetColor(255, 0, 0)
+        landmark_combination_2_actor = get_line_actor(np.array([
+            current_bone['landmarks'][landmark_combination_2[0]],
+            current_bone['landmarks'][landmark_combination_2[1]]
+        ]))
+        landmark_combination_2_actor.GetProperty().SetRepresentationToWireframe()
+        landmark_combination_2_actor.GetProperty().SetLineWidth(2)
+        landmark_combination_2_actor.GetProperty().SetColor(0, 255, 0)
 
-            self.actors.append(outline_actor)
-            self.actors.append(landmark_combination_1_actor)
-            self.actors.append(landmark_combination_2_actor)
-            for actor in self.actors:
-                self.ren.AddActor(actor)
+        self.actors.append(outline_actor)
+        self.actors.append(landmark_combination_1_actor)
+        self.actors.append(landmark_combination_2_actor)
+        for actor in self.actors:
+            self.ren.AddActor(actor)
 
-            self.ren.ResetCamera()
-            self.vtkWidget.GetRenderWindow().Render()
-        except:
-            print(traceback.format_exc())
-
-
-
-
-
-
-
+        self.ren.ResetCamera()
+        self.vtkWidget.GetRenderWindow().Render()
