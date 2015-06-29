@@ -1,4 +1,5 @@
 import sys
+import signal
 import os
 from PyQt4 import QtCore, QtGui
 
@@ -70,8 +71,16 @@ def open_directory_in_comparison_helper():
 
         return True
 
+
 def main():
+    def shutdown(signal, widget):
+        exit()
+    signal.signal(signal.SIGINT, shutdown)
     app = QtGui.QApplication(sys.argv)
+
+    timer = QtCore.QTimer()
+    timer.start(500)
+    timer.timeout.connect(lambda: None)
 
     if open_directory_in_comparison_helper():
         sys.exit(app.exec_())
