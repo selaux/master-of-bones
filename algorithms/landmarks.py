@@ -106,6 +106,30 @@ def get_using_space_partitioning(outline_points):
     """
     landmark_definitions = [
         {
+            'x_min': 0.25,
+            'x_max': 1,
+            'y_min': 0.75,
+            'y_max': 1.5,
+            'method': 'max',
+            'dim': 'y'
+        },
+        {
+            'x_min': -0.5,
+            'x_max': 0.5,
+            'y_min': 0.75,
+            'y_max': 1.5,
+            'method': 'min',
+            'dim': 'y'
+        },
+        {
+            'x_min': -1,
+            'x_max': -0.25,
+            'y_min': 0.75,
+            'y_max': 1.5,
+            'method': 'max',
+            'dim': 'y'
+        },
+        {
             'x_min': -1,
             'x_max': 0.25,
             'y_min': -1.5,
@@ -136,30 +160,6 @@ def get_using_space_partitioning(outline_points):
             'y_max': 0.3,
             'method': 'min',
             'dim': 'x'
-        },
-        {
-            'x_min': -1,
-            'x_max': -0.25,
-            'y_min': 0.75,
-            'y_max': 1.5,
-            'method': 'max',
-            'dim': 'y'
-        },
-        {
-            'x_min': -0.5,
-            'x_max': 0.5,
-            'y_min': 0.75,
-            'y_max': 1.5,
-            'method': 'min',
-            'dim': 'y'
-        },
-        {
-            'x_min': 0.25,
-            'x_max': 1,
-            'y_min': 0.75,
-            'y_max': 1.5,
-            'method': 'max',
-            'dim': 'y'
         }
     ]
     landmarks = []
