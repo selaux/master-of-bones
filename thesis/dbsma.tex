@@ -70,6 +70,7 @@ Informatik der LMU M"unchen.
 \section{Preprocessing}
 
 \subsection{Image Segmentation}
+\label{sub:segmentation}
 
 \cite{achanta2012slic}
 \cite{felzenszwalb2004efficient}
@@ -79,9 +80,35 @@ Informatik der LMU M"unchen.
 
 \subsection{Triangulation and Outlining}
 
-\cite{akkirajualpha}
+The next step for preprocessing images was extracting the outline from a segmented image. As stated in Section
+\ref{sub:segmentation}, we marked some pixels in the images as being pixels that lie on the bone.
+To extract the outline from these pixels, we first transformed them into points in the x-y-space and then
+triangulated them using the delaunay triangulation.
+
+To reduce the number of outliers that were detected as on-bone-pixels,
+we decided to use the DBSCAN algorithm from \cite{ester1996density} and apply density based clustering to the points
+beforehand. DBSCAN allowed us to create clusters from the data, which correspond to closely packed points. Since
+the points on the bone were closely packed, and the points not on the bone were only sparsely detected as
+on-bone-pixels this allowed us to filter some of the false-positives. Another benefit of the DBSCAN algorithm is that,
+by defining our bone as a large densely connected area, we were able to use the largest cluster from the result,
+so closely packed areas that are disconnected from the bone were also removed.
+
+The delaunay triangulation was applied to the remaining points to create a triangulated mesh. Since delaunay
+triangulation can only create meshes with convex outlines, another step was required to extract the bone outline
+from the triangulation. For this purpose we used the $\alpha$-complex of the mesh as defined in \cite{akkirajualpha}.
+The $\alpha$-complex algorithm removes outer triangles for the delaunay-triangulation whose radii exceed
+$\frac{1}{\alpha}$ where $\alpha$ is a parameter. For our purpose $\alpha$ was chosen as $25$, which provided us with
+an accurate concave outline of the bone.
+
+Since we are analyzing the shape of the object, a manual step was introduced here to give the user the ability to
+approve the automatically extracted outline and adapt it if the result was not satisfactory. We gave the user the
+ability to mark points as on-the-bone/off-the-bone as well as fill a rectagle with a grid of on-the-bone points.
+This allows the user to easily adapt a triangulation and, if necessary, create a completely new one. It becomes
+especially important because the result of the image segmentation algorithm often has jagged borders, because the
+image segmentation algorithms do not consider the smoothness of the outline.
 
 \subsection{Landmark Extraction}
+\label{sub:landmarks}
 
 As some of the features we propose in this work are landmark based, and the detection of on-site-measurable differences
 is based on landmarks as well, a method to extract these landmarks from the outline of the bone is needed. In contrast to
@@ -126,13 +153,99 @@ d(\alpha) = ||i(\alpha)||
 The definitions for all landmarks when using this method can be found in Appendix \ref{appendix:table:landmarks-angle}.
 
 The landmarks found by this method are robustly located across all classes, but have a distinct disadvantage. They are
-not as easily located by hand since they dont lie exactly on the high  points of the outline, but slightly beneath
+not as easily located by hand since they dont lie exactly on the high points of the outline, but slightly beneath
 them  as seen in Figure \ref{figure-landmark-methods}. This makes distances inbetween landmarks harder to measure, which
 will become relevant in Chapter \ref{chapter:measurable-differences}.
 
 \subsubsection{Extraction by Space Partitioning}
 
+When extracting a landmark by space partitioning, the landmark position is defined by a rectangle in which the landmark
+lies, the information wether it lies on a maximum or a minimum turning point and the coordinate axis on which the
+turning point lies. The rectangle is defined by $x_{min}$, $x_{max}$, $y_min$ and $y_max$. The turning point
+is then found by only evaluating the respective axis inside the rectangle. The following function for turning points
+is then evaluated inside the rectangle, where $s_y(x)$ is the x-coordinate of the spline at the x-coordinate $x$.
+
+\begin{equation}
+d(x) = s_y(x)
+\end{equation}
+
+The definitions for all landmarks when using the space-paritioning method can be found in Appendix
+\ref{appendix:table:landmarks-space}.
+
+When looking at the landmarks found by this method, they tend to lie exactly on the high points of the outline, which
+makes them easily locatable by hand. The drawback of this approach is that local high or low points can be mistaken as
+landmarks by this algorithm, especially when the bone shapes are not registered yet.
+
 \section{Shape Registration}
+
+To adequatly compare the shapes, we needed to align them first as much as possible, so small differences in shape would
+show in the result. For this purpose we implemented several methods for point-to-point registration algorithms in order
+to find the one that best matches our dataset. In general point-to-point registration algorithms that matches point set
+$X$ onto point set $Y$ consist of two parts:
+
+\begin{itemize}
+\item Find correspondent points $C_Y$ for (some of the) points in $X$
+\item Find transformation $T$ that aligns $X$ to $C_Y$ as best as possible under certain restrictions
+\end{itemize}
+
+We chose the reference point set $Y$ to be represented by the bone outline with the most points, since this will allow
+us to find non-duplicate correspondences from $X$ to $Y$. Since we are considering the outline of the bone and not
+individual points, we can choose any points on the outline $B_Y$ as $Y$ and any point on the outline $B_X$ as $X$.
+Transformation estimations can also easily be iterated as done by the \"Iterative Closest Point\"-method \cite{besl1992method}.
+The method can be different in each iteration. We implemented several methods for point-to-point correspondence
+estimation as well as several methods for the estimation of the transformation.
+
+\subsection{Correspondence Estimation}
+
+\subsubsection{Landmarks}
+
+When estimating the correspondence using landmarks, the landmark points are located as described in Section
+\ref{sub:landmarks}. Since the number of landmarks is always the same in both outlines, we used the result
+as one-to-one correspondences for the registration. We implemented both the angle-based as well as the
+space-partitioning-based approaches of the automated landmark extraction. Additionally, we added a method
+that evaluates the manually set landmarks of the bones.
+
+\subsubsection{Spline Points}
+
+Another approach to find correspondences was to parameterize the bone outline using a spline and then using $n$
+evaluated points on the spline as a normalized representation of the shape. The spline representation consists
+of two functions $s_x$, $s_y$ for the $x$ and $y$ coordinates of the outline. We evaluated this spline using $n$
+equally spaced parameters $T$ as seen in Equation \ref{eq:registration-spline}.
+
+\begin{equation}
+\label{eq:registration-spline}
+\begin{split}
+& s(t) = ( s_x(t), s_y(t) ) \text{ with } 0 \leq t \leq 1 \\
+& T = \{ t_i=\frac{i}{n} | i=0, 1, \dots, (n-1) \} \\
+& X = \{ s(t_i) | t_i \in T \}
+\end{split}
+\end{equation}
+
+These spline points can be evaluated for all bones in the bone set and provide a one-to-one estimation of correspondences.
+
+\subsubsection{Nearest Neighbors}
+
+All previously suggested approaches have one distinct disadvantage: The correspondences are static, meaning they don't
+change after an iteration (although the positions of the automatically found landmarks might change). To compensate this
+we implemented a nearest-neighbor approach to estimate correspondences. The resulting algorithm is very similar to
+\cite{besl1992method} but uses other transformation estimators.
+
+To find the correspondences for $X$ in $Y$ we simply use the nearest neighbor $NN_Y(x_i)$ for each point $x_i$ in $X$.
+
+\begin{equation}
+NN_Y(x_i) = \arg\min(\{ \forall y_i \in Y: dist(x_i, y_i) \})
+\end{equation}
+
+The correspondences found with this method might change after each iteration. This is beneficial for already registered
+outlines.
+
+\subsection{Transformation Estimation}
+
+\subsubsection{Rigid Transformation}
+
+\subsubsection{Similarity Transformation}
+
+\subsubsection{Projective Transformation}
 
 \section{Shape Comparison}
 
@@ -187,8 +300,6 @@ will become relevant in Chapter \ref{chapter:measurable-differences}.
 
 \chapter{Landmark Extraction}
 
-\section{Definitions by Angle}
-
 \begin{table}
     \begin{center}
         \begin{tabular}{|r|r|r|r|}
@@ -205,6 +316,24 @@ will become relevant in Chapter \ref{chapter:measurable-differences}.
     \end{center}
     \caption{Landmark Definitions for the Extraction by Angle.}
     \label{appendix:table:landmarks-angle}
+
+    \begin{center}
+        \begin{tabular}{|r|r|r|r|r|r|r|}
+            \hline
+            \makebox[3cm]{Landmark No} & \makebox[1cm]{$x_{min}$} & \makebox[1cm]{$x_{max}$} & \makebox[1cm]{$y_{min}$} & \makebox[1cm]{$y_{max}$} & \makebox[2cm]{Axis} & \makebox[2cm]{Type} \\
+            \hline
+            \hline 1 &  $0.25$ & $1$ & $0.75$ & $1.5$ & y & maximum \\
+            \hline 2 &  $-0.5$ & $0.5$ & $0.75$ & $1.5$ & y & minimum \\
+            \hline 3 &  $-1$ & $-0.25$ & $0.75$ & $1.5$ & y & maximum \\
+            \hline 5 &  $-1$ & $-0.25$ & $-0.3$ & $0.3$ & x & minimum \\
+            \hline 6 &  $-1$ & $0.25$ & $-1.5$ & $-0.75$ & y & minimum \\
+            \hline 7 &  $-0.5$ & $0.5$ & $-1.5$ & $-0.75$ & y & maximum \\
+            \hline 8 &  $0.25$ & $1$ & $-1.5$ & $-0.75$ & y & minimum \\
+            \hline
+        \end{tabular}
+    \end{center}
+    \caption{Landmark Definitions for the Extraction by Space Partitioning.}
+    \label{appendix:table:landmarks-space}
 \end{table}
 
 % Abbildungsverzeichnis (kann auch nach dem Inhaltsverzeichnis kommen)
