@@ -197,6 +197,30 @@ estimation as well as several methods for the estimation of the transformation.
 
 \subsection{Correspondence Estimation}
 
+The correspondence estimation was then done for the point sets. Since the shape of the bones should be
+analyzed and they might have different sizes and positions the following normalizations were applied beforehand.
+
+\begin{itemize}
+\item Transformation of all point sets into the coordinate center
+\begin{equation}
+\begin{split}
+& \bar{x} = \frac{x_{1x} + x_{2x} + \cdots + x_{nx}}{n} \\
+& \bar{y} = \frac{x_{1y} + x_{2y} + \cdots + x_{ny}}{n} \\
+& X_c = \{ (x_{1x} - \bar{x}, x_{1y} - \bar{y}), \cdots, + (x_{nx} - \bar{x}, x_{ny} - \bar{y}) \}
+\end{split} 
+\end{equation}
+\item Scaling all point sets uniformly
+\begin{equation}
+\begin{split}
+& s = \sqrt{\frac{\sum\limits_{x \in X_c}||x||^2}{n}} \\
+& X_s = \left\{ \frac{x_{c1}}{s}, \cdots, \frac{x_{cn}}{s}\right\}
+\end{split}
+\end{equation}
+\end{itemize}
+
+This allowed us to use the scaled variants for correspondence estimation which yield correct results, especially
+for nearest neighbor queries and landmarks.
+
 \subsubsection{Landmarks}
 
 When estimating the correspondence using landmarks, the landmark points are located as described in Section
@@ -241,11 +265,18 @@ outlines.
 
 \subsection{Transformation Estimation}
 
-\subsubsection{Rigid Transformation}
+\subsubsection{Procrustes Transformation}
 
-\subsubsection{Similarity Transformation}
+Procrustes transformation is a transformation that uses a combination of translation, scaling and rotation. This kind of
+transformation preserves the original shape of the object, making it a similarity transformation. In our case reflection
+was not necessary since all the objects were prealigned already. The Procrustes transformation is closely related to the
+Procrustes analysis. To superimpose a point set $X$ onto a reference point set $Y$ three steps are necessary. The first
+two steps (transformation into center and uniform scaling) were already done in the normalization step. The only
+estimation necessary is the one of the angle $\theta$ which the point set $X$ needs to be rotated by.
 
 \subsubsection{Projective Transformation}
+
+\subsubsection{Affine Transformation}
 
 \section{Shape Comparison}
 
