@@ -17,4 +17,5 @@ thesis/*.lot
 thesis/*.blg
 thesis/*.bbl
 thesis/*.eps
+thesis/*.synctex.gz
 thesis/dbsma.pdf

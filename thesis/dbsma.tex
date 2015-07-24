@@ -99,16 +99,38 @@ so closely packed areas that are disconnected from the bone were also removed.
 The delaunay triangulation was applied to the remaining points to create a triangulated mesh. Since delaunay
 triangulation can only create meshes with convex outlines, another step was required to extract the bone outline
 from the triangulation. For this purpose we used the $\alpha$-complex of the mesh as defined in \cite{akkirajualpha}.
-The $\alpha$-complex algorithm removes outer triangles for the delaunay-triangulation whose radii exceed
-$\frac{1}{\alpha}$ where $\alpha$ is a parameter. For our purpose $\alpha$ was chosen as $25$, which provided us with
+The $\alpha$-complex algorithm removes outer triangles for the Delaunay triangulation that have a radus which exceeds
+$\frac{1}{\alpha}$. $\alpha$ is a parameter and was chosen as $25$ for our purpose, which provided us with
 an accurate concave outline of the bone.
 
 Since we are analyzing the shape of the object, a manual step was introduced here to give the user the ability to
 approve the automatically extracted outline and adapt it if the result was not satisfactory. We gave the user the
-ability to mark points as on-the-bone/off-the-bone as well as fill a rectagle with a grid of on-the-bone points.
+ability to mark points as on-the-bone/off-the-bone as well as fill a rectangle with a grid of on-the-bone points (or mark them all as not on-the-bone).
 This allows the user to easily adapt a triangulation and, if necessary, create a completely new one. It becomes
 especially important because the result of the image segmentation algorithm often has jagged borders, because the
 image segmentation algorithms do not consider the smoothness of the outline.
+
+Since the bones might have different sizes and positions, due to different image sizes and position of the bone in
+the image, we needed to introduce another normalization step afterwards. We decided to remove all variance in between the bones that are not attributed to shape. For this purpose we executed the first two steps of Procrustes
+analysis, also used in Section \ref{subsub:procrustes}.
+
+\begin{itemize}
+	\item Transformation of all point sets into the coordinate center
+	\begin{equation}
+		\begin{split}
+			& \bar{x} = \frac{x_{1x} + x_{2x} + \cdots + x_{nx}}{n} \\
+			& \bar{y} = \frac{x_{1y} + x_{2y} + \cdots + x_{ny}}{n} \\
+			& X_c = \{ (x_{1x} - \bar{x}, x_{1y} - \bar{y}), \cdots, + (x_{nx} - \bar{x}, x_{ny} - \bar{y}) \}
+		\end{split} 
+	\end{equation}
+	\item Scaling all point sets uniformly
+	\begin{equation}
+		\begin{split}
+			& s = \sqrt{\frac{\sum\limits_{x \in X_c}||x||^2}{n}} \\
+			& X_s = \left\{ \frac{x_{c1}}{s}, \cdots, \frac{x_{cn}}{s}\right\}
+		\end{split}
+	\end{equation}
+\end{itemize}
 
 \subsection{Landmark Extraction}
 \label{sub:landmarks}
@@ -144,7 +166,7 @@ landmark 8, which has no biological correspondence, but can be located robustly 
 \subsubsection{Extraction by Angle}
 
 When extracting a landmark by angle, the landmark position is defined by a minimum angle $\alpha_{min}$, a maximum
-angle $\alpha_{max}$ and the information wether it is located on a minimum or a maximum turning point.
+angle $\alpha_{max}$ and the information whether it is located on a minimum or a maximum turning point.
 The minimum/maximum turning angle $\alpha_{t}$ between $\alpha_{min}$ and $\alpha_{max}$ of the following function
 is calculated, where $i(\alpha)$ is the intersection between a ray from the coordinate center with the angle $\alpha$ and
 the outline. $i(\alpha_t)$ is then used as the landmark.
@@ -194,35 +216,14 @@ $X$ onto point set $Y$ consist of two parts:
 We chose the reference point set $Y$ to be represented by the bone outline with the most points, since this will allow
 us to find non-duplicate correspondences from $X$ to $Y$. Since we are considering the outline of the bone and not
 individual points, we can choose any points on the outline $B_Y$ as $Y$ and any point on the outline $B_X$ as $X$.
-Transformation estimations can also easily be iterated as done by the \"Iterative Closest Point\"-method \cite{besl1992method}.
+Transformation estimations can also easily be iterated as done by the ``Iterative Closest Point`` method \cite{besl1992method}.
 The method can be different in each iteration. We implemented several methods for point-to-point correspondence
-estimation as well as several methods for the estimation of the transformation.
+approaches as well as several for the estimation of the transformation which have different restrictions.
 
 \subsection{Correspondence Estimation}
 
-The correspondence estimation was then done for the point sets. Since the shape of the bones should be
-analyzed and they might have different sizes and positions the following normalizations were applied beforehand.
-
-\begin{itemize}
-\item Transformation of all point sets into the coordinate center
-\begin{equation}
-\begin{split}
-& \bar{x} = \frac{x_{1x} + x_{2x} + \cdots + x_{nx}}{n} \\
-& \bar{y} = \frac{x_{1y} + x_{2y} + \cdots + x_{ny}}{n} \\
-& X_c = \{ (x_{1x} - \bar{x}, x_{1y} - \bar{y}), \cdots, + (x_{nx} - \bar{x}, x_{ny} - \bar{y}) \}
-\end{split} 
-\end{equation}
-\item Scaling all point sets uniformly
-\begin{equation}
-\begin{split}
-& s = \sqrt{\frac{\sum\limits_{x \in X_c}||x||^2}{n}} \\
-& X_s = \left\{ \frac{x_{c1}}{s}, \cdots, \frac{x_{cn}}{s}\right\}
-\end{split}
-\end{equation}
-\end{itemize}
-
-This allowed us to use the scaled variants for correspondence estimation which yield correct results, especially
-for nearest neighbor queries and landmarks.
+Corresponding points are defined as pairs of semantically identical points in both point sets. Based on these
+pairs, the transformation estimation is done.
 
 \subsubsection{Landmarks}
 
@@ -273,7 +274,7 @@ outlines.
 
 Procrustes transformation is a transformation that uses a combination of translation, scaling and rotation. This kind of
 transformation preserves the original shape of the object, making it a similarity transformation. In our case reflection
-was not necessary since all the objects were prealigned already. The Procrustes transformation is closely related to the
+was not necessary since all the objects were pre-aligned already. The Procrustes transformation is closely related to the
 Procrustes analysis. To superimpose a point set $X$ onto a reference point set $Y$ three steps are necessary. The first
 two steps (transformation into center and uniform scaling) were already done in the normalization step. The only
 estimation necessary is the one of the angle $\theta$ which the point set $X$ needs to be rotated by to get the registered
@@ -288,7 +289,7 @@ point set $R$.
 \end{equation}
 
 When executing the Procrustes transformation in an iterative manner using differing correspondence estimations,
-transformation and scaling needs to be re-estimated as well.
+translation and scaling need to be re-estimated as well.
 
 \subsubsection{Affine Transformation}
 \label{subsub:affine}
@@ -297,7 +298,7 @@ An affine transformation is a transformation between two spaces that preserves t
 
 \begin{itemize}
 \item Collinearity: All points on a line still lie on a line after the transformation
-\item Parallelity: Two parallel lines are still parallel after the tranformation
+\item Parallelism: Two parallel lines are still parallel after the transformation
 \item Proportions of distances: Three points on a line have the same ratio of distances after the transformation
 \end{itemize}
 
@@ -307,7 +308,7 @@ disadvantage of actually changing the shape of the object. The Procrustes transf
 slightly different perspectives, we allowed the slight change in shape in this case, especially because was
 applied to the whole object.
 
-A affine transformation is represented by a $3x3$ transformation matrix $A$. A affine transform that
+A affine transformation is represented by a $3\times3$ transformation matrix $A$. A affine transform that
 superimposes a point set $X$ onto a point set $Y$ can be written in homogenous coordinates as:
 
 \begin{equation}
@@ -339,7 +340,7 @@ as this allows us to easily extract segments of the bone outline. After the regi
 adhere to the following standards.
 
 \begin{itemize}
-\item The centroid lies at the coordinate center $(0,0)$
+\item The centroid lies close to the coordinate center $(0,0)$
 \item The expansion lies within the ranges of $0$ to $2$ in the x and y directions
 \end{itemize}
 
@@ -361,7 +362,7 @@ To compare the shapes, we evaluated windows around $n$ points on the outline. Ea
 point therefore represents a neighborhood around itself. For each of these neighborhoods
 we calculated a set of features for each bone in the database. Then a support vector machine
 was used to determine the separability of the established classes at these points. Based on 
-these separability measures, we can then decide wether the two classes can be distinguished
+these separability measures, we can then decide whether the two classes can be distinguished
 at this point or not. 
 
 \subsection{Selection of Evaluation Windows}
@@ -372,10 +373,10 @@ each bone $B \in DB$. For this purpose we implemented two approaches to the prob
 \subsubsection{By Angle}
 \label{subsub:windowbyangle}
 
-The first approach to select an evaluation window by cutting a window of a certain angular
+The first approach to select an evaluation window by cutting a section of a certain angular
 width from the bone outline. The window in this method is defined by $\rho$ and $\Delta\rho$
-and is derived by raycasting from the coordinate center at the angles $\rho - \Delta\rho$ and 
-$\rho + \Delta\rho$ and using the polygon segment that lies inbetween these intersection points. 
+and is derived by ray casting from the coordinate center at the angles $\rho - \Delta\rho$ and 
+$\rho + \Delta\rho$ and using the polygon segment that lies in between these intersection points. 
 
 To find an intersection point at a certain angle $\rho$, the spline $\vec{s_B}(t) = (s_{Bx}(t), s_{By}(t))$ was evaluated at $k=250$ evenly spaced
 parameters $t_i \in [0,1]$ for each bone $B \in DB$. This evaluation was joined to a polygon
@@ -383,7 +384,7 @@ with $k$ line segments $s_i$. The intersection $\vec{i_B}(\rho)$ between this po
 the line segment $s_i$ that had this intersection on it was selected. $s_i$ is the line
 segment between $\vec{s_B}(t_i)$ and $\vec{s_B}(t_{i+1})$ or $\vec{s_B}(0)$ for $i=k$.
 
-To extract the exact parameter $t_{int}(\rho)$ where the intersection occured, The distances
+To extract the exact parameter $t_{int}(\rho)$ where the intersection occurred, The distances
 between the intersection $\vec{i_B}(\rho)$ and the endpoints of the line segment $s_i$ were put into relation.
 
 \begin{equation}
@@ -396,11 +397,11 @@ This leads to a good estimation of $t_{int}$ and the intersection point $\vec{s_
 for each bone $B$ at the angle $\rho$.
 
 Performing this calculation for $\rho-\Delta\rho$ and $\rho+\Delta\rho$ leads to two spline
-parameters $t_{\rho-\Delta\rho}$ and $t_{\rho+\Delta\rho}$ inbetween the spline can be 
+parameters $t_{\rho-\Delta\rho}$ and $t_{\rho+\Delta\rho}$ in between the spline can be 
 evaluated to get the evaluation window.
 
-The drawback of this method is that bones that are not aligned very well get longer windows
-if their outline lies closer to the coordinate center and shorter windows otherwise. This 
+The drawback of this method is that bones that are not aligned very well get shorter windows
+if their outline lies closer to the coordinate center and longer windows otherwise. This 
 might lead to unwanted results when doing the comparison since the considered windows are
 not semantically equal. 
 
@@ -418,14 +419,14 @@ t_{rho}+\Delta t_i]$ with $\Delta t_0 = 0$ and $i=0$ iteratively. With each iter
 \Delta t_i = \Delta t_{i-1} + \delta
 \end{equation}
 
-When the window is equal, or exceeds the required length $l$, we abort and get the current
+When the window length is equal, or exceeds the required length $l$, we abort and get the current
 window as the result of our calculation.
 
 \begin{equation}
 \int_{t_\rho - \Delta t_i}^{t_\rho + \Delta t_i} ||\vec{s_B}(t)|| dt \leq l
 \end{equation}
 
-Similarily to the angle based method presented in Section \ref{subsub:windowbyangle}, this leads to the spline parameters $[t_{rho}-\Delta t_i, t_{rho}+\Delta t_i]$ of the last iteration $i$, inbetween which the window at angle $\rho$ of length $l$ is defined.
+Similarly to the angle based method presented in Section \ref{subsub:windowbyangle}, this leads to the spline parameters $[t_{rho}-\Delta t_i, t_{rho}+\Delta t_i]$ of the last iteration $i$, inbetween which the window at angle $\rho$ of length $l$ is defined.
 
 The windows extracted by this method have approximately (because of the discrete
 characteristic of the algorithm) the same length, making them more similar across
