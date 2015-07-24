@@ -57,6 +57,9 @@ Informatik der LMU M"unchen.
 
 \cite{van2014scikit}
 
+\section{Splines}
+\label{section:splines}
+
 \section{Support Vector Machines}
 
 \cite{pedregosa2011scikit}
@@ -266,21 +269,167 @@ outlines.
 \subsection{Transformation Estimation}
 
 \subsubsection{Procrustes Transformation}
+\label{subsub:procrustes}
 
 Procrustes transformation is a transformation that uses a combination of translation, scaling and rotation. This kind of
 transformation preserves the original shape of the object, making it a similarity transformation. In our case reflection
 was not necessary since all the objects were prealigned already. The Procrustes transformation is closely related to the
 Procrustes analysis. To superimpose a point set $X$ onto a reference point set $Y$ three steps are necessary. The first
 two steps (transformation into center and uniform scaling) were already done in the normalization step. The only
-estimation necessary is the one of the angle $\theta$ which the point set $X$ needs to be rotated by.
+estimation necessary is the one of the angle $\theta$ which the point set $X$ needs to be rotated by to get the registered
+point set $R$.
+
+\begin{equation}
+\begin{split}
+& \theta = \arctan{\left( \frac{\sum\limits_{i = 1}^n(x_{ix}y_{iy} - x_{iy} y_{ix})}{\sum\limits_{i = 1}^n (x_{ix} y_{ix} + x_{iy} y_{iy}) } \right)} \\
+& \vec{r_i} = { (x_{ix} \cos\theta - x_{iy} \sin\theta, x_{ix} \sin\theta - x_{iy} \cos\theta) } \\
+& R = \{ \vec{r_1}, \cdots, \vec{r_n} \}
+\end{split}
+\end{equation}
+
+When executing the Procrustes transformation in an iterative manner using differing correspondence estimations,
+transformation and scaling needs to be re-estimated as well.
+
+\subsubsection{Affine Transformation}
+\label{subsub:affine}
+
+An affine transformation is a transformation between two spaces that preserves three properties:
+
+\begin{itemize}
+\item Collinearity: All points on a line still lie on a line after the transformation
+\item Parallelity: Two parallel lines are still parallel after the tranformation
+\item Proportions of distances: Three points on a line have the same ratio of distances after the transformation
+\end{itemize}
+
+Estimating kind of transformation allows for more flexibility to align the shapes. At the same time it has the
+disadvantage of actually changing the shape of the object. The Procrustes transform we presented in Section
+\ref{subsub:procrustes} is a subset of the affine transformation. Other transformations include shearing and combination of all presented transformations. Since the bones were sometimes photographed from
+slightly different perspectives, we allowed the slight change in shape in this case, especially because was
+applied to the whole object.
+
+A affine transformation is represented by a $3x3$ transformation matrix $A$. A affine transform that
+superimposes a point set $X$ onto a point set $Y$ can be written in homogenous coordinates as:
+
+\begin{equation}
+\label{eq:projectivetransformation}
+\begin{split}
+& \vec{r_i} = A \vec{x_i} \\
+& R = \{ \vec{r_i}, \cdots, \vec{r_n} \}
+\end{split}
+\end{equation}
+
+The estimation of the affine transform was done using the scikit-image python library \cite{van2014scikit}.
+It uses a linear equation system to solve for $A$ minimizing the mean squared error between $R$ and $Y$.
 
 \subsubsection{Projective Transformation}
 
-\subsubsection{Affine Transformation}
+A projective transformation, often refered to as homography is another kind of transform we implemented.
+Projective transformations are all transformations that adhere to the colinearity constraint introduced
+in Section \ref{subsub:affine}. Since projective transformations are transformations specifically used
+to study perspective, we used it to correct for differing perspectives of the bone photographies.
+
+A projective transformation can be represented similarily to an affine transform as defined in Equation
+\ref{eq:projectivetransformation}. The estimation was done by scikit-learn \cite{van2014scikit} as well. 
 
 \section{Shape Comparison}
 
+After registering the bone shapes, we could test them for significant local shape variations.
+To represent the outlines we decided to use splines as introduced in Section \ref{section:splines},
+as this allows us to easily extract segments of the bone outline. After the registration all outlines
+adhere to the following standards.
+
+\begin{itemize}
+\item The centroid lies at the coordinate center $(0,0)$
+\item The expansion lies within the ranges of $0$ to $2$ in the x and y directions
+\end{itemize}
+
+To further normalize the data we calculated the intersection between the x-axis and the bone outline
+in the positive section of the x-axis. This point was introduced as the starting point for the outline.
+The spline $(s_x(t), s_y(t))$ for the interval $t \in [0, 1]$ was then extracted leading to the
+following standards for the the spline representation for each bone. These standards can be leveraged for the comparison algorithm.
+
+\begin{equation}
+\begin{split}
+& s_y(0) = 0 \\
+& s_y(1) = 0 \\
+& s_x^\prime(0) = s_x^\prime(1) \\
+& s_y^\prime(0) = s_y^\prime(1)
+\end{split}
+\end{equation}
+
+To compare the shapes, we evaluated windows around $n$ points on the outline. Each evaluation
+point therefore represents a neighborhood around itself. For each of these neighborhoods
+we calculated a set of features for each bone in the database. Then a support vector machine
+was used to determine the separability of the established classes at these points. Based on 
+these separability measures, we can then decide wether the two classes can be distinguished
+at this point or not. 
+
 \subsection{Selection of Evaluation Windows}
+
+The next step in the algorithm is the selection the evaluation windows at an angle $\rho$ for
+each bone $B \in DB$. For this purpose we implemented two approaches to the problem.
+
+\subsubsection{By Angle}
+\label{subsub:windowbyangle}
+
+The first approach to select an evaluation window by cutting a window of a certain angular
+width from the bone outline. The window in this method is defined by $\rho$ and $\Delta\rho$
+and is derived by raycasting from the coordinate center at the angles $\rho - \Delta\rho$ and 
+$\rho + \Delta\rho$ and using the polygon segment that lies inbetween these intersection points. 
+
+To find an intersection point at a certain angle $\rho$, the spline $\vec{s_B}(t) = (s_{Bx}(t), s_{By}(t))$ was evaluated at $k=250$ evenly spaced
+parameters $t_i \in [0,1]$ for each bone $B \in DB$. This evaluation was joined to a polygon
+with $k$ line segments $s_i$. The intersection $\vec{i_B}(\rho)$ between this polygon and the ray was calculated and
+the line segment $s_i$ that had this intersection on it was selected. $s_i$ is the line
+segment between $\vec{s_B}(t_i)$ and $\vec{s_B}(t_{i+1})$ or $\vec{s_B}(0)$ for $i=k$.
+
+To extract the exact parameter $t_{int}(\rho)$ where the intersection occured, The distances
+between the intersection $\vec{i_B}(\rho)$ and the endpoints of the line segment $s_i$ were put into relation.
+
+\begin{equation}
+t_{int}(\rho) =
+\frac{|\vec{i_B}(\rho) - \vec{s_B}(t_{i+1})|}{|\vec{s_B}(t_i) - \vec{s_B}(t_{i+1})|} t_i +
+\frac{|\vec{i_B}(\rho) - \vec{s_B}(t_i)|}{|\vec{s_B}(t_i) - \vec{s_B}(t_{i+1})|} t_{i+1}
+\end{equation}
+
+This leads to a good estimation of $t_{int}$ and the intersection point $\vec{s_B}(t_{int})$
+for each bone $B$ at the angle $\rho$.
+
+Performing this calculation for $\rho-\Delta\rho$ and $\rho+\Delta\rho$ leads to two spline
+parameters $t_{\rho-\Delta\rho}$ and $t_{\rho+\Delta\rho}$ inbetween the spline can be 
+evaluated to get the evaluation window.
+
+The drawback of this method is that bones that are not aligned very well get longer windows
+if their outline lies closer to the coordinate center and shorter windows otherwise. This 
+might lead to unwanted results when doing the comparison since the considered windows are
+not semantically equal. 
+
+\subsubsection{By Length}
+
+To nullify this drawback, we implemented another method to extract the evaluation window.
+In this approach, a window of a certain length $l$ around a point of evaluation that is defined by the angle $\rho$ is extracted. To find these points we employed raycasting
+as introduced in Section \ref{subsub:windowbyangle}. This leads to a spline parameter
+$t_\rho$ which now defines the center of our window.
+
+To get a window from $t_\rho$, we expand the initial window $[t_{rho}-\Delta t_i,
+t_{rho}+\Delta t_i]$ with $\Delta t_0 = 0$ and $i=0$ iteratively. With each iteration we add a constant value $\delta$ to $\Delta t_i$.
+
+\begin{equation}
+\Delta t_i = \Delta t_{i-1} + \delta
+\end{equation}
+
+When the window is equal, or exceeds the required length $l$, we abort and get the current
+window as the result of our calculation.
+
+\begin{equation}
+\int_{t_\rho - \Delta t_i}^{t_\rho + \Delta t_i} ||\vec{s_B}(t)|| dt \leq l
+\end{equation}
+
+Similarily to the angle based method presented in Section \ref{subsub:windowbyangle}, this leads to the spline parameters $[t_{rho}-\Delta t_i, t_{rho}+\Delta t_i]$ of the last iteration $i$, inbetween which the window at angle $\rho$ of length $l$ is defined.
+
+The windows extracted by this method have approximately (because of the discrete
+characteristic of the algorithm) the same length, making them more similar across
+the different bones.
 
 \subsection{Feature Extraction}
 
@@ -302,6 +451,7 @@ estimation necessary is the one of the angle $\theta$ which the point set $X$ ne
 \subsection{Results and Compliance with Former Findings}
 
 \subsection{Comparison of Algorithm Parameters}
+\label{sub:comparisonalgorithmparameters}
 
 \subsection{Comparison of Features}
 
