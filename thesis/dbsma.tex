@@ -151,7 +151,7 @@ with space partitioning. The biological correspondences of the landmarks are as 
 \item Landmark 2: Lowest point in between the crests
 \item Landmark 3: Highest point on the medial crest
 \item Landmark 4: Intersection between the medial outer edge and the medially arcing edge of the medial crest
-\item Landmark 5: Outmost point on the medial apex
+\item Landmark 5: Out most point on the medial apex
 \item Landmark 6: Lowest point on the medial outer edge
 \item Landmark 7: Highest point on the distal depression
 \item Landmark 9: Intersection of the distal articular surface with the Calcaneus
@@ -185,7 +185,7 @@ will become relevant in Chapter \ref{chapter:measurable-differences}.
 \subsubsection{Extraction by Space Partitioning}
 
 When extracting a landmark by space partitioning, the landmark position is defined by a rectangle in which the landmark
-lies, the information wether it lies on a maximum or a minimum turning point and the coordinate axis on which the
+lies, the information whether it lies on a maximum or a minimum turning point and the coordinate axis on which the
 turning point lies. The rectangle is defined by $x_{min}$, $x_{max}$, $y_min$ and $y_max$. The turning point
 is then found by only evaluating the respective axis inside the rectangle. The following function for turning points
 is then evaluated inside the rectangle, where $s_y(x)$ is the x-coordinate of the spline at the x-coordinate $x$.
@@ -194,7 +194,7 @@ is then evaluated inside the rectangle, where $s_y(x)$ is the x-coordinate of th
 d(x) = s_y(x)
 \end{equation}
 
-The definitions for all landmarks when using the space-paritioning method can be found in Appendix
+The definitions for all landmarks when using the space-partitioning method can be found in Appendix
 \ref{appendix:table:landmarks-space}.
 
 When looking at the landmarks found by this method, they tend to lie exactly on the high points of the outline, which
@@ -203,7 +203,7 @@ landmarks by this algorithm, especially when the bone shapes are not registered 
 
 \section{Shape Registration}
 
-To adequatly compare the shapes, we needed to align them first as much as possible, so small differences in shape would
+To adequately compare the shapes, we needed to align them first as much as possible, so small differences in shape would
 show in the result. For this purpose we implemented several methods for point-to-point registration algorithms in order
 to find the one that best matches our dataset. In general point-to-point registration algorithms that matches point set
 $X$ onto point set $Y$ consist of two parts:
@@ -269,12 +269,15 @@ outlines.
 
 \subsection{Transformation Estimation}
 
+The transformation estimation is done for the selected corresponding points only and then applied to all points in
+the point set.
+
 \subsubsection{Procrustes Transformation}
 \label{subsub:procrustes}
 
 Procrustes transformation is a transformation that uses a combination of translation, scaling and rotation. This kind of
 transformation preserves the original shape of the object, making it a similarity transformation. In our case reflection
-was not necessary since all the objects were pre-aligned already. The Procrustes transformation is closely related to the
+was not necessary since all the objects were previously aligned already. The Procrustes transformation is closely related to the
 Procrustes analysis. To superimpose a point set $X$ onto a reference point set $Y$ three steps are necessary. The first
 two steps (transformation into center and uniform scaling) were already done in the normalization step. The only
 estimation necessary is the one of the angle $\theta$ which the point set $X$ needs to be rotated by to get the registered
@@ -309,7 +312,7 @@ slightly different perspectives, we allowed the slight change in shape in this c
 applied to the whole object.
 
 A affine transformation is represented by a $3\times3$ transformation matrix $A$. A affine transform that
-superimposes a point set $X$ onto a point set $Y$ can be written in homogenous coordinates as:
+superimposes a point set $X$ onto a point set $Y$ can be written in homogeneous coordinates as:
 
 \begin{equation}
 \label{eq:projectivetransformation}
@@ -324,12 +327,12 @@ It uses a linear equation system to solve for $A$ minimizing the mean squared er
 
 \subsubsection{Projective Transformation}
 
-A projective transformation, often refered to as homography is another kind of transform we implemented.
-Projective transformations are all transformations that adhere to the colinearity constraint introduced
+A projective transformation, often referred to as homography is another kind of transform we implemented.
+Projective transformations are all transformations that adhere to the collinearity constraint introduced
 in Section \ref{subsub:affine}. Since projective transformations are transformations specifically used
 to study perspective, we used it to correct for differing perspectives of the bone photographies.
 
-A projective transformation can be represented similarily to an affine transform as defined in Equation
+A projective transformation can be represented similarly to an affine transform as defined in Equation
 \ref{eq:projectivetransformation}. The estimation was done by scikit-learn \cite{van2014scikit} as well. 
 
 \section{Shape Comparison}
@@ -408,7 +411,7 @@ not semantically equal.
 \subsubsection{By Length}
 
 To nullify this drawback, we implemented another method to extract the evaluation window.
-In this approach, a window of a certain length $l$ around a point of evaluation that is defined by the angle $\rho$ is extracted. To find these points we employed raycasting
+In this approach, a window of a certain length $l$ around a point of evaluation that is defined by the angle $\rho$ is extracted. To find these points we employed ray-casting
 as introduced in Section \ref{subsub:windowbyangle}. This leads to a spline parameter
 $t_\rho$ which now defines the center of our window.
 
@@ -426,17 +429,211 @@ window as the result of our calculation.
 \int_{t_\rho - \Delta t_i}^{t_\rho + \Delta t_i} ||\vec{s_B}(t)|| dt \leq l
 \end{equation}
 
-Similarly to the angle based method presented in Section \ref{subsub:windowbyangle}, this leads to the spline parameters $[t_{rho}-\Delta t_i, t_{rho}+\Delta t_i]$ of the last iteration $i$, inbetween which the window at angle $\rho$ of length $l$ is defined.
+Similarly to the angle based method presented in Section \ref{subsub:windowbyangle}, this leads to the spline parameters $[t_{rho}-\Delta t_i, t_{rho}+\Delta t_i]$ of the last iteration $i$, in between which the window at angle $\rho$ of length $l$ is defined.
 
 The windows extracted by this method have approximately (because of the discrete
 characteristic of the algorithm) the same length, making them more similar across
 the different bones.
 
 \subsection{Feature Extraction}
+\label{sub:featureextraction}
+
+To compare the two classes at an angle $\rho$, we needed to extract features from the
+window defined by $[t_{start}, t_{end}]$ for each bone. We evaluated several feature
+extraction methods for this purpose. Most of these methods operate on a set of points
+$S$ that are created by evaluating the spline at $k$ equally spaced parameters.
+
+\begin{equation}
+\begin{split}
+& T = \{ t_i=t_{start} + \frac{i}{n} * (t_{end}-t_{start}) | i=0, 1, \dots, (k-1) \} \\
+& S = \{ \vec{s}(t_i) | t_i \in T \}
+\end{split}
+\end{equation}  
+
+Other features like the distances to the markers only use a single point, the center of
+the window.
+
+\subsubsection{Flattened Points}
+
+The simplest feature vector we used is to use a flattened version of $S$ as the feature
+vector. We consider this the baseline of our algorithm.
+
+\begin{equation}
+\vec{f} = \left( \begin{array}{c}
+s_x(t_0) \\
+s_y(t_0) \\
+\vdots \\
+s_x(t_{k-1}) \\
+s_y(t_{k-1})
+\end{array} \right)
+\end{equation}
+
+\subsubsection{Distance to Center}
+
+Another feature based on the point set $S$ is the distance of each point $s(t_i)$ to the
+center. This feature was considered to be more robust because it offers a lower dimensionality
+than to simply flatten the points.
+
+\begin{equation}
+\vec{f} = \left( \begin{array}{c}
+||s(t_0)|| \\
+\vdots \\
+||s(t_{k-1})||
+\end{array} \right)
+\end{equation}
+
+\subsubsection{Distance to Center and Curvature}
+\label{subsub:featuredistancetocenterandcurvature}
+
+To additionally take the relationships in between the points into account we considered
+to take the curvature of the spline evaluation into account as well. The curvature $\kappa$ of the spline at the parameter $t_i$ can be calculated as following.
+
+\begin{equation}
+\kappa(t_i) = \frac{|s_x^\prime(t_i) s_y^{\prime\prime}(t_i) - s_y^\prime(t_i) s_x^{\prime\prime}(t_i)|}{(s_x^\prime(t_i)^2 + s_y^{\prime}(t_i)^2)^{3/2}}
+\end{equation}
+
+The feature vector then consists of a combination of distances and the curvature of the
+corresponding points.
+
+\begin{equation}
+\vec{f} = \left( \begin{array}{c}
+||s(t_0)|| \\
+\kappa(t_0) \\
+\vdots \\
+||s(t_{k-1})|| \\
+\kappa(t_{k-1})
+\end{array} \right)
+\end{equation}
+
+\subsubsection{Curvature of Distance to Center}
+
+For this feature the idea was to only use the relationship between the points in $S$ and describe
+the polygon section by the curvature $\kappa$ of the distances to the center. Since the distance 
+to the center is no longer a parameterized curve the equation for $\kappa$ differs from
+Section \ref{subsub:featuredistancetocenterandcurvature}.
+
+\begin{equation}
+\begin{split}
+& d(t_i) = ||s(t)_i|| \\
+& \kappa(t_i) = \frac{|d^{\prime\prime}(t_i)|}{(1 + d^\prime(t_i)^2)^{2/3}}
+\end{split}
+\end{equation}
+
+The feature vector is then composed of the curvature of the points in the point set $S$.
+
+\begin{equation}
+\vec{f} = \left( \begin{array}{c}
+\kappa(t_0) \\
+\vdots \\
+\kappa(t_{k-1})
+\end{array} \right)
+\end{equation}
+
+\subsubsection{Derivation from Mean Bone}
+
+The concept of this feature was to use the fact that the mean bone outline is derived from both classes.
+Differences in the shape of the two classes should show in derivations from the mean bone outline that
+occur in different directions. For this purpose we need to calculate the mean bone $\bar{B} = \{ (\bar{b}_{x0}, \bar{b}_{y0}), \cdots, (\bar{b}_{xk-1}, \bar{b}_{yk-1}) \}$ for the current window of all bones $B \in DB$ first. $(s_{xB}(t), s_{yB}(t))$ defines the spline representation and $T_B = \{ t_{B0}, \cdots t_{Bk-1} \}$ is the extracted window for each bone $B$. The feature vector is then defined by the difference between the mean bone and
+each evaluation of the spline.
+
+\begin{equation}
+\begin{split}
+& \bar{b}_{xi} = \frac{1}{|DB|} \sum_{B \in DB} s_{xB}(t_{Bi}) \\
+& \bar{b}_{yi} = \frac{1}{|DB|} \sum_{B \in DB} s_{yB}(t_{Bi}) \\
+& \vec{f}_B = \left( \begin{array}{c}
+s_{xB}(t_{B0}) - \bar{s}_{x0} \\
+s_{yB}(t_{B0}) - \bar{s}_{y0} \\
+\vdots \\
+s_{xB}(t_{Bk-1}) - \bar{s}_{xk-1} \\
+s_{yB}(t_{Bk-1}) - \bar{s}_{yk-1} \\
+\end{array} \right)  
+\end{split}
+\end{equation}
+
+\subsubsection{Spline Derivatives}
+
+Spline derivatives can be used to analyze the shape of an object as well. Changes in the shape reflect heavily
+on the derivatives since they show the direction the outline is currently bending to. To filter out high frequency
+changes which occur due to the uneven surface of the bone, smoothing based on the Fast Fourier Transform is applied
+beforehand. The smoothing acts as a low-pass filter in frequency space.
+
+TODO: Howto FFT Splder
 
 \subsection{Dimensionality Reduction}
 
+Depending on the number of evaluations $k$ in the feature extraction step, shown in Section
+\ref{sub:featureextraction}, the dimensionality of the feature vector for each bone is relatively high. Most of 
+the feature vectors have a dimensionality $d = 2k$ or $d = k$. Depending on the value of $k$, this might become
+a feature vector of $> 50$ dimensions.
+
+To further analyze these features, we decided to introduce an optional step where principal component analysis
+(PCA) is applied to find the main components of the feature vectors. PCA transforms a number of correlated variables into a number of uncorrelated variables called principal components. The number of principal components can then be limited to to reduce the dimensionality of the feature set.
+
+Scikit-learn \cite{pedregosa2011scikit} provides an implementation of PCA, which we used to reduce the number of features to a user-defined number.
+
 \subsection{Calculation of Separability Measures}
+
+After extracting features $f_B$ for each bone $B \in DB$ at a certain evaluation point, the last step in the
+algorithm is to calculate an indicator that shows whether the two classes can be separated well around this point.
+This indicator can be used to show the location of the characteristic differences on the bone outline. For this
+purpose we used a Support Vector Machine to calculate several separability measures.
+
+\subsubsection{Margin}
+
+The SVM has the advantage of having the first separability measure built in: The width of the margin between the
+support vectors and the separating hyperplane $D$. Since the soft margin method is used to train the SVM, allowing for incorrectly labeled observations, this is the distance to the nearest cleanly split examples. The margin is 
+defined using the normal vector of the separating hyperplane $\vec{w}$. We used all observations $TR = \{ f_B \forall B \in DB \}$ to train the SVM $K$ in this case.
+
+\begin{equation}
+m = \frac{2}{||\vec{w}||}
+\end{equation}
+
+\subsubsection{Observed Accuracy}
+
+Since the margin might incorporate incorrectly classified examples, we decided to use other separability measures
+as well to confirm the results defined by the margin. For this purpose we used the observed accuracy metric of the SVM classifier $K$, trained with all observations as well. The class of the observation is here denoted as $C(o)$
+while the predicted class is denoted as $K(o)$.
+
+\begin{equation}
+a_{TR}(K) = \frac{|o \in TR | K(o) = C(o)|}{|TR|}
+\end{equation}
+
+\subsubsection{Mean Confidence Score}
+
+Using the SVM for classification also allowed us to see how well an observation can be assigned to a class. This
+is called a confidence score. The confidence score for the SVM is the distance from the observation to the dividing
+hyperplane $D$. We can use this to calculate a mean confidence score for all observations for the current evaluation point.
+
+\begin{equation}
+c_{TR}(K) = \frac{1}{|TR|} (\sum_{o \in TR | K(o) = C(o)} dist(o, D) - \sum_{o \in TR | K(o) \neq C(o)} dist(o, D))
+\end{equation}
+
+\subsubsection{Mean Cross-Validation Accuracy}
+
+In classification applications it's usually beneficial to separate the training and test sets to see how well a
+classifier can be generalized. Since our application is not a classifier but still very close to it, we wanted
+to make sure that the SVM could be generalized as well. When the classifier can be generalized well, the separation
+should be good as well at this position.
+
+Since our dataset is relatively small, we decided to use cross-validation to verify that the classifier can be
+generalized. In cross-validation the dataset is split up into $k$ disjoint sets $S_i$ that hold $\frac{|DB|}{k}$ items each. For our case we used $4$ items per set in a stratified manner. Stratified cross-validation is done by using the same ratio of classes inside each disjoint set as inside the whole database. The cross-validation is then
+executed by using all but one set as the training data and the remaining one as the test data. This is done $k$ times, so each set is used as test data once.
+
+\begin{equation}
+\begin{split}
+& TR_i = DB \setminus S_i \\
+& TE_i = S_i 
+\end{split}
+\end{equation}
+
+Using these sets $k$ SVMs $K_i$ are trained. The mean accuracy on the test sets of each classifier is then used
+as the measure.
+
+\begin{equation}
+\bar{a} = \frac{1}{|DB|} \sum_{i=1}^k | \{o \in TE_i | K(o) = C(o) \}| 
+\end{equation}
+
+
 
 \chapter{Detection of Differences That Are Measurable On-Site}
 \label{chapter:measurable-differences}
@@ -498,7 +695,9 @@ the different bones.
     \end{center}
     \caption{Landmark Definitions for the Extraction by Angle.}
     \label{appendix:table:landmarks-angle}
+\end{table}
 
+\begin{table}
     \begin{center}
         \begin{tabular}{|r|r|r|r|r|r|r|}
             \hline
