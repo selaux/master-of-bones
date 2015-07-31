@@ -1,8 +1,28 @@
+from functools import partial
+import os
 from inspect import getargspec
 import traceback
 import vtk
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
 from vtk.qt4.QVTKRenderWindowInteractor import QVTKRenderWindowInteractor
+
+
+def error_decorator(fn):
+    inspected = getargspec(fn)
+    num_args = len(inspected.args) - 1
+
+    def catched_fn(self, *args):
+        try:
+            fn(self, *args[:num_args])
+        except SystemExit:
+            self.close()
+        except:
+            QtGui.QMessageBox.critical(
+                self,
+                'An Error Occured',
+                '<b>An unexpected error occured, please report it to the programmer</b><br><code>{0}</code>'.format(traceback.format_exc())
+            )
+    return catched_fn
 
 
 class VTKWindow(QtGui.QMainWindow):
@@ -17,6 +37,10 @@ class VTKWindow(QtGui.QMainWindow):
         self.hl = QtGui.QHBoxLayout()
         self.frame = QtGui.QFrame()
         self.vtkWidget, self.ren, self.iren, self.intstyle = self.init_vtk_widget(self.frame)
+        self.save_main_vizualization_button = self.init_save_vizualization_button(
+            self.frame,
+            self.vtkWidget.GetRenderWindow()
+        )
         self.vl.addWidget(self.vtkWidget)
         self.hl.insertLayout(-1, self.vl)
 
@@ -71,6 +95,42 @@ class VTKWindow(QtGui.QMainWindow):
 
         return scale
 
+    @error_decorator
+    def init_save_vizualization_button(self, widget, render_window):
+        button = QtGui.QPushButton(widget)
+
+        old_resize_event = widget.resizeEvent
+        def new_resize_event(ev):
+            button.move(widget.mapToParent(QtCore.QPoint(20, 20)))
+            old_resize_event(ev)
+        widget.resizeEvent = new_resize_event
+
+        button.setGeometry(20, 20, 32, 32)
+        button.setIcon(QtGui.QIcon.fromTheme('document-save'))
+        button.setToolTip('Save Visualization')
+
+        button.clicked.connect(partial(self.store_visualization, render_window))
+
+        return button
+
+    @error_decorator
+    def store_visualization(self, render_window):
+        file_name = str(QtGui.QFileDialog.getSaveFileName(
+            self,
+            'Save Visualization',
+            os.path.join(os.getcwd(), '/visualization.svg'),
+            'SVG-Images (*.svg)'
+        ))
+
+        if len(file_name) > 0:
+            exporter = vtk.vtkGL2PSExporter()
+            exporter.SetRenderWindow(render_window)
+            exporter.SetFileFormatToSVG()
+            exporter.CompressOff()
+            exporter.DrawBackgroundOff()
+            exporter.SetFilePrefix(os.path.splitext(file_name)[0])
+            exporter.Write()
+
     def render_actors(self, actors, legends=[]):
         for actor in actors:
             self.ren.AddActor(actor)
@@ -95,21 +155,3 @@ class VTKWindow(QtGui.QMainWindow):
         self.show()
         self.activateWindow()
         self.iren.Initialize()
-
-def error_decorator(fn):
-    inspected = getargspec(fn)
-    num_args = len(inspected.args) - 1
-
-    def catched_fn(self, *args):
-        try:
-            fn(self, *args[:num_args])
-        except SystemExit:
-            self.close()
-        except:
-            QtGui.QMessageBox.critical(
-                self,
-                'An Error Occured',
-                '<b>An unexpected error occured, please report it to the programmer</b><br><code>{0}</code>'.format(traceback.format_exc())
-            )
-    return catched_fn
-

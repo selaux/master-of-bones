@@ -33,6 +33,11 @@ class ComparisonWindow(VTKWindow):
         self.window_actors = None
         self.fl.insertWidget(-1, self.window_widget)
 
+        self.save_main_vizualization_button = self.init_save_vizualization_button(
+            self.window_widget,
+            self.window_vtk_widget.GetRenderWindow()
+        )
+
         # Fixme: Implement Feature Widget (shows features of current window)
         # self.feature_widget = QtGui.QFrame()
         # self.feature_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
