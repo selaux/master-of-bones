@@ -434,6 +434,23 @@ class ComparisonResult:
         self.actor.GetProperty().SetRepresentationToWireframe()
         self.actor.GetProperty().SetLineWidth(3)
 
+        self.chart = vtk.vtkChartXY()
+        self.chart.GetAxis(1).SetBehavior(vtk.vtkAxis.FIXED);
+        self.chart.GetAxis(0).SetBehavior(vtk.vtkAxis.FIXED);
+        self.chart.GetAxis(1).SetRange(0, 359)
+        self.chart.GetAxis(0).SetRange(0, 1)
+        self.chart_table = vtk.vtkTable()
+        self.chart_angle_axis_array = vtk.vtkFloatArray()
+        self.chart_angle_axis_array.SetName('Angle (degrees)')
+        self.chart_metric_array = vtk.vtkFloatArray()
+        self.chart_metric_array.SetName('Metric')
+        self.chart_table.AddColumn(self.chart_angle_axis_array)
+        self.chart_table.AddColumn(self.chart_metric_array)
+
+        self.chart_line = self.chart.AddPlot(vtk.vtkChart.LINE)
+        self.chart_line.SetColor(0, 0, 0, 255)
+        self.chart_line.SetWidth(2)
+
     def add_single_result(self, result):
         self.single_results.append(result)
 
@@ -488,16 +505,25 @@ class ComparisonResult2D(ComparisonResult):
         lines = vtk.vtkCellArray()
         mean_outline = self.get_morphed_outline(ratio)
 
-        for i, point in enumerate(mean_outline):
-            points.InsertNextPoint([point[1], point[0], 1.0])
-            vertex = vtk.vtkVertex()
-            vertex.GetPointIds().SetId(0, i)
-            vertices.InsertNextCell(vertex)
+        self.chart_table.SetNumberOfRows(len(self.single_results))
+        for i, r in enumerate(self.single_results):
+            indicator = r.get_performance_indicators()[index_of_performance_indicator];
+            self.chart_metric_array.SetName(indicator['label'])
 
-            rho, phi = gh.cart2pol(point[0], point[1])
-            phi = degrees(phi) + 360 if phi < 0 else degrees(phi)
-            color = self.get_color_for_angle(phi, index_of_performance_indicator)
-            colors.InsertNextTuple3(*color)
+            self.chart_table.SetValue(i, 0, r.evaluation_point)
+            self.chart_table.SetValue(i, 1, indicator['value'])
+        self.chart_line.SetInputData(self.chart_table, 0, 1)
+
+        for i, point in enumerate(mean_outline):
+                points.InsertNextPoint([point[1], point[0], 1.0])
+                vertex = vtk.vtkVertex()
+                vertex.GetPointIds().SetId(0, i)
+                vertices.InsertNextCell(vertex)
+
+                rho, phi = gh.cart2pol(point[0], point[1])
+                phi = degrees(phi) + 360 if phi < 0 else degrees(phi)
+                color = self.get_color_for_angle(phi, index_of_performance_indicator)
+                colors.InsertNextTuple3(*color)
 
         for i in range(0, mean_outline.shape[0]):
             j = i+1 if i+1 < mean_outline.shape[0] else 0

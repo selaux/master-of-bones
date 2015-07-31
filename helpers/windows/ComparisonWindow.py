@@ -32,11 +32,24 @@ class ComparisonWindow(VTKWindow):
         self.window_vtk_widget.setSizePolicy(QtGui.QSizePolicy.Expanding, QtGui.QSizePolicy.Expanding)
         self.window_actors = None
         self.fl.insertWidget(-1, self.window_widget)
-
         self.save_main_vizualization_button = self.init_save_vizualization_button(
             self.window_widget,
             self.window_vtk_widget.GetRenderWindow()
         )
+
+        self.graph_widget = QtGui.QFrame()
+        self.graph_widget.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
+        self.graph_vtk_widget, self.graph_renderer, self.graph_interactor, self.graph_istyle = self.init_vtk_widget(self.graph_widget)
+        self.graph_vtk_widget.setSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
+        self.graph_context = vtk.vtkContextView()
+        self.graph_context.SetRenderWindow(self.graph_vtk_widget.GetRenderWindow())
+        self.graph_views = None
+        self.vl.addWidget(self.graph_widget)
+        self.save_main_vizualization_button = self.init_save_vizualization_button(
+            self.graph_widget,
+            self.graph_vtk_widget.GetRenderWindow()
+        )
+        self.graph_item = None
 
         # Fixme: Implement Feature Widget (shows features of current window)
         # self.feature_widget = QtGui.QFrame()
@@ -67,6 +80,7 @@ class ComparisonWindow(VTKWindow):
         self.window_renderer.AddActor(self.init_scale())
 
         self.window_interactor.Initialize()
+        self.graph_interactor.Initialize()
         # self.feature_interactor.Initialize()
 
         self.iren.AddObserver('LeftButtonPressEvent', self.on_click, 0.0)
@@ -245,6 +259,7 @@ class ComparisonWindow(VTKWindow):
         self.progress_bar.setValue(progress)
         QtGui.QApplication.processEvents()
 
+    @error_decorator
     def reset_overview(self):
         if self.results:
             old_metric_index = self.show_metric_box.currentIndex()
@@ -254,9 +269,14 @@ class ComparisonWindow(VTKWindow):
                 self.show_metric_box.addItem(m['label'])
             self.show_metric_box.setCurrentIndex(old_metric_index)
 
-            self.ren.RemoveActor(self.comparison_actor)
+            if self.comparison_actor:
+                self.ren.RemoveActor(self.comparison_actor)
+            if self.graph_item:
+                self.graph_context.GetScene().RemoveItem(self.graph_item)
             self.comparison_actor = self.results.actor
+            self.graph_item = self.results.chart
             self.ren.AddActor(self.comparison_actor)
+            self.graph_context.GetScene().AddItem(self.graph_item)
             self.update_overview_data()
 
             self.ren.ResetCamera()
