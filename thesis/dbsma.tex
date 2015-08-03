@@ -70,16 +70,109 @@ Informatik der LMU M"unchen.
 
 \section{Overview}
 
+Detecting local shape variation had to occur in several steps. The starting point was annotated JPG data. We had a series of images from the same bone, which encode the archaeological site in the file name. From the name of the archaeological site we could extract the class of the observation, since all bones found are of a single type (wild sheep or domestic sheep). The pipeline of the algorithm is shown in figure \ref{somefigure} and shows the steps needed.
+
+First we needed to extract the outline of the bone from the photograph. This is done in two steps: image segmentation is used to find pixels that lie on the bone and triangulation is used to extract the outline of the bone from these pixels. Additionally some landmark points are annotated in the preprocessing step.
+
+Then the outlines need to be normalized. Since the bones have different sizes and slightly different orientations, we needed to scale them uniformly and superimpose them onto each other as well as possible to be able to determine the local variations.
+
+The last step is to determine where on the bone significant differences of the two classes lie. For this purpose we sampled sections of the bone and used a support vector machine to determine the separability of the two classes at this section.
+
+To analyze the results, the resulting separability metrics can be shown in a line graph where the x-axis corresponds to the position of the bone section and the y-axis corresponds to the separability. Another way to visualize the results is to show it as an overlay onto a mean outline of the bone, which can be warped between the two classes so the reasons for the separability at each position becomes apparent.
+
 \section{Preprocessing}
+
+In preprocessing, several steps are necessary to extract an outline and other data like landmarks from the image data.
 
 \subsection{Image Segmentation}
 \label{sub:segmentation}
 
-\cite{achanta2012slic}
-\cite{felzenszwalb2004efficient}
-\cite{houhou2009fast}
-\cite{jain1990unsupervised}
-\cite{haralick1973textural}
+The first step in the preprocessing pipeline is to extract the bone for the image. Image segmentation
+is necessary to do this automatically. We segment the image into two parts: on-bone and not-on-bone pixels.
+The on bone pixels are the pixels that are part of the bone and are used for further processing.
+
+Since we apply triangulation afterwards it is not necessary for all pixels that lie on the bone
+to be classified as such, but only for the pixels on the outer edge of the bone. The inner pixels
+might only be classified as on-the-bone only sparsely. While this promotes the usage of a edge detection
+filter as the means of segmentation, in practice this was not possible since the background of the
+images contained a lot of edges as well and the edge between the bone and the background was not
+visible in all images. Another drawback of the provided image data was that the background of the images
+was not of consistent color.
+
+To cope with the diverse data, we decided to use mostly texture-focused methods of image segmentation. Since the data provided such a challenge we decided to give the user the ability to preview the results for each method and select the one that works best for the current image.
+
+\subsubsection{Watershed Segmentation}
+\label{subsub:segmentationwatershed}
+
+The watershed segmentation is a method that operates on greyscale images. It simulates a drop of water that flows towards the minima of the image using the pixel values of the image as a heightmap. This leads to areas around minima of the image separated by surrounding maxima ranges.
+
+Watershed segmentation usually relies on previous knowledge about the image, since several methods can be used to generate the greyscale image that is used for the segmentation. We based our watershed method on the previous knowledge that the bone is slightly darker than the background in the H channel of the HSV image space. To generate the image used for watershed, we used a threshold calculated from the mean color of the H channel and applied watershed afterwards.
+
+\begin{equation}
+\begin{split}
+& p_{thresh} = \frac{\mu}{|IMG|} \sum_{p_h \in IMG} p_h \\
+& p_{watershed}(p_h) = \begin{cases} 0 & \text{if } p_h > p_{thresh} \\ 1 & \text{if } p_h \leq p_{thresh} \end{cases}
+\end{split}
+\end{equation}
+
+We chose the parameter $\mu$ as $1.25$ and used the largest resulting label as on-bone-pixels. While this yielded results that were sufficient to determine where the  location of the bone in the image is, the exact outline of the bone could not be reproduced using this method. Nevertheless we leveraged this method to limit the search space for the following segmentation methods by cutting out the bounding box of the bone from the rest of the image.
+
+\subsubsection{SLIC}
+
+Simple linear iterative clustering (SLIC) is a method proposed by Achanta et. al. in \cite{achanta2012slic} to extract areas of perceptual simililarity from an image. While this is not a texture based method, by clustering the image into small regions of the same size we hoped to adhere to the edges of the bone. SLIC employs k-means clustering representing each pixel by its color values in the CIELAB color space and its position in the image. The parameter k is the number of desired superpixels. An additional parameter $m$ can be supplied to weigh spatial and color information in the distance function of the cluster algorithm. A small value for $m$ leads to less densely packed superpixels that adhere more tightly to boundaries.
+
+TODO: Results
+
+\subsubsection{Felzenszwalb Graph-Based}
+
+The method proposed by Felzenszwalb et. al in \cite{felzenszwalb2004efficient} is a graph based image segmentation method that works with the local neighborhoods of pixels. We decided to implement this method because it tries to segment perceptually similar regions. It works on the neighborhood graph of the image and defines the edges weights as the difference between the intensity of the pixels. The algorithm then iteratively splits and merges segments of the graph until the overall segmentation obeys certain global properties. The global properties are that the segmentation is neither too fine nor too coarse.
+
+\begin{itemize}
+	\item A segmentation $S$ is too fine if there is some pair of regions $C_1, C_2 \in S$ for which there is no evidence of a boundary between them
+	\item A segmentation $S$ is too coarse when there exists a proper refinement of $S$ that is not too fine
+\end{itemize}
+
+TODO: Results
+
+\subsubsection{Semi-local region descriptor}
+
+The method based on a semi-local region descriptor and active contour by Houhou et. al. in \cite{houhou2009fast} is the first method presented here that relies on a description of the texture that surrounds a pixel. The texture feature $F$ presented in the paper analyzes a patch $P_{x,y}$ around the pixel at position $(x,y)$ and represents the texture of this patch by a manifold. The metric
+tensor of this method is then calculated, accumulated for all color channels and a textural feature is extracted from the metric tensor.
+
+For the sake of simplicity we decided only to implement the texture feature from \cite{houhou2009fast} and not the proposed segmentation method, since the documentation was very sparse.
+
+TODO: Results
+
+\subsubsection{Gabor Filters}
+
+Another way to do texture segmentation in images is to represent the image using Gabor filters. The image is decomposed using Gabor filters into a number of filtered images that each contain variations in intensity over a certain frequency and in a certain direction. To obtain filtered images for segmentation it is necessary to well define the parameters of the filters. We used the filter selection method from \cite{jain1990unsupervised} to obtain the filter parameters. Gabor filters are tailored to represent the early stages of the human visual system, so the image is preprocessed using a non-linear function first and then the filters with the selected parameters are applied. This results in an vector of pixel values per pixel that can be clustered using k-means.
+
+TODO: Results
+
+\subsubsection{Textural Edge Detection}
+
+An approach to edge detection using semi-local texture features was also implemented. Since it wasn't necessary to segment the whole bone as on-bone-pixels but only the outline, we defined the outline as a region where there are different textures on either side. To detect vertical and horizontal edges we considered the local neighborhood of $n$ pixels into each direction of the pixel $N_{left}(x,y), N_{right}(x,y), N_{top}(x,y), N_{bottom}(x,y)$.
+
+\begin{equation}
+\begin{split}
+	& N_{left}(x,y) = \{ (x-n,y), (x-1,y) \} \\
+	& N_{right}(x,y) = \{ (x+1,y), (x+n,y) \} \\
+	& N_{top}(x,y) = \{ (x,y+n), (x,y+1) \} \\
+	& N_{bottom}(x,y) = \{ (x,y-1), (x,y-n) \}
+\end{split}
+\end{equation}
+
+We then calculated textural features $F$ for these local neighborhoods and used the distance between them as a measure for an edge. For this purpose we used Haralick textural features (\cite{haralick1973textural}) or parameter free threshold adjacency statistics (\cite{hamilton2007fast}). 
+
+\begin{equation}
+\begin{split}
+E(x,y) = & ||F(N_{left}(x,y)) -F(N_{right}(x,y))|| \\ & + ||F(N_{top}(x,y)) - F(N_{bottom}(x,y))||
+\end{split}
+\end{equation}
+
+The results could then be fed into a clustering algorithm or into the watershed segmentation from Section \ref{subsub:segmentationwatershed}.
+
+TODO: results
 
 \subsection{Triangulation and Outlining}
 
