@@ -7,6 +7,7 @@ import helpers.loading as lh
 import helpers.geometry as gh
 import helpers.display as dh
 import algorithms.registration as ar
+import algorithms.triangulation as tr
 
 BASE_PATH = os.getcwd()
 print("Current base path: {0}".format(BASE_PATH))
@@ -57,7 +58,9 @@ REFERENCE_ESTIMATORS = [
 ]
 
 def normalize_outline(outline):
-    outline['points'], outline['edges'] = gh.extract_outline(outline['points'], outline['simplices'])
+    triangulation = tr.triangulation(outline['bone_pixels'])
+
+    outline['points'], outline['edges'] = gh.extract_outline(triangulation.points, triangulation.simplices)
     gh.normalize_outline_with_markers(outline)
     return outline
 

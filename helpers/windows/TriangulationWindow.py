@@ -1,11 +1,10 @@
+from copy import copy
 import vtk
 import numpy as np
-import gzip
-import pickle
-import traceback
 from PyQt4 import QtCore, QtGui
 from ..to_vtk import get_outline_actor
 from .. import geometry as gh
+from .. import loading as lh
 from VTKWindow import VTKWindow, error_decorator
 
 
@@ -217,16 +216,10 @@ class TriangulationWindow(VTKWindow):
     @error_decorator
     def save_current(self):
         filename = self.current['save_path']
-        tri = self.do_triangulation(self.current['bone_pixels'])
-        to_save = {
-            'done': 'done' in self.current and self.current['done'],
-            'bone_pixels': self.current['bone_pixels'],
-            'markers': self.current['markers'],
-            'points': tri.points,
-            'simplices': tri.simplices
-        }
-        with gzip.open(filename, 'wb') as f:
-            pickle.dump(to_save, f)
+        to_save = copy(self.current)
+        to_save.pop('save_path')
+        to_save.pop('image')
+        lh.save_single_file(filename, to_save)
         self.current_modified = False
 
     @error_decorator
