@@ -8,9 +8,17 @@ from PyQt4 import QtCore, QtGui
 import helpers.display as dh
 import helpers.loading as lh
 import algorithms.triangulation as tr
+import algorithms.segmentation as se
 
 BASE_PATH = os.getcwd()
 DATA_PATH = os.path.join(BASE_PATH, 'data/2D/triangulation-results')
+SEGMENTATION_METHODS = [
+    {
+        'label': 'Watershed',
+        'fn': se.watershed
+    }
+]
+
 
 print("Current base path: {0}".format(BASE_PATH))
 
@@ -34,7 +42,8 @@ def main():
 
     dh.triangulation(
         loaded,
-        do_triangulation=tr.triangulation
+        do_triangulation=tr.triangulation,
+        segmentation_methods=SEGMENTATION_METHODS
     )
 
     sys.exit(app.exec_())

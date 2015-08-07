@@ -6,10 +6,11 @@ from ..to_vtk import get_outline_actor
 from .. import geometry as gh
 from .. import loading as lh
 from VTKWindow import VTKWindow, error_decorator
+from ImportBoneWindow import ImportBoneWindow
 
 
 class TriangulationWindow(VTKWindow):
-    def __init__(self, bones, do_triangulation):
+    def __init__(self, bones, do_triangulation, segmentation_methods):
         VTKWindow.__init__(self, title='Triangulation Helper')
 
         self.bones = bones
@@ -17,13 +18,20 @@ class TriangulationWindow(VTKWindow):
         self.current = bones[0]
         self.last_step = None
         self.current_modified = False
+        self.segmentation_methods = segmentation_methods
 
+        self.ll = QtGui.QVBoxLayout()
         self.list_model = lm = BonesListModel(self.bones, self)
         self.list_view = QtGui.QListView()
         self.list_view.setModel(lm)
         self.list_view.selectionModel().select(lm.index(0), QtGui.QItemSelectionModel.SelectCurrent)
         self.list_view.setSizePolicy(QtGui.QSizePolicy.Fixed, QtGui.QSizePolicy.MinimumExpanding)
-        self.hl.insertWidget(0, self.list_view)
+        self.ll.addWidget(self.list_view)
+
+        self.add_bone_button = self.get_new_button('Add new bone', 'list-add')
+        self.ll.addWidget(self.add_bone_button)
+
+        self.hl.insertLayout(0, self.ll)
 
         self.bl = QtGui.QHBoxLayout()
         self.toggle_triangulation_button = self.get_new_button('Toggle Triangulation', 'image-x-generic', checkable=True)
@@ -72,6 +80,7 @@ class TriangulationWindow(VTKWindow):
         self.iren.AddObserver('KeyPressEvent', self.on_key, 0.0)
         self.intstyle.AddObserver('SelectionChangedEvent', self.area_selected, 0.0)
         self.list_view.selectionModel().currentChanged.connect(self.on_bone_model_change)
+        self.add_bone_button.clicked.connect(self.add_bone)
         self.toggle_triangulation_button.clicked.connect(self.toggle_triangulation)
         self.toggle_markers_button.clicked.connect(self.toggle_markers)
         self.mark_as_done_button.clicked.connect(self.mark_as_done)
@@ -177,6 +186,12 @@ class TriangulationWindow(VTKWindow):
     def closeEvent(self, event):
         self.ask_for_save()
         VTKWindow.closeEvent(self, event)
+
+    def add_bone(self):
+        import_bone_window = ImportBoneWindow('base', 'some image', self.segmentation_methods)
+
+        if import_bone_window.exec_() == QtGui.QDialog.Accepted:
+            pass
 
     @error_decorator
     def toggle_triangulation(self, state):

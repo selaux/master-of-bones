@@ -87,8 +87,8 @@ def outlines(outlines, show_direction=False, title=None, color_by_class=False):
     return window
 
 
-def triangulation(bones, do_triangulation):
-    window = windows.TriangulationWindow(bones, do_triangulation)
+def triangulation(bones, do_triangulation, segmentation_methods):
+    window = windows.TriangulationWindow(bones, do_triangulation, segmentation_methods)
     show_window(window)
     return window
 
