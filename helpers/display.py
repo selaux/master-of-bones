@@ -1,4 +1,8 @@
+from helpers.loading import get_info_from_filename
+import os
+from PyQt4 import QtGui
 import itertools
+from helpers.windows.ImportBoneWindow import ImportBoneWindow
 import windows
 from skimage.color import label2rgb
 from skimage.transform import resize
@@ -87,8 +91,8 @@ def outlines(outlines, show_direction=False, title=None, color_by_class=False):
     return window
 
 
-def triangulation(bones, do_triangulation, segmentation_methods):
-    window = windows.TriangulationWindow(bones, do_triangulation, segmentation_methods)
+def triangulation(bones, do_triangulation, do_import):
+    window = windows.TriangulationWindow(bones, do_triangulation, do_import)
     show_window(window)
     return window
 
@@ -112,3 +116,24 @@ def measurable_differences(bones, compare_fn, landmark_extractors):
     window = windows.MeasurableDifferencesWindow(bones, compare_fn, landmark_extractors=landmark_extractors)
     show_window(window)
     return window
+
+def import_bone(segmentation_methods):
+    file_name = bytes(QtGui.QFileDialog.getOpenFileName(
+        None,
+        caption='Open File to Import',
+        directory=os.getcwd(),
+        filter='JPG-Images (*.jpg)'
+    ))
+
+    if len(file_name) != 0:
+        import_bone_window = ImportBoneWindow(file_name, segmentation_methods)
+
+        if import_bone_window.exec_() == QtGui.QDialog.Accepted:
+            content = {
+                'image': import_bone_window.raw_cut_image,
+                'bone_pixels': import_bone_window.bone_pixels
+            }
+
+            content.update(get_info_from_filename(file_name))
+
+            return content

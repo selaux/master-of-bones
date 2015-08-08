@@ -1,3 +1,4 @@
+from functools import partial
 import sys
 import signal
 import os
@@ -16,6 +17,10 @@ SEGMENTATION_METHODS = [
     {
         'label': 'Watershed',
         'fn': se.watershed
+    },
+    {
+        'label': 'SLIC',
+        'fn': se.slic
     }
 ]
 
@@ -43,7 +48,7 @@ def main():
     dh.triangulation(
         loaded,
         do_triangulation=tr.triangulation,
-        segmentation_methods=SEGMENTATION_METHODS
+        do_import=partial(dh.import_bone, SEGMENTATION_METHODS)
     )
 
     sys.exit(app.exec_())

@@ -6,11 +6,10 @@ from ..to_vtk import get_outline_actor
 from .. import geometry as gh
 from .. import loading as lh
 from VTKWindow import VTKWindow, error_decorator
-from ImportBoneWindow import ImportBoneWindow
 
 
 class TriangulationWindow(VTKWindow):
-    def __init__(self, bones, do_triangulation, segmentation_methods):
+    def __init__(self, bones, do_triangulation, do_import):
         VTKWindow.__init__(self, title='Triangulation Helper')
 
         self.bones = bones
@@ -18,7 +17,7 @@ class TriangulationWindow(VTKWindow):
         self.current = bones[0]
         self.last_step = None
         self.current_modified = False
-        self.segmentation_methods = segmentation_methods
+        self.do_import = do_import
 
         self.ll = QtGui.QVBoxLayout()
         self.list_model = lm = BonesListModel(self.bones, self)
@@ -188,10 +187,14 @@ class TriangulationWindow(VTKWindow):
         VTKWindow.closeEvent(self, event)
 
     def add_bone(self):
-        import_bone_window = ImportBoneWindow('base', 'some image', self.segmentation_methods)
-
-        if import_bone_window.exec_() == QtGui.QDialog.Accepted:
-            pass
+        bone = self.do_import()
+        if bone:
+            bone.update({
+                'edited': False,
+                'done': False,
+                'markers': {}
+            })
+            self.list_model.insertRows([bone])
 
     @error_decorator
     def toggle_triangulation(self, state):
@@ -310,8 +313,6 @@ class TriangulationWindow(VTKWindow):
         low_x, low_y = min(start_world_x, end_world_x), min(start_world_y, end_world_y)
         high_x, high_y = max(start_world_x, end_world_x), max(start_world_y, end_world_y)
 
-
-
         self.reshape_bone_pixels_if_necessary(low_x, low_y)
         bone_pixels = self.reshape_bone_pixels_if_necessary(high_x, high_y)
 
@@ -409,6 +410,12 @@ class BonesListModel(QtCore.QAbstractListModel):
 
     def rowCount(self, parent):
         return len(self.listdata)
+
+    def insertRows(self, rows):
+        for row in rows:
+            self.beginInsertRows(QtCore.QModelIndex(), len(self.listdata), len(self.listdata))
+            self.listdata.append(row)
+            self.endInsertRows()
 
     def data(self, index, role):
         if role == QtCore.Qt.DecorationRole:
