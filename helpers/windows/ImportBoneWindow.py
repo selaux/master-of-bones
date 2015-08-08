@@ -1,3 +1,4 @@
+import os
 from PyQt4 import QtCore, QtGui
 from helpers.windows.VTKWindow import error_decorator
 import skimage
@@ -9,7 +10,7 @@ from algorithms.segmentation import watershed_cut
 def scale_to_max(maximum, pixmap):
     height = min(pixmap.height(), maximum)
     width = min(pixmap.width(), maximum)
-    return pixmap.scaled(QtCore.QSize(width, height), QtCore.Qt.KeepAspectRatio)
+    return pixmap.copy(0, 0, pixmap.width(), pixmap.height()).scaled(QtCore.QSize(width, height), QtCore.Qt.KeepAspectRatio)
 
 
 class ImportBoneWindow(QtGui.QDialog):
@@ -48,10 +49,13 @@ class ImportBoneWindow(QtGui.QDialog):
 
         bl = QtGui.QHBoxLayout()
         self.ok_button = QtGui.QPushButton('OK')
+        self.save_images_button = QtGui.QPushButton('Save Images')
         self.cancel_button = QtGui.QPushButton('Cancel')
         bl.addWidget(self.ok_button)
+        bl.addWidget(self.save_images_button)
         bl.addWidget(self.cancel_button)
         self.ok_button.clicked.connect(self.do_accept)
+        self.save_images_button.clicked.connect(self.save_images)
         self.cancel_button.clicked.connect(self.do_cancel)
 
         self.vl.addLayout(bl)
@@ -77,28 +81,32 @@ class ImportBoneWindow(QtGui.QDialog):
         
         self.raw_cut_image = watershed_cut(self.raw_skimage)
 
-        self.cut_image = QtGui.QPixmap.fromImage(ImageQt.ImageQt(scipy.misc.toimage(self.raw_cut_image)))
+        self.cut_qimage = ImageQt.ImageQt(scipy.misc.toimage(self.raw_cut_image))
+        self.cut_image = QtGui.QPixmap.fromImage(self.cut_qimage)
         self.cut_image_label.setPixmap(scale_to_max(400, self.cut_image))
 
         self.raw_segmented_image = segmentation_method(self.raw_cut_image)
-        self.segmented_image =QtGui.QPixmap.fromImage(ImageQt.ImageQt(scipy.misc.toimage(skimage.color.label2rgb(self.raw_segmented_image))))
+        self.colored_labels_image = ImageQt.ImageQt(scipy.misc.toimage(skimage.color.label2rgb(self.raw_segmented_image)))
+        self.segmented_image = QtGui.QPixmap.fromImage(self.colored_labels_image)
         self.segmented_image_label.setPixmap(scale_to_max(400, self.segmented_image))
 
         self.labels = list(np.unique(self.raw_segmented_image))
+        print(len(self.labels))
         for button in self.label_buttons:
             button.close()
         self.label_buttons = map(lambda c: QtGui.QCheckBox(str(int(c))), self.labels)
 
         col = 0
         row = 0
-        for button in self.label_buttons:
-            button.clicked.connect(self.changed_classes)
-            self.labels_layout.addWidget(button, row, col)
-            if (col+1) % 5 == 0:
-                row += 1
-                col = 0
-            else:
-                col += 1
+        if len(self.label_buttons) <= 20:
+            for button in self.label_buttons:
+                button.clicked.connect(self.changed_classes)
+                self.labels_layout.addWidget(button, row, col)
+                if (col+1) % 5 == 0:
+                    row += 1
+                    col = 0
+                else:
+                    col += 1
 
     def changed_segmentation_method(self):
         self.apply_segmentation_method()
@@ -127,6 +135,23 @@ class ImportBoneWindow(QtGui.QDialog):
                 self.bone_pixels[self.raw_segmented_image == cls] = 1.0
 
         self.accept()
+
+    @error_decorator
+    def save_images(self):
+        def save_image(path, pixmap):
+            pixmap.save(path, os.path.splitext(path)[1][1:])
+        dir_name = bytes(QtGui.QFileDialog.getExistingDirectory(
+            None,
+            caption='Open File to Import',
+            directory=os.getcwd()
+        ))
+
+        if len(dir_name) > 0:
+            save_image(os.path.join(dir_name, 'original.jpg'), self.raw_image)
+            save_image(os.path.join(dir_name, 'cut.jpg'), self.cut_image)
+            save_image(os.path.join(dir_name, 'segmented.jpg'), self.segmented_image)
+
+
 
     def do_cancel(self):
         self.bone_pixels = None
