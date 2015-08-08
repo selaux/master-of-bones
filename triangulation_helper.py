@@ -21,6 +21,18 @@ SEGMENTATION_METHODS = [
     {
         'label': 'SLIC',
         'fn': se.slic
+    },
+    {
+        'label': 'Felzenszwalb',
+        'fn': se.felzenszwalb
+    },
+    {
+        'label': 'Gabor Filters',
+        'fn': se.gabor
+    },
+    {
+        'label': 'Textural Edges',
+        'fn': se.textural_edges
     }
 ]
 
