@@ -1,6 +1,6 @@
 \documentclass[pdftex,12pt,a4paper]{report}
 \usepackage{dbstmpl}
-\usepackage{subfigure}
+\usepackage{subcaption}
 \usepackage[utf8]{inputenc}
 
 % Hier die eigenen Daten eintragen
@@ -65,8 +65,10 @@ Informatik der LMU M"unchen.
 \cite{pedregosa2011scikit}
 
 \section{Decision Trees}
+\label{sec:basics-decision-trees}
 
 \chapter{Detection of Local Shape Variations}
+\label{chapter:detecting-shape-variations}
 
 \section{Overview}
 
@@ -115,11 +117,63 @@ Watershed segmentation usually relies on previous knowledge about the image, sin
 \end{split}
 \end{equation}
 
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/watershed/cut.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/watershed/segmented.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/watershed/cut.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/watershed/segmented.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\caption{Image Segmentation using watershed algorithm for two images}
+	\label{fig:watershed}
+\end{figure}
+
 We chose the parameter $\mu$ as $1.25$ and used the largest resulting label as on-bone-pixels. While this yielded results that were sufficient to determine where the  location of the bone in the image is, the exact outline of the bone could not be reproduced using this method. Nevertheless we leveraged this method to limit the search space for the following segmentation methods by cutting out the bounding box of the bone from the rest of the image.
 
 \subsubsection{SLIC}
 
 Simple linear iterative clustering (SLIC) is a method proposed by Achanta et. al. in \cite{achanta2012slic} to extract areas of perceptual simililarity from an image. While this is not a texture based method, by clustering the image into small regions of the same size we hoped to adhere to the edges of the bone. SLIC employs k-means clustering representing each pixel by its color values in the CIELAB color space and its position in the image. The parameter k is the number of desired superpixels. An additional parameter $m$ can be supplied to weigh spatial and color information in the distance function of the cluster algorithm. A small value for $m$ leads to less densely packed superpixels that adhere more tightly to boundaries.
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/slic/cut.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/slic/segmented.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/slic/cut.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/slic/segmented.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\caption{Image Segmentation using SLIC superpixels for two images}
+	\label{fig:slic}
+\end{figure}
 
 TODO: Results
 
@@ -131,6 +185,32 @@ The method proposed by Felzenszwalb et. al in \cite{felzenszwalb2004efficient} i
 	\item A segmentation $S$ is too fine if there is some pair of regions $C_1, C_2 \in S$ for which there is no evidence of a boundary between them
 	\item A segmentation $S$ is too coarse when there exists a proper refinement of $S$ that is not too fine
 \end{itemize}
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/felzenszwalb/cut.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/felzenszwalb/segmented.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/felzenszwalb/cut.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/felzenszwalb/segmented.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\caption{Image Segmentation using Felzenszwalb's graph-based method for two images}
+	\label{fig:felzenszwalb}
+\end{figure}
 
 TODO: Results
 
@@ -146,6 +226,32 @@ TODO: Results
 \subsubsection{Gabor Filters}
 
 Another way to do texture segmentation in images is to represent the image using Gabor filters. The image is decomposed using Gabor filters into a number of filtered images that each contain variations in intensity over a certain frequency and in a certain direction. To obtain filtered images for segmentation it is necessary to well define the parameters of the filters. We used the filter selection method from \cite{jain1990unsupervised} to obtain the filter parameters. Gabor filters are tailored to represent the early stages of the human visual system, so the image is preprocessed using a non-linear function first and then the filters with the selected parameters are applied. This results in an vector of pixel values per pixel that can be clustered using k-means.
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/gabor/cut.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/gabor/segmented.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/gabor/cut.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/gabor/segmented.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\caption{Image Segmentation using gabor filters for two images}
+	\label{fig:gabor}
+\end{figure}
 
 TODO: Results
 
@@ -172,6 +278,32 @@ E(x,y) = & ||F(N_{left}(x,y)) -F(N_{right}(x,y))|| \\ & + ||F(N_{top}(x,y)) - F(
 
 The results could then be fed into a clustering algorithm or into the watershed segmentation from Section \ref{subsub:segmentationwatershed}.
 
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/textural-edges/cut.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/good/textural-edges/segmented.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/textural-edges/cut.jpg}
+		\subcaption*{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/segmentation/bad/textural-edges/segmented.jpg}
+		\subcaption{}
+	\end{subfigure}
+	\caption{Image Segmentation using gabor filters for two images}
+	\label{fig:gabor}
+\end{figure}
+
 TODO: results
 
 \subsection{Triangulation and Outlining}
@@ -179,7 +311,7 @@ TODO: results
 The next step for preprocessing images was extracting the outline from a segmented image. As stated in Section
 \ref{sub:segmentation}, we marked some pixels in the images as being pixels that lie on the bone.
 To extract the outline from these pixels, we first transformed them into points in the x-y-space and then
-triangulated them using the delaunay triangulation.
+triangulated them using the Delaunay triangulation.
 
 To reduce the number of outliers that were detected as on-bone-pixels,
 we decided to use the DBSCAN algorithm from \cite{ester1996density} and apply density based clustering to the points
@@ -189,10 +321,10 @@ on-bone-pixels this allowed us to filter some of the false-positives. Another be
 by defining our bone as a large densely connected area, we were able to use the largest cluster from the result,
 so closely packed areas that are disconnected from the bone were also removed.
 
-The delaunay triangulation was applied to the remaining points to create a triangulated mesh. Since delaunay
+The Delaunay triangulation was applied to the remaining points to create a triangulated mesh. Since Delaunay
 triangulation can only create meshes with convex outlines, another step was required to extract the bone outline
 from the triangulation. For this purpose we used the $\alpha$-complex of the mesh as defined in \cite{akkirajualpha}.
-The $\alpha$-complex algorithm removes outer triangles for the Delaunay triangulation that have a radus which exceeds
+The $\alpha$-complex algorithm removes outer triangles for the Delaunay triangulation that have a radius which exceeds
 $\frac{1}{\alpha}$. $\alpha$ is a parameter and was chosen as $25$ for our purpose, which provided us with
 an accurate concave outline of the bone.
 
@@ -702,6 +834,7 @@ c_{TR}(K) = \frac{1}{|TR|} (\sum_{o \in TR | K(o) = C(o)} dist(o, D) - \sum_{o \
 \end{equation}
 
 \subsubsection{Mean Cross-Validation Accuracy}
+\label{subsub:cross-validation-accuracy}
 
 In classification applications it's usually beneficial to separate the training and test sets to see how well a
 classifier can be generalized. Since our application is not a classifier but still very close to it, we wanted
@@ -731,9 +864,46 @@ as the measure.
 \chapter{Detection of Differences That Are Measurable On-Site}
 \label{chapter:measurable-differences}
 
+The method presented in Chapter \ref{chapter:detecting-shape-variations} is useful for finding general differences in shape in between two classes of data. But these differences can only be located, but not measured. Since the zooarchaeologists also needed a method to classify these bones in the field, we implemented another method with the goal of creating a method to classify the bones with only a slide caliper as a tool.
+
 \section{Definition of Measurable Values}
 
-\section{Training Decision Trees}
+First we needed to define measurable values that could be extracted from the outline of the bone. For this purpose we decided to use the automatically extracted landmarks that we defined in Section \ref{sub:landmarks}. This method provided us with a sets of points that are semantically identical on each bone. Since these points lie on the extrema of the bones shape, finding them manually should be no problem.
+
+These points can be used to calculate simple features that can be used to classify the bone. Since the point can be located on the bone, but not measured in coordinates, we decided to use distances between these points as features. This way only a few distances need to be measured in the field to be able to decide, with a certain probability, to which class the bone belongs. Since the absolute distance between the landmarks is still not meaningful, because the data was normalized and therefore the distance does not translate into a real-world distance, we decided to use ratios of distances as the input data for finding measurable differences.
+
+Both methods to extract landmarks that were presented in Section \ref{sub:landmarks} can be used to extract the landmarks. Depending on the extraction method, some of the distances can be hard to measure. Since the landmarks extracted by space-partitioning lie on extrema in x and y direction, they are preferred when using this method for distances that are parallel to the x- and y-axes. The landmarks extracted by angle are favored for distances that are measured diagonally. This can be considered when evaluating the decision tree created by this method.
+
+To create the feature vector for each bone, the initial data is a list of landmarks for this bone $L = \{ l_1, \cdots l_n \}$ and a list of landmark combinations $C = \{ (l_g, l_h), \cdots, (l_i, l_j) \}$ with $1 <= g,h,i,j <= n$. The feature vector will then be created from all possible combinations $D$ of the landmark combinations $C$, which correspond to distances between the landmarks.
+
+\begin{equation}
+D = C \times C \setminus \{ (c_i, c_i) \forall i = 1 \cdots k \}
+\end{equation}
+
+The distance ratios can then be calculated from this set.
+
+\begin{equation}
+\begin{split}
+& D = \{ ((l_g, l_h), (l_i, l_j)), \cdots, ((l_k, l_l), (l_m, l_n)) \} \\
+& \vec{f} = \left( \begin{array}{c}
+\frac{||l_g - l_h||}{||l_i - l_j||} \\
+\vdots \\
+\frac{||l_k - l_l||}{||l_m - l_n||} \\
+\end{array} \right)
+\end{split}
+\end{equation}
+
+\section{Training a Decision Tree}
+
+To classify the bone we decided to use a decision tree as presented in Section \ref{sec:basics-decision-trees}, because it gives the capability to read the decision path from the classifier. This way the zooarchaeologist only needs to measure a handful of distances and apply them to the decision tree to figure out the class of the object.
+
+The depth of the decision tree $T$ defines how many distances need to be measured as $m <= depth(T) * 2$. We decided to limit the trees depth to 2 to reduce the number of measurements as well as to have a better generalization of the model.
+
+Training the decision tree is pretty straight forward using the feature vectors from the previous section. The split criterion can be selected by the user.
+
+To validate our findings we use the cross-validation method already presented in Section \ref{subsub:cross-validation-accuracy}. We again use stratified sets of 4 items. All but one set are used for training and the remaining one is used as test data. This is done $\frac{|D|}{4}$ times, with each set used once as test data. The mean accuracy of these classifications is used as a metric of how well the decision tree performs.
+
+After having trained the decision tree, the result can be used for manual classification. The split dimensions and values are included in the decision tree. The distances between landmarks represented by the split dimensions need to be measured on the bone that was found in the field. After obtaining the distances the researcher can use a simple calculator to determine the ratios of these distances. The decision tree needs to be applied to these ratios to get the leaf node that corresponds to the found bone. After applying this method correctly the researcher can determine with what probability the bone belongs to a certain class.
 
 \chapter{Experiments}
 
