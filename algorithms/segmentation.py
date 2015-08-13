@@ -1,17 +1,19 @@
-from math import radians, sqrt
+from math import radians, sqrt, exp
 import numpy as np
 from scipy.cluster.vq import kmeans2
+from scipy.ndimage import convolve
 from skimage import  color, img_as_ubyte
 from skimage.filters import gabor_filter, gaussian_filter
 from skimage.filters.rank import median, mean
 from skimage.transform import rescale
 from skimage.morphology import disk, watershed
+from skimage.util import pad
 from skimage import morphology
 from skimage import segmentation
 import mahotas as mh
 
 from helpers import features as fh
-from sklearn.decomposition import PCA
+from sklearn.decomposition import PCA, RandomizedPCA
 
 MU = 1.3
 SCALE = 0.1
@@ -70,8 +72,43 @@ def watershed(image):
 
     return labels
 
-def threshold_median_filter():
-    pass
+def active_contours(image):
+    WINDOW_SIZE = 4
+    SIGMA = .1
+    SCALE=.1
+
+    image = rescale(image, SCALE)
+    step_size = WINDOW_SIZE / 2
+    image_with_padded_borders = pad(image, ((step_size, step_size), (step_size, step_size), (0, 0)), mode='symmetric')
+    features = np.zeros((image.shape[0], image.shape[1], WINDOW_SIZE*WINDOW_SIZE))
+
+    for y in range(image.shape[0]):
+        for x in range(image.shape[1]):
+            neighborhood = image_with_padded_borders[y:y+WINDOW_SIZE, x:x+WINDOW_SIZE]
+
+            gradient_filter_y = [[0, 0, 0], [-1, 0, 1], [0, 0, 0]]
+            gradient_images_y = np.zeros_like(neighborhood)
+            gradient_images_y[:, :, 0] = convolve(neighborhood[:, :, 0], gradient_filter_y)
+            gradient_images_y[:, :, 1] = convolve(neighborhood[:, :, 1], gradient_filter_y)
+            gradient_images_y[:, :, 2] = convolve(neighborhood[:, :, 2], gradient_filter_y)
+
+            gradient_filter_x = [[0, -1, 0], [0, 0, 0], [0, 1, 0]]
+            gradient_images_x = np.zeros_like(neighborhood)
+            gradient_images_x[:, :, 0] = convolve(neighborhood[:, :, 0], gradient_filter_x)
+            gradient_images_x[:, :, 1] = convolve(neighborhood[:, :, 1], gradient_filter_x)
+            gradient_images_x[:, :, 2] = convolve(neighborhood[:, :, 2], gradient_filter_x)
+
+            result = np.zeros((neighborhood.shape[0], neighborhood.shape[1]))
+            for y in range(neighborhood.shape[0]):
+                for x in range(neighborhood.shape[1]):
+                    mat = np.array([
+                        [1 + np.sum(np.power(gradient_images_x[y,x,:], 2)), np.sum(np.multiply(gradient_images_x[y,x,:], gradient_images_y[y,x,:]))],
+                        [np.sum(np.multiply(gradient_images_x[y,x,:], gradient_images_y[y,x,:])), 1 + np.sum(np.power(gradient_images_x[y,x,:], 2))]
+                    ])
+                    result[y, x] = exp(-np.linalg.det(mat) / SIGMA)
+            features[y, x, :] = result.flatten()
+
+    return segmentation_clustering(features, add_locality=False)
 
 def felzenszwalb(image):
     SCALE = 250
@@ -127,7 +164,7 @@ def textural_edges(image):
         dist_x = np.linalg.norm(har_left - har_right)
         dist_y = np.linalg.norm(har_top - har_bottom)
 
-        return [dist_x + dist_y]
+        return [dist_x, dist_y]
         #return list(har_left - har_right) + list(har_top - har_bottom)
 
     image = img_as_ubyte(rescale(image, SCALE))
@@ -195,8 +232,8 @@ def segmentation_clustering(features, normalize_features=True, use_pca=True, add
         return np.concatenate((locality, features), 2)
 
     def reduce_feature_complexity(features):
-        pca = PCA(n_components=6)
-        #pca = RandomizedPCA(n_components=6)
+        #pca = PCA(n_components=6)
+        pca = RandomizedPCA(n_components=6)
         reduced = pca.fit_transform(features)
         return reduced
 

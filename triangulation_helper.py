@@ -27,6 +27,10 @@ SEGMENTATION_METHODS = [
         'fn': se.felzenszwalb
     },
     {
+        'label': 'Active Contours',
+        'fn': se.active_contours
+    },
+    {
         'label': 'Gabor Filters',
         'fn': se.gabor
     },
