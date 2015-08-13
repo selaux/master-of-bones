@@ -53,9 +53,13 @@ Informatik der LMU M"unchen.
 
 \chapter{Mathematical Basics}
 
-\section{Image Segmentation}
+\section{Principal Component Analysis}
 
-\cite{van2014scikit}
+\section{Clustering}
+
+\subsection{K-Means}
+
+\subsection{DBSCAN}
 
 \section{Splines}
 \label{section:splines}
@@ -101,14 +105,14 @@ images contained a lot of edges as well and the edge between the bone and the ba
 visible in all images. Another drawback of the provided image data was that the background of the images
 was not of consistent color.
 
-To cope with the diverse data, we decided to use mostly texture-focused methods of image segmentation. Since the data provided such a challenge we decided to give the user the ability to preview the results for each method and select the one that works best for the current image.
+To cope with the diverse data, we decided to use mostly texture-focused methods of image segmentation. Since the data provided such a challenge we decided to give the user the ability to preview the results for each method and select the one that works best for the current image. If not otherwise stated, the calculated features for each pixel were reduced in dimensionality by using Principal Component Analysis to $4$ components. Then k-means clustering is applied with $k=8$ to cluster the pixels into labels.
 
 \subsubsection{Watershed Segmentation}
 \label{subsub:segmentationwatershed}
 
 The watershed segmentation is a method that operates on greyscale images. It simulates a drop of water that flows towards the minima of the image using the pixel values of the image as a heightmap. This leads to areas around minima of the image separated by surrounding maxima ranges.
 
-Watershed segmentation usually relies on previous knowledge about the image, since several methods can be used to generate the greyscale image that is used for the segmentation. We based our watershed method on the previous knowledge that the bone is slightly darker than the background in the H channel of the HSV image space. To generate the image used for watershed, we used a threshold calculated from the mean color of the H channel and applied watershed afterwards.
+Watershed segmentation usually relies on previous knowledge about the image, since several methods can be used to generate the greyscale image that is used for the segmentation. We based our watershed method on the previous knowledge that the bone is slightly darker than the background in the H channel of the HSV image space. To generate the image used for watershed, we used a threshold calculated from the mean color of the H channel and applied watershed afterwards. Before using the data, a local median filter was applied beforehand to smooth the image and the resulting labels.
 
 \begin{equation}
 \begin{split}
@@ -117,7 +121,7 @@ Watershed segmentation usually relies on previous knowledge about the image, sin
 \end{split}
 \end{equation}
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
@@ -143,39 +147,43 @@ Watershed segmentation usually relies on previous knowledge about the image, sin
 	\label{fig:watershed}
 \end{figure}
 
-We chose the parameter $\mu$ as $1.25$ and used the largest resulting label as on-bone-pixels. While this yielded results that were sufficient to determine where the  location of the bone in the image is, the exact outline of the bone could not be reproduced using this method. Nevertheless we leveraged this method to limit the search space for the following segmentation methods by cutting out the bounding box of the bone from the rest of the image.
+We chose the parameter $\mu$ as $1.25$ and used the largest resulting label as on-bone-pixels. While this yielded results that were sufficient to determine where the  location of the bone in the image is, the exact outline of the bone could not be reproduced using this method as visible in Figure \ref{fig:watershed}. Nevertheless we leveraged this method to limit the search space for the following segmentation methods by cutting out the bounding box of the bone from the rest of the image.
 
 \subsubsection{SLIC}
 
-Simple linear iterative clustering (SLIC) is a method proposed by Achanta et. al. in \cite{achanta2012slic} to extract areas of perceptual simililarity from an image. While this is not a texture based method, by clustering the image into small regions of the same size we hoped to adhere to the edges of the bone. SLIC employs k-means clustering representing each pixel by its color values in the CIELAB color space and its position in the image. The parameter k is the number of desired superpixels. An additional parameter $m$ can be supplied to weigh spatial and color information in the distance function of the cluster algorithm. A small value for $m$ leads to less densely packed superpixels that adhere more tightly to boundaries.
+Simple linear iterative clustering (SLIC) is a method proposed by Achanta et. al. in \cite{achanta2012slic} to extract areas of perceptual similarity from an image. While this is not a texture based method, by clustering the image into small regions of the same size we hoped to adhere to the edges of the bone. SLIC employs k-means clustering representing each pixel by its color values in the CIELAB color space and its position in the image. The parameter $k$ is the number of desired superpixels. An additional parameter $m$ can be supplied to weigh spatial and color information in the distance function of the cluster algorithm. A small value for $m$ leads to less densely packed superpixels that adhere more tightly to boundaries.
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/slic/cut.jpg}
 		\subcaption{}
+		\label{fig:slic:good}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/slic/segmented.jpg}
 		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/slic/cut.jpg}
 		\subcaption{}
+		\label{fig:slic:bad}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/slic/segmented.jpg}
 		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\caption{Image Segmentation using SLIC superpixels for two images}
 	\label{fig:slic}
 \end{figure}
 
-TODO: Results
+This superpixel method works well for images with differing background and foreground colors as visible in Figure \ref{fig:slic:good} and when using a sufficiently number of superpixels $k=8$. Increasing the weight $m$ to $m=15$ leads to compact clusters that align to the bone shape. When background and foreground colors are similar as it is the case in Figure \ref{fig:slic:bad}, the clusters become more frayed and do not align anymore with the bone shape.
 
 \subsubsection{Felzenszwalb Graph-Based}
 
@@ -186,33 +194,39 @@ The method proposed by Felzenszwalb et. al in \cite{felzenszwalb2004efficient} i
 	\item A segmentation $S$ is too coarse when there exists a proper refinement of $S$ that is not too fine
 \end{itemize}
 
-\begin{figure}
+The split algorithm can be configured by a parameter $k$, which sets the scale of observation. A larger $k$ means that stronger evidence for a boundary is needed to perform a split.
+
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/felzenszwalb/cut.jpg}
 		\subcaption{}
+		\label{fig:felzenszwalb:good}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/felzenszwalb/segmented.jpg}
 		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/felzenszwalb/cut.jpg}
 		\subcaption{}
+		\label{fig:felzenszwalb:bad}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/felzenszwalb/segmented.jpg}
 		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\caption{Image Segmentation using Felzenszwalb's graph-based method for two images}
 	\label{fig:felzenszwalb}
 \end{figure}
 
-TODO: Results
+In contrast to the previous methods, Felzenszwalb's method creates clusters from the edge of the bone only as shown in Figure \ref{fig:felzenszwalb:good}. These labels adhere to the edges of the bone, but some additional areas are included in the result as well. The number of labels is not selectable and for large images this method can create hundreds of labels, which complicates label selection for the user, so a sufficiently high observation level $k$ needs to be chosen to reduce the number of labels. For our purpose, we chose $k=1000$. The images that are difficult to segment could often not be correctly segmented using this method as visible in Figure \ref{fig:felzenszwalb:bad}. When choosing a small value for $k$ a huge amount of small labels was generated. On the other hand, when choosing a large value for $k$, the bone and background collapsed into a single label.
 
 \subsubsection{Semi-local region descriptor}
 
@@ -227,33 +241,37 @@ TODO: Results
 
 Another way to do texture segmentation in images is to represent the image using Gabor filters. The image is decomposed using Gabor filters into a number of filtered images that each contain variations in intensity over a certain frequency and in a certain direction. To obtain filtered images for segmentation it is necessary to well define the parameters of the filters. We used the filter selection method from \cite{jain1990unsupervised} to obtain the filter parameters. Gabor filters are tailored to represent the early stages of the human visual system, so the image is preprocessed using a non-linear function first and then the filters with the selected parameters are applied. This results in an vector of pixel values per pixel that can be clustered using k-means.
 
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/gabor/cut.jpg}
 		\subcaption{}
+		\label{fig:gabor:good}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/gabor/segmented.jpg}
 		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/gabor/cut.jpg}
-		\subcaption*{}
+		\subcaption{}
+		\label{fig:gabor:bad}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/gabor/segmented.jpg}
-		\subcaption{}
+		\subcaption*{}
+		\label{}
 	\end{subfigure}
-	\caption{Image Segmentation using gabor filters for two images}
+	\caption{Image Segmentation using Gabor filters for two images}
 	\label{fig:gabor}
 \end{figure}
 
-TODO: Results
+The results of clustering the Gabor filter features vary heavily depending on the image. For almost all images, wavy features either in the background or on the bone are detected. Depending on where they are detected, one of these labels can be used to outline the bone. As visible in Figure \ref{fig:gabor} this sometimes works better for difficultly separable images.
 
 \subsubsection{Textural Edge Detection}
 
@@ -276,35 +294,37 @@ E(x,y) = & ||F(N_{left}(x,y)) -F(N_{right}(x,y))|| \\ & + ||F(N_{top}(x,y)) - F(
 \end{split}
 \end{equation}
 
-The results could then be fed into a clustering algorithm or into the watershed segmentation from Section \ref{subsub:segmentationwatershed}.
-
-\begin{figure}
+\begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/textural-edges/cut.jpg}
 		\subcaption{}
+		\label{fig:textural:good}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/textural-edges/segmented.jpg}
 		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/textural-edges/cut.jpg}
-		\subcaption*{}
+		\subcaption{}
+		\label{fig:textural:bad}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/textural-edges/segmented.jpg}
-		\subcaption{}
+		\subcaption*{}
+		\label{}
 	\end{subfigure}
-	\caption{Image Segmentation using gabor filters for two images}
-	\label{fig:gabor}
+	\caption{Image Segmentation using textural edge detection for two images}
+	\label{fig:textural}
 \end{figure}
 
-TODO: results
+The results for this segmentation method are mixed as well. While edges are detected correctly on images with high contrast as visible in Figure \ref{fig:textural:good}, the results appear random for images with low contrast between bone and background as shown in Figure \ref{fig:textural:bad}. Some structure is visible in Figure \ref{fig:textural:bad}, but the clustering does not work well in this case because of the low number of features.
 
 \subsection{Triangulation and Outlining}
 
@@ -368,6 +388,7 @@ are not positioned on the outline of the bone, this was not feasible in our case
 of the bone that could be located automatically and overlap as much as possible with the landmark definitions by the
 zooarcheologists. For this purpose we introduced two methods that extract landmarks from outlines of Tali. The landmarks
 found by these methods have very similar positions but differ in on-site-measurability and stability in-between classes.
+
 Figure \ref{figure-landmark-methods} shows the results of the three landmark locating methods: manual, with angles and
 with space partitioning. The biological correspondences of the landmarks are as follows.
 
@@ -404,7 +425,7 @@ The definitions for all landmarks when using this method can be found in Appendi
 
 The landmarks found by this method are robustly located across all classes, but have a distinct disadvantage. They are
 not as easily located by hand since they dont lie exactly on the high points of the outline, but slightly beneath
-them  as seen in Figure \ref{figure-landmark-methods}. This makes distances inbetween landmarks harder to measure, which
+them  as seen in Figure \ref{figure-landmark-methods}. This makes distances in between landmarks harder to measure, which
 will become relevant in Chapter \ref{chapter:measurable-differences}.
 
 \subsubsection{Extraction by Space Partitioning}
@@ -444,6 +465,23 @@ individual points, we can choose any points on the outline $B_Y$ as $Y$ and any 
 Transformation estimations can also easily be iterated as done by the ``Iterative Closest Point`` method \cite{besl1992method}.
 The method can be different in each iteration. We implemented several methods for point-to-point correspondence
 approaches as well as several for the estimation of the transformation which have different restrictions.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.34\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/registration/unregistered.pdf}
+	\end{subfigure}
+	\hspace{0.1\textwidth}%
+	\begin{subfigure}[b]{0.34\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/registration/registered.pdf}
+	\end{subfigure}
+	\caption{The bone outlines before (left) and after registration (right)}
+	\label{fig:registration}
+\end{figure}
+
+Figure \ref{fig:registration} shows the bone outlines before and after the registration step. The differences between the two classes of bones, displayed as yellow and blue here, become more apparent.
 
 \subsection{Correspondence Estimation}
 
@@ -496,6 +534,32 @@ outlines.
 
 The transformation estimation is done for the selected corresponding points only and then applied to all points in
 the point set.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/registration/single-before.pdf}
+		\subcaption{unregistered}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/registration/single-procrustes.pdf}
+		\subcaption{Procrustes}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/registration/single-affine.pdf}
+		\subcaption{affine}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/registration/single-projective.pdf}
+		\subcaption{projective}
+	\end{subfigure}
+	\caption{A single registration step using same correspondences but different transformation estimations}
+	\label{fig:slic}
+\end{figure}
 
 \subsubsection{Procrustes Transformation}
 \label{subsub:procrustes}
@@ -696,7 +760,7 @@ s_y(t_{k-1})
 \subsubsection{Distance to Center}
 
 Another feature based on the point set $S$ is the distance of each point $s(t_i)$ to the
-center. This feature was considered to be more robust because it offers a lower dimensionality
+center. This feature was considered	to be more robust because it offers a lower dimensionality
 than to simply flatten the points.
 
 \begin{equation}
@@ -779,10 +843,18 @@ s_{yB}(t_{Bk-1}) - \bar{s}_{yk-1} \\
 
 Spline derivatives can be used to analyze the shape of an object as well. Changes in the shape reflect heavily
 on the derivatives since they show the direction the outline is currently bending to. To filter out high frequency
-changes which occur due to the uneven surface of the bone, smoothing based on the Fast Fourier Transform is applied
-beforehand. The smoothing acts as a low-pass filter in frequency space.
+changes which occur due to the uneven surface of the bone, smoothing based on the Fast Fourier Transform (FFT) is applied
+beforehand. The smoothing acts as a low-pass filter in frequency space. For this purpose we use the FFT functions provided by scipy \cite{oliphant2007python}. We can then recalculate the spline parameterization of the smoothed curve and build the feature vector from the spine derivatives.
 
-TODO: Howto FFT Splder
+\begin{equation}
+\vec{f}_B = \left( \begin{array}{c}
+s^\prime_{x}(t_{0}) \\
+s^\prime_{y}(t_{0}) \\
+\vdots \\
+s^\prime_{x}(t_{k-1}) \\
+s^\prime_{y}(t_{k-1}) \\
+\end{array} \right)  
+\end{equation}
 
 \subsection{Dimensionality Reduction}
 
