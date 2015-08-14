@@ -53,6 +53,9 @@ Informatik der LMU M"unchen.
 
 \chapter{Mathematical Basics}
 
+\section{Splines}
+\label{section:splines}
+
 \section{Principal Component Analysis}
 
 \section{Clustering}
@@ -60,9 +63,6 @@ Informatik der LMU M"unchen.
 \subsection{K-Means}
 
 \subsection{DBSCAN}
-
-\section{Splines}
-\label{section:splines}
 
 \section{Support Vector Machines}
 
@@ -625,6 +625,7 @@ A projective transformation can be represented similarly to an affine transform 
 \ref{eq:projectivetransformation}. The estimation was done by scikit-learn \cite{van2014scikit} as well. 
 
 \section{Shape Comparison}
+\label{sec:shape-comparison}
 
 After registering the bone shapes, we could test them for significant local shape variations.
 To represent the outlines we decided to use splines as introduced in Section \ref{section:splines},
@@ -994,7 +995,145 @@ After having trained the decision tree, the result can be used for manual classi
 
 \section{Tests on Synthetic Data}
 
+Additionally to tests on real-world data, we decided to execute some tests on synthetic data as well. The reason for that lies in the lack of similar works in this field, so the method needs to be tested thoroughly. Additionally we wanted to see whether the method could be generalized to different forms and how different characteristics of shape influence the result. 
+
 \subsection{Generating Synthetic Data}
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/shapes/1.pdf}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/shapes/2.pdf}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/shapes/3.pdf}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/shapes/4.pdf}
+	\end{subfigure}
+	\caption{Shapes generated using synthetic generation}
+	\label{fig:synthetic-shapes}
+\end{figure}
+
+The first step to testing with synthetic data is to define how the data should look like and how it is possible to generate such data. Since the algorithm compares two classes of data we need to create two sets of outlines that have similar characteristics, but also vary inside each set. Additionally because of the style of our algorithm we decided to create circle-shaped test-data. As the base for our data, we use a ellipsoid, which we can vary in eccentricity. Parameterized by angle the ellipsoid can be defined as, where $\epsilon$ is a parameter that defines the eccentricity of the ellipsoid:
+
+\begin{equation}
+\vec{e}(\alpha) = \left( \begin{array}{c}
+cos(\alpha) \\
+\epsilon sin(\alpha)
+\end{array} \right) 
+\end{equation}
+
+To represent shape variations on the bone, we decided to use Gaussian bell curves, which can be stacked onto each other to produce a whole variation of shapes. Each of these bell curves $b_i(\alpha)$ is defined by a height $h_i$, an angle at which the curve has its center $\mu_i$ and a width of the curve $\sigma$. The formula for the curve is applied in the normal direction of the current angle $\vec{n}(\alpha)$, which is defined as:
+
+\begin{equation}
+\vec{n}(\alpha) = \frac{1}{\sqrt{(v_y^\prime(\alpha))^2 + (-v_x^\prime(\alpha))^2}}\left( \begin{array}{c}
+v_y^\prime(\alpha) \\
+-v_x^\prime(\alpha)
+\end{array} \right)
+\end{equation}
+
+Using this normal vector the set of bell curves $B$ can be applied to the ellipsoid:
+
+\begin{equation}
+\vec{b}(\alpha) = \sum_{(h_i, \mu_i, \sigma_i) \in B}h_i \vec{n}(\alpha) \exp\left(\frac{-(\mu_i - \alpha)^2}{2 \sigma_i^2} \right )
+\end{equation}
+
+The whole shape can be defined by summing these functions together:
+
+\begin{equation}
+\vec{b}(\alpha) = \vec{e}(\alpha) + \vec{b}(\alpha)
+\end{equation}
+
+This function needs to be evaluated at $n$ angles $\alpha_i$ with $i = 1 ... n$ to get an outline that can be used as input for the algorithm.
+
+\begin{equation}
+\alpha_i = \frac{i}{n} 360^{\circ}
+\end{equation}
+
+This is the base for generating multiple shapes of this kind to feed the algorithm. Figure \ref{fig:synthetic-shapes} shows shapes that can be built using this method. Using these equations, we could only define two shapes using the described method. To describe two classes, we needed to add randomized elements to the equations.
+
+The first randomized elements are class internal randomizations that describe differences in measurement and registration. For each class we can define standard deviations for radius $\sigma_r$, evaluation angles $\sigma_\alpha$ and transformation $\sigma_t$. Randomized values $n_r()$, $n_\alpha()$, $n_t$ based on normal distributions using these parameters are added whenever a value is accessed. The values are adapted as follows:
+
+\begin{equation}
+\begin{split}
+& \vec{t} = \left( \begin{array}{c}
+n_t() \\
+n_t()
+\end{array} \right) \\
+& \vec{e}_r = \begin{pmatrix}
+1 + n_r() & 0 \\
+0 & 1 + n_r() \\
+\end{pmatrix} \vec{e}  + \vec{t} \\
+& \alpha_{ri} = \alpha_i + n_\alpha() \\
+\end{split}
+\end{equation}
+
+Additionally the number of evaluation angles $n$ is chosen from a uniform distribution between $n_{min}$ and $n_{max}$.
+
+Similarly to randomizing the overall shapes, the shape variations need to be randomized as well, since the features might occur at slightly different positions in nature. To do this we can add randomized elements to each of the parameters that define a shape variation.
+
+\begin{equation}
+\begin{split}
+& h_{ir} = h_i + n_{hi}() \\
+& \mu_{ir} = \mu_i + n_{\mu i}() \\
+& \sigma_{ir} = \sigma_i + n_{\sigma i}() \\
+\end{split}
+\end{equation}
+
+Using this randomization process two classes of semi-randomized data can be built that we can compare using the algorithm presented in Section \ref{sec:shape-comparison}. The classes are already registered, so the comparison is possible without further preprocessing. Since we define the characteristic locations on the bone outline ourselves, we can validate whether they are detected by the algorithm correctly.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/1-1.pdf}
+		\caption{Class A}
+		\label{subfig:synthetic-classes:a-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/1-2.pdf}
+		\caption{Class A}
+		\label{subfig:synthetic-classes:a-2}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/2-1.pdf}
+		\caption{Class B}
+		\label{subfig:synthetic-classes:b-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/2-2.pdf}
+		\caption{Class B}
+		\label{subfig:synthetic-classes:b-2}
+	\end{subfigure}
+	\caption{Two observations each for two classes of outlines that were synthetically generated}
+	\label{fig:synthetic-classes}
+\end{figure}
+
+Figure \ref{fig:synthetic-classes} shows two classes that were generated using this process. The classes in this figure have their distinct variations in the position of the small left bulge, the location of the indentation at the bottom and the height of the right bulge at the top. It is also noticeable that the small left bulge is different inside of class A, because it is much more distinct in Figure \ref{subfig:synthetic-classes:a-2} than it is in Figure \ref{subfig:synthetic-classes:a-1}. The small left bulge is less distinct in Figure \ref{subfig:synthetic-classes:b-1} than it is in Figure \ref{subfig:synthetic-classes:b-2} as well. Additionally the indentation at the top more shallow in Figure \ref{subfig:synthetic-classes:b-2} than in \ref{subfig:synthetic-classes:b-1} and has slightly shifted to the right. 
+
+Unless otherwise stated, we use 30 observation per class in our experiments. Randomization is only applied if it is explicitly tested, so it can not influence the results.
+
+\subsection{Influence of Different Types of Variations in Shape Features}
+
+The first test with randomized data has the goal of visualizing how certain changes in shape in between the classes materialize in the result. Since we cannot determine the type of shape shift from the separability metric itself, we need to know how these shape changes influence the separability metric and how we can determine them using the mean shapes of the classes in combination with the separability metric. For this purpose we determined several characteristic changes in shape that we tested using synthetic data based on the unit circle.
+
+\subsubsection{Missing Characteristic}
+
+A missing characteristic is a characteristic that appears in one class, but not in another.
+
+\subsubsection{Less Distinct Characteristic}
+
+\subsubsection{Shifted Characteristic}
 
 \subsection{Influence of Variances in Shape Features}
 
