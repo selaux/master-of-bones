@@ -16,7 +16,7 @@ from helpers import features as fh
 from sklearn.decomposition import PCA, RandomizedPCA
 
 MU = 1.3
-SCALE = 0.1
+SCALE = 0.2
 INITIAL_WINDOW_SIZE = 50
 BORDER_SIZE = 100
 PADDING = 150
@@ -111,7 +111,7 @@ def active_contours(image):
     return segmentation_clustering(features, add_locality=False)
 
 def felzenszwalb(image):
-    SCALE = 250
+    SCALE = 1000
     SIGMA = 5
     MIN_SIZE = 500
     return segmentation.felzenszwalb(image, SCALE, SIGMA, MIN_SIZE)
@@ -213,7 +213,7 @@ def gabor(image):
             features[:, :, i] = fh.normalize(features[:, :, i])
         return features
 
-    image = img_as_ubyte(rescale(image, 0.25))
+    image = img_as_ubyte(rescale(image, SCALE))
     kernels = get_gabor_kernels()
     features = apply_gabor_kernels(image, kernels)
     features = apply_nonlinearity(features)
@@ -233,7 +233,7 @@ def segmentation_clustering(features, normalize_features=True, use_pca=True, add
 
     def reduce_feature_complexity(features):
         #pca = PCA(n_components=6)
-        pca = RandomizedPCA(n_components=6)
+        pca = RandomizedPCA(n_components=4)
         reduced = pca.fit_transform(features)
         return reduced
 
