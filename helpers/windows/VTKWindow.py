@@ -101,7 +101,7 @@ class VTKWindow(QtGui.QMainWindow):
 
         old_resize_event = widget.resizeEvent
         def new_resize_event(ev):
-            button.move(widget.mapToParent(QtCore.QPoint(20, 20)))
+            button.move(widget.mapToGlobal(QtCore.QPoint(20, 20)))
             old_resize_event(ev)
         widget.resizeEvent = new_resize_event
 

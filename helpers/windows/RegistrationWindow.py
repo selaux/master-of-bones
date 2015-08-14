@@ -53,7 +53,7 @@ class RegistrationWindow(VTKWindow):
         self.save_button.clicked.connect(self.store_data)
 
     def get_actor_for_property(self, property, outline):
-        points = outline[property]
+        points = outline[property] if property in outline else outline['points']
         num_points = points.shape[0]
         edges = np.zeros((num_points, 2), dtype=np.int)
         edges[:, 0] = range(num_points)
