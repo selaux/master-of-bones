@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 npm install
-npm build
+npm run build
 make clean && make all
