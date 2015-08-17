@@ -1,6 +1,7 @@
 'use strict';
 
 var gulp = require('gulp'),
+    del = require('del'),
     using = require('gulp-using'),
     through2 = require('through2'),
     spawn = require('child_process').spawn,
@@ -44,6 +45,12 @@ function inkscape() {
     });
 }
 
+gulp.task('clean', function (cb) {
+    del([
+        'img/results/**/*.pdf'
+    ], cb);
+});
+
 gulp.task('updateCharts', function() {
     gulp.src('img/results/**/*.svg')
         .pipe(using({}))
@@ -51,7 +58,7 @@ gulp.task('updateCharts', function() {
         .pipe(gulp.dest('img/results'))
 });
 
-gulp.task('svgToPdf', [ 'updateCharts' ], function() {
+gulp.task('svgToPdf', [ 'clean', 'updateCharts' ], function() {
     gulp.src('img/**/*.svg')
         .pipe(using({}))
         .pipe(inkscape())
