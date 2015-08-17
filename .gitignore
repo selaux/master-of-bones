@@ -19,3 +19,7 @@ thesis/*.bbl
 thesis/*.eps
 thesis/*.synctex.gz
 thesis/dbsma.pdf
+thesis/img/**/*.pdf
+
+node_modules
+thesis/node_modules

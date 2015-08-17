@@ -134,14 +134,18 @@ class ComparisonWindow(VTKWindow):
         layout.addRow('Shown Metric', self.show_metric_box)
 
         mbs_layout = QtGui.QHBoxLayout()
-        mbs_layout.addWidget(QtGui.QLabel(ch.get_class_name(self.get_compared_classes()[1])))
+        class1 = self.get_compared_classes()[1]
+        num_class1 = len(filter(lambda b: b['class'] == class1, self.bones))
+        mbs_layout.addWidget(QtGui.QLabel('{} ({})'.format(ch.get_class_name(class1), num_class1)))
         self.mean_bone_slider = QtGui.QSlider(QtCore.Qt.Horizontal)
         self.mean_bone_slider.setMinimum(0)
         self.mean_bone_slider.setMaximum(100)
         self.mean_bone_slider.setValue(50)
         self.mean_bone_slider.valueChanged.connect(self.update_overview_data)
         mbs_layout.addWidget(self.mean_bone_slider)
-        mbs_layout.addWidget(QtGui.QLabel(ch.get_class_name(self.get_compared_classes()[0])))
+        class2 = self.get_compared_classes()[0]
+        num_class2 = len(filter(lambda b: b['class'] == class2, self.bones))
+        mbs_layout.addWidget(QtGui.QLabel('{} ({})'.format(ch.get_class_name(class2), num_class2)))
         layout.addRow('Shift Mean Bone', mbs_layout)
 
         self.vl.addLayout(layout)

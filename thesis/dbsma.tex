@@ -35,6 +35,7 @@ Informatik der LMU M"unchen.
 \chapter{Introduction}
 
 \chapter{Problem Definition}
+\label{chapter:problem-definition}
 
 \chapter{Related Work}
 
@@ -699,6 +700,7 @@ might lead to unwanted results when doing the comparison since the considered wi
 not semantically equal. 
 
 \subsubsection{By Length}
+\label{subsub:windowbylength}
 
 To nullify this drawback, we implemented another method to extract the evaluation window.
 In this approach, a window of a certain length $l$ around a point of evaluation that is defined by the angle $\rho$ is extracted. To find these points we employed ray-casting
@@ -744,6 +746,7 @@ Other features like the distances to the markers only use a single point, the ce
 the window.
 
 \subsubsection{Flattened Points}
+\label{subsub:features-flattened}
 
 The simplest feature vector we used is to use a flattened version of $S$ as the feature
 vector. We consider this the baseline of our algorithm.
@@ -932,7 +935,8 @@ as the measure.
 \bar{a} = \frac{1}{|DB|} \sum_{i=1}^k | \{o \in TE_i | K(o) = C(o) \}| 
 \end{equation}
 
-
+\subsubsection{Mean Cross-Validation Confidence}
+\label{subsub:cross-validation-confidence}
 
 \chapter{Detection of Differences That Are Measurable On-Site}
 \label{chapter:measurable-differences}
@@ -980,24 +984,12 @@ After having trained the decision tree, the result can be used for manual classi
 
 \chapter{Experiments}
 
-\section{Tests on Real-World Data}
-
-\subsection{Results and Compliance with Former Findings}
-
-\subsection{Comparison of Algorithm Parameters}
-\label{sub:comparisonalgorithmparameters}
-
-\subsection{Comparison of Features}
-
-\subsection{Comparison of Registration Strategies}
-
-\subsection{Comparison of Separability Measures}
-
 \section{Tests on Synthetic Data}
 
 Additionally to tests on real-world data, we decided to execute some tests on synthetic data as well. The reason for that lies in the lack of similar works in this field, so the method needs to be tested thoroughly. Additionally we wanted to see whether the method could be generalized to different forms and how different characteristics of shape influence the result. 
 
 \subsection{Generating Synthetic Data}
+\label{sub:generating-synthetic-data}
 
 \begin{figure}[h]
 	\centering
@@ -1024,37 +1016,37 @@ Additionally to tests on real-world data, we decided to execute some tests on sy
 The first step to testing with synthetic data is to define how the data should look like and how it is possible to generate such data. Since the algorithm compares two classes of data we need to create two sets of outlines that have similar characteristics, but also vary inside each set. Additionally because of the style of our algorithm we decided to create circle-shaped test-data. As the base for our data, we use a ellipsoid, which we can vary in eccentricity. Parameterized by angle the ellipsoid can be defined as, where $\epsilon$ is a parameter that defines the eccentricity of the ellipsoid:
 
 \begin{equation}
-\vec{e}(\alpha) = \left( \begin{array}{c}
-cos(\alpha) \\
-\epsilon sin(\alpha)
-\end{array} \right) 
+	\vec{e}(\alpha) = \left( \begin{array}{c}
+		cos(\alpha) \\
+		\epsilon sin(\alpha)
+	\end{array} \right) 
 \end{equation}
 
 To represent shape variations on the bone, we decided to use Gaussian bell curves, which can be stacked onto each other to produce a whole variation of shapes. Each of these bell curves $b_i(\alpha)$ is defined by a height $h_i$, an angle at which the curve has its center $\mu_i$ and a width of the curve $\sigma$. The formula for the curve is applied in the normal direction of the current angle $\vec{n}(\alpha)$, which is defined as:
 
 \begin{equation}
-\vec{n}(\alpha) = \frac{1}{\sqrt{(v_y^\prime(\alpha))^2 + (-v_x^\prime(\alpha))^2}}\left( \begin{array}{c}
-v_y^\prime(\alpha) \\
--v_x^\prime(\alpha)
-\end{array} \right)
+	\vec{n}(\alpha) = \frac{1}{\sqrt{(v_y^\prime(\alpha))^2 + (-v_x^\prime(\alpha))^2}}\left( \begin{array}{c}
+		v_y^\prime(\alpha) \\
+		-v_x^\prime(\alpha)
+	\end{array} \right)
 \end{equation}
 
 Using this normal vector the set of bell curves $B$ can be applied to the ellipsoid:
 
 \begin{equation}
-\vec{b}(\alpha) = \sum_{(h_i, \mu_i, \sigma_i) \in B}h_i \vec{n}(\alpha) \exp\left(\frac{-(\mu_i - \alpha)^2}{2 \sigma_i^2} \right )
+	\vec{b}(\alpha) = \sum_{(h_i, \mu_i, \sigma_i) \in B}h_i \vec{n}(\alpha) \exp\left(\frac{-(\mu_i - \alpha)^2}{2 \sigma_i^2} \right )
 \end{equation}
 
 The whole shape can be defined by summing these functions together:
 
 \begin{equation}
-\vec{b}(\alpha) = \vec{e}(\alpha) + \vec{b}(\alpha)
+	\vec{b}(\alpha) = \vec{e}(\alpha) + \vec{b}(\alpha)
 \end{equation}
 
 This function needs to be evaluated at $n$ angles $\alpha_i$ with $i = 1 ... n$ to get an outline that can be used as input for the algorithm.
 
 \begin{equation}
-\alpha_i = \frac{i}{n} 360^{\circ}
+	\alpha_i = \frac{i}{n} 360^{\circ}
 \end{equation}
 
 This is the base for generating multiple shapes of this kind to feed the algorithm. Figure \ref{fig:synthetic-shapes} shows shapes that can be built using this method. Using these equations, we could only define two shapes using the described method. To describe two classes, we needed to add randomized elements to the equations.
@@ -1062,17 +1054,17 @@ This is the base for generating multiple shapes of this kind to feed the algorit
 The first randomized elements are class internal randomizations that describe differences in measurement and registration. For each class we can define standard deviations for radius $\sigma_r$, evaluation angles $\sigma_\alpha$ and transformation $\sigma_t$. Randomized values $n_r()$, $n_\alpha()$, $n_t$ based on normal distributions using these parameters are added whenever a value is accessed. The values are adapted as follows:
 
 \begin{equation}
-\begin{split}
-& \vec{t} = \left( \begin{array}{c}
-n_t() \\
-n_t()
-\end{array} \right) \\
-& \vec{e}_r = \begin{pmatrix}
-1 + n_r() & 0 \\
-0 & 1 + n_r() \\
-\end{pmatrix} \vec{e}  + \vec{t} \\
-& \alpha_{ri} = \alpha_i + n_\alpha() \\
-\end{split}
+	\begin{split}
+		& \vec{t} = \left( \begin{array}{c}
+			n_t() \\
+			n_t()
+		\end{array} \right) \\
+		& \vec{e}_r = \begin{pmatrix}
+			1 + n_r() & 0 \\
+			0 & 1 + n_r() \\
+		\end{pmatrix} \vec{e}  + \vec{t} \\
+		& \alpha_{ri} = \alpha_i + n_\alpha() \\
+	\end{split}
 \end{equation}
 
 Additionally the number of evaluation angles $n$ is chosen from a uniform distribution between $n_{min}$ and $n_{max}$.
@@ -1080,11 +1072,11 @@ Additionally the number of evaluation angles $n$ is chosen from a uniform distri
 Similarly to randomizing the overall shapes, the shape variations need to be randomized as well, since the features might occur at slightly different positions in nature. To do this we can add randomized elements to each of the parameters that define a shape variation.
 
 \begin{equation}
-\begin{split}
-& h_{ir} = h_i + n_{hi}() \\
-& \mu_{ir} = \mu_i + n_{\mu i}() \\
-& \sigma_{ir} = \sigma_i + n_{\sigma i}() \\
-\end{split}
+	\begin{split}
+		& h_{ir} = h_i + n_{hi}() \\
+		& \mu_{ir} = \mu_i + n_{\mu i}() \\
+		& \sigma_{ir} = \sigma_i + n_{\sigma i}() \\
+	\end{split}
 \end{equation}
 
 Using this randomization process two classes of semi-randomized data can be built that we can compare using the algorithm presented in Section \ref{sec:shape-comparison}. The classes are already registered, so the comparison is possible without further preprocessing. Since we define the characteristic locations on the bone outline ourselves, we can validate whether they are detected by the algorithm correctly.
@@ -1121,25 +1113,272 @@ Using this randomization process two classes of semi-randomized data can be buil
 
 Figure \ref{fig:synthetic-classes} shows two classes that were generated using this process. The classes in this figure have their distinct variations in the position of the small left bulge, the location of the indentation at the bottom and the height of the right bulge at the top. It is also noticeable that the small left bulge is different inside of class A, because it is much more distinct in Figure \ref{subfig:synthetic-classes:a-2} than it is in Figure \ref{subfig:synthetic-classes:a-1}. The small left bulge is less distinct in Figure \ref{subfig:synthetic-classes:b-1} than it is in Figure \ref{subfig:synthetic-classes:b-2} as well. Additionally the indentation at the top more shallow in Figure \ref{subfig:synthetic-classes:b-2} than in \ref{subfig:synthetic-classes:b-1} and has slightly shifted to the right. 
 
-Unless otherwise stated, we use 30 observation per class in our experiments. Randomization is only applied if it is explicitly tested, so it can not influence the results.
+Unless otherwise stated, we use 30 observation per class in our experiments. Only non-characteristic randomization is applied, so it can not influence the results.
 
 \subsection{Influence of Different Types of Variations in Shape Features}
 
-The first test with randomized data has the goal of visualizing how certain changes in shape in between the classes materialize in the result. Since we cannot determine the type of shape shift from the separability metric itself, we need to know how these shape changes influence the separability metric and how we can determine them using the mean shapes of the classes in combination with the separability metric. For this purpose we determined several characteristic changes in shape that we tested using synthetic data based on the unit circle.
+The first test with randomized data has the goal of visualizing how certain changes in shape in between the classes materialize in the result. Since we cannot determine the type of shape shift from the separability metric itself, we need to know how these shape changes influence the separability metric and how we can determine them using the mean shapes of the classes in combination with the separability metric. For this purpose we determined several characteristic changes in shape that we tested using synthetic data based on the variances from Appendix \ref{appendix:table:synthetic-bone} as the base.
 
-\subsubsection{Missing Characteristic}
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.45\linewidth]{img/results/synthetic/missing-characteristic/missing-characteristic.pdf}
+		\subcaption{Missing Feature}
+		\label{fig:diff:missing}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/missing-characteristic/0-missing.pdf}
+		\subcaption*{}
+		\label{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.45\linewidth]{img/results/synthetic/shifted/shifter-characteristic.pdf}
+		\subcaption{Shifted Feature}
+		\label{fig:diff:shifted}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/shifted/0-shifted.pdf}
+		\subcaption*{}
+		\label{}
+	\end{subfigure}
+	\caption{Mean input data for two classes (red and green) and separability measure chart for this comparison}
+	\label{fig:slic}
+\end{figure}
 
-A missing characteristic is a characteristic that appears in one class, but not in another.
+Most features manifest similarly in the separability measure as a very distinctive maximum. An example for this kind of difference can be seen in Figure \ref{fig:diff:missing}. For this comparison we left out a feature at the left side of the bone at an angle of $180^\circ$ as defined in Appendix \ref{appendix:table:synthetic-bone-missing} for one class (green). This is clearly visible as a distinct peak at $180^\circ$ in the respective diagram. The separability measure begins to rise when the window that is cut from the bones includes the missing feature.  
 
-\subsubsection{Less Distinct Characteristic}
+While the differences between two classes of bones between are apparent and even visible to the human eye, the algorithm also detects differences in features that are less dissimilar. The model that is visible in Figure \ref{fig:diff:shifted} was built by moving the feature that creates part of the bottom recess to the left as defined in Appendix \ref{appendix:table:synthetic-bone-shifted}. The difference is still visible in the result, although the absolute value is smaller. Noticeable is also the V-shape of the top of the peak, which can occur if the feature is wider than the window that is cut out of the bone. The separability of the individual parts of the feature are calculated instead of the separability of the full width of the feature. This can be fixed by using a larger window size for the algorithm.
 
-\subsubsection{Shifted Characteristic}
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.45\linewidth]{img/results/synthetic/all/visualization.pdf}
+		\subcaption*{}
+		\label{fig:diff:all}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/all/0-all.pdf}
+		\subcaption*{}
+		\label{}
+	\end{subfigure}
+	\caption{Two classes of data with multiple shape differences}
+	\label{fig:all}
+\end{figure}
+
+Figure \ref{fig:all} shows two classes of data having multiple differences in shape that are defined in Appendix \ref{appendix:table:synthetic-bone-all}. Additionally to the two previously presented differences, the bump at $45^\circ$ is more distinct as well as the width of indentation at the bottom was increased. The four differences are only visible as 3 in the chart in Figure \ref{fig:all}. This is because two differences affect the bottom crevice. This causes the separability measure to be increased in the absolute value, because the difference between the bones is more distinct. Additionally it looses the V-shape because the separability varies less while only considering parts of the features.
+
+The data presented in Figure \ref{fig:all} is used as the base graph for the following synthetic experiments. While the previous experiments have been executed using only a minimal error component, the next tests will investigate the robustness of the algorithm under the influence of errors.
 
 \subsection{Influence of Variances in Shape Features}
+\label{sub:synthetic-variances}
+
+Variances in shape features represent differences in the bone shapes of individual animals. These differences occur because of a different process of growth, changing stress on the bone and even injuries.
+
+We simulate these variances in the bone by adding randomization to the individual bell curves that define the shape of the bone classes. This way each bone gets an individual shape that is increasingly different from each other, but all bones of one class still generate the same mean shape as before. The amount of randomization applied each feature was constant.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-feat/0-Features0.pdf}
+		\subcaption{\footnotesize$\sigma_{h}=0.01, \sigma_{\mu}, \sigma_{\sigma} = 1.0$}
+		\label{fig:results-synthetic-features-0}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-feat/1-Features1.pdf}
+		\subcaption{\footnotesize$\sigma_{h}=0.025, \sigma_{\mu}, \sigma_{\sigma} = 2.5$}
+		\label{fig:results-synthetic-features-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-feat/2-Features2.pdf}
+		\subcaption{\footnotesize$\sigma_{h}=0.05, \sigma_{\mu}, \sigma_{\sigma} = 5.0$}
+		\label{fig:results-synthetic-features-2}
+	\end{subfigure}
+	\caption{Graphs for models with ascending variance in features}
+	\label{fig:ascending-variance}
+\end{figure}
+
+The result for models with increasingly high variances in shape features can be seen in Figure \ref{fig:ascending-variance}. It is noticeable that all features are still visible, even in the most noisy configuration. The small difference at about $300^\circ$ cannot be encountered from Figure \ref{fig:results-synthetic-features-1} anymore. This happens if a smaller difference in shape is superimposed by the shape variations. The only feature that is not influenced as much is the missing feature at $180^\circ$. This probably happens because it is a distinct variation in shape, not a wider feature that has a similar shape as the other class.
+
+The shape variances presented in this experiment are subjectively larger than those seen in the real-world data. Though we can not rule out that shape variances seen in the real-world are of different character than the ones we presented our algorithm with, it seems to cope well with varying features.
 
 \subsection{Influence of Errors in Shape Measurement}
 
+Errors in shape measurement can have multiple reasons. On the one hand they can result from a bad photograph or a bad image segmentation. On the other hand they can occur when the bone is being chipped or parts of the bone break away over the bone's time in the ground.
+
+These errors are modeled by adding randomization to the evaluation angle and radius of the generation algorithm presented in Section \ref{sub:generating-synthetic-data}. The bone outlines become irregular, bit still follow the same mean outline per class.  
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-radius/0-Radius0.pdf}
+		\subcaption{\footnotesize$\sigma_r=0.01, \sigma_\alpha=0.5$}
+		\label{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-radius/1-Radius1.pdf}
+		\subcaption{\footnotesize$\sigma_r=0.025, \sigma_\alpha=1$}
+		\label{}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-radius/2-Radius2.pdf}
+		\subcaption{\footnotesize$\sigma_r=0.05, \sigma_\alpha=1$}
+		\label{fig:ascending-radius-angle-2}
+	\end{subfigure}
+	\caption{Graphs for models with ascending variance in radius and angle}
+	\label{fig:ascending-radius-angle}
+\end{figure}
+
+The first noticeable change is the serrated edge of the graph in Figure \ref{fig:ascending-radius-angle}. While the graph still follows the same general outline, the results seem to have more variance when increasing the error. This might occur when certain observations are not classified correctly anymore when validating the model, because of their distortion. The peaks of the features approximately stay at the same height and become sharper because the less distinct parts of the feature are superimposed by noise.
+
+While a graph like Figure \ref{fig:ascending-radius-angle-2} might not be sufficient to be analyzed for differences in the bone class, we can still see that our method picks up differences in very noisy data. What we have not verified is how bigger broken-off parts of the object influences shape analysis, since our data does not contain such samples.
+
 \subsection{Influence of Errors in Shape Registration}
+
+The last test we executed on synthetic data was how registration error affects the algorithm. Registration errors are inherent to this method since the shapes cannot be superimposed exactly without any registration error.
+
+We model this registration error as variances in translation in between the shapes. This does not affect the outlines shape, but the position of this outline. Both classes now consist of the same shapes with slightly different positions.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-trans/0-Trans0.pdf}
+		\subcaption{\footnotesize$\sigma_t=0.01$}
+		\label{fig:ascending-translation-0}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-trans/1-Trans1.pdf}
+		\subcaption{\footnotesize$\sigma_t=0.025$}
+		\label{fig:ascending-translation-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/synthetic/synthetic-errors-trans/2-Trans2.pdf}
+		\subcaption{\footnotesize$\sigma_t=0.05$}
+		\label{fig:ascending-translation-2}
+	\end{subfigure}
+	\caption{Graphs for models with ascending variance in translation}
+	\label{fig:ascending-translation}
+\end{figure}
+
+From Figure \ref{fig:ascending-translation} we can see that small or medium registration errors only have little effect on the result of our algorithm. Similarly to the variances of feature from Section \ref{sub:synthetic-variances}, the small feature at $300^\circ$ is lost in the registration error. The missing feature at $180^\circ$ is again the least influenced by the error. While all but this feature fade in Figure \ref{fig:ascending-translation-2}, the registration error encountered in this experiment is larger than the one found in real-word-data.
+
+With this knowledge it might not be necessary to register the bones using a non-similarity transform, avoiding changes in the shape of the bones. While this might lead to smaller separability, we can assure that the data used by the algorithm has not been altered in a possibly biasing fashion.
+
+\section{Tests on Real-World Data}
+
+After validating the algorithm using synthetic data, we advanced by analyzing the shape of real bone findings. The data provided to us is data from domestic and wild sheep classes that are already classified by zoo-archaeologists as explained in Chapter \ref{chapter:problem-definition}. We have a database size of $57$ observations, $29$ of which are in the class of domestic sheep and $28$ of which are wild sheep. We registered the sheep using one iteration with landmarks as correspondences and 20 iterations using nearest neighbors. Unless otherwise stated the algorithm was executed using $n=20$ evaluation points per window, a window length of $l=0.2$ and PCA with 4 components. The window extraction is done by length as described in Section \ref{subsub:windowbylength}. We are using the basic flattened spline point feature from Section \ref{subsub:features-flattened} for feature extraction. As the metric we are using the mean cross-validation confidence. The input data can be seen in Figure \ref{fig:registration}.
+
+\subsection{Results and Compliance with Former Findings} 
+
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/number_of_evaluations/1-10.pdf}
+		\subcaption{\footnotesize Registered input data}
+		\label{fig:main-result-data}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.64\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/normal/0-result.pdf}
+		\subcaption{\footnotesize Result}
+		\label{fig:main-result-chart}
+	\end{subfigure}
+	\caption{Algorithm applied to real-world data}
+	\label{fig:main-result}
+\end{figure}
+
+The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. It needs to be noted that the value range of the result is smaller than that of the synthetic tests. Nevertheless distinct peaks are visible in the result graph. The correspondent angles to these peaks are visible in Figure \ref{fig:main-result-data}. 
+
+\subsection{Comparison of Algorithm Parameters}
+\label{sub:comparisonalgorithmparameters}
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/number_of_evaluations/1-10.pdf}
+		\subcaption{\footnotesize$n=10$}
+		\label{fig:number-evaluations-0}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/number_of_evaluations/4-25.pdf}
+		\subcaption{\footnotesize$n=25$}
+		\label{fig:number-evaluations-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/number_of_evaluations/5-50.pdf}
+		\subcaption{\footnotesize$n=50$}
+		\label{fig:number-evaluations-2}
+	\end{subfigure}
+	\caption{Graphs for different parameters for the number of evaluation points in each window}
+	\label{fig:number-evaluations}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/window_size/1-0,1.pdf}
+		\subcaption{\footnotesize$l=0.1$}
+		\label{fig:window-size-0}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/window_size/3-0,4.pdf}
+		\subcaption{\footnotesize$l=0.4$}
+		\label{fig:window-size-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/window_size/4-0,8.pdf}
+		\subcaption{\footnotesize$l=0.8$}
+		\label{fig:window-size-2}
+	\end{subfigure}
+	\caption{Graphs for different parameter for window length}
+	\label{fig:window-size}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/window_extraction/0-by-angle.pdf}
+		\subcaption{\footnotesize By Angle}
+		\label{fig:window-size-0}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/window_extraction/1-by-length.pdf}
+		\subcaption{\footnotesize By Length}
+		\label{fig:window-size-1}
+	\end{subfigure}
+	\caption{Graphs for different window extraction strategy}
+	\label{fig:window-size}
+\end{figure}
+
+
+\subsection{Comparison of Features}
+
+\subsection{Comparison of Registration Strategies}
+
+\subsection{Comparison of Separability Measures}
 
 \chapter{Conclusion}
 
@@ -1153,7 +1392,7 @@ A missing characteristic is a characteristic that appears in one class, but not 
 
 \chapter{Landmark Extraction}
 
-\begin{table}
+\begin{table}[h]
     \begin{center}
         \begin{tabular}{|r|r|r|r|}
             \hline \makebox[3cm]{Landmark No} & \makebox[1cm]{$\alpha_{min}$} & \makebox[1cm]{$\alpha_{max}$} & \makebox[2cm]{Type} \\
@@ -1171,7 +1410,7 @@ A missing characteristic is a characteristic that appears in one class, but not 
     \label{appendix:table:landmarks-angle}
 \end{table}
 
-\begin{table}
+\begin{table}[h]
     \begin{center}
         \begin{tabular}{|r|r|r|r|r|r|r|}
             \hline
@@ -1189,6 +1428,73 @@ A missing characteristic is a characteristic that appears in one class, but not 
     \end{center}
     \caption{Landmark Definitions for the Extraction by Space Partitioning.}
     \label{appendix:table:landmarks-space}
+\end{table}
+
+\chapter{Synthetic Generation}
+
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|r|r|r|r|}
+			\hline
+			\makebox[1cm]{$i$} & \makebox[1cm]{$\mu_i$} & \makebox[1cm]{$h_i$} & \makebox[1cm]{$\sigma_i$} \\
+			\hline
+			\hline 1 & $45^\circ$ & 0.1 & 20 \\
+			\hline 2 & $60^\circ$ & 0.3 & 15 \\
+			\hline 3 & $90^\circ$ & -0.2 & 10 \\
+			\hline 4 & $120^\circ$ & 0.3 & 15 \\
+			\hline 5 & $180^\circ$ & 0.1 & 5 \\
+			\hline 6 & $240^\circ$ & 0.3 & 15 \\
+			\hline 7 & $270^\circ$ & -0.2 & 10 \\
+			\hline 8 & $300^\circ$ & 0.3 & 15 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{Definition of a synthetic bone shape.}
+	\label{appendix:table:synthetic-bone}
+\end{table}
+
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|r|r|r|r|}
+			\hline
+			\makebox[1cm]{$i$} & \makebox[1cm]{$\mu_i$} & \makebox[1cm]{$h_i$} & \makebox[1cm]{$\sigma_i$} \\
+			\hline
+			\hline 5 & $180^\circ$ & 0.0 & 5 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{Adaptations from Table \ref{appendix:table:synthetic-bone} for a missing feature.}
+	\label{appendix:table:synthetic-bone-missing}
+\end{table}
+
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|r|r|r|r|}
+			\hline
+			\makebox[1cm]{$i$} & \makebox[1cm]{$\mu_i$} & \makebox[1cm]{$h_i$} & \makebox[1cm]{$\sigma_i$} \\
+			\hline
+			\hline 7 & $265^\circ$ & -0.2 & 10 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{Adaptations from Table \ref{appendix:table:synthetic-bone} for a shifted feature.}
+	\label{appendix:table:synthetic-bone-shifted}
+\end{table}
+
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|r|r|r|r|}
+			\hline
+			\makebox[1cm]{$i$} & \makebox[1cm]{$\mu_i$} & \makebox[1cm]{$h_i$} & \makebox[1cm]{$\sigma_i$} \\
+			\hline
+			\hline 1 & $45^\circ$ & 0.05 & 20 \\
+			\hline 5 & $180^\circ$ & 0.0 & 5 \\
+			\hline 7 & $265^\circ$ & -0.2 & 15 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{Adaptations from Table \ref{appendix:table:synthetic-bone} for multiple differing features.}
+	\label{appendix:table:synthetic-bone-all}
 \end{table}
 
 % Abbildungsverzeichnis (kann auch nach dem Inhaltsverzeichnis kommen)

@@ -44,6 +44,10 @@ WINDOW_EXTRACTORS = [
     {
         'label': '2D Window by length',
         'fn': cr.WindowExtractor2DByWindowLength
+    },
+    {
+        'label': '2D Window by angle',
+        'fn': cr.WindowExtractor2DByAngle
     }
 ]
 

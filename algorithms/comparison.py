@@ -49,7 +49,7 @@ class WindowExtractor2DByWindowLength(WindowExtractor):
         EXTENSION_STEP = 0.0025
         source = np.array([0.0, 0.0])
         ray = np.array(gh.pol2cart(2, radians(self.evaluation_point)))
-        total_space = np.linspace(0, 1, self.number_of_evaluations)
+        total_space = np.linspace(0, 1, self.number_of_evaluations, endpoint=False)
 
         coords = splev(total_space, tck)
         num_total_spline_points = len(coords[0])
@@ -74,7 +74,7 @@ class WindowExtractor2DByWindowLength(WindowExtractor):
                 break
 
         if param_for_spline is None:
-            raise Exception('No intersection found')
+            raise Exception('No intersection found for angle {}'.format(self.evaluation_point))
 
         current_window_size = 0
         window_width = 0
@@ -95,6 +95,70 @@ class WindowExtractor2DByWindowLength(WindowExtractor):
             window_width = np.cumsum(np.linalg.norm(window_spline - np.roll(window_spline, -1, axis=0), axis=1))[-2]
         return window_space
 
+class WindowExtractor2DByAngle(WindowExtractor):
+    """
+    Get an array of spline parameters that represent a section of the outline around the angle {evaluation_point}
+    that has the length {window_size}.
+    angle: The angle around which this window is positioned
+    window_size: The length of the section that is this window
+    number_of_evaluations: The number of spline parameters that should be returned by this function
+    """
+
+    def extract_window_space(self, bone):
+        tck = bone['spline_params']
+        source = np.array([0.0, 0.0])
+        step = radians(self.window_size / 2 * 90)
+        ray_left = np.array(gh.pol2cart(2, radians(self.evaluation_point) - step))
+        ray_right = np.array(gh.pol2cart(2, radians(self.evaluation_point) + step))
+        total_space = np.linspace(0, 1, self.number_of_evaluations, endpoint=False)
+
+        coords = splev(total_space, tck)
+        num_total_spline_points = len(coords[0])
+        total_spline = np.zeros((num_total_spline_points, 2))
+        total_spline[:, 0] = coords[0]
+        total_spline[:, 1] = coords[1]
+
+        param_left = None
+        for i in range(0, num_total_spline_points):
+            j = i+1 if i+1 < num_total_spline_points else 0
+            intersect = gh.seg_intersect(source, ray_left, total_spline[i, :], total_spline[j, :])
+            if intersect is not None:
+                dist_from_i = np.linalg.norm(intersect - total_spline[i, :])
+                norm_dist_from_i = dist_from_i / np.linalg.norm(total_spline[j, :] - total_spline[i, :])
+
+                if total_space[i] == 0:
+                    param_left = total_space[j]
+                if total_space[j] == 0:
+                    param_left = total_space[i]
+                else:
+                    param_left = total_space[i] * (1-norm_dist_from_i) + total_space[j] * norm_dist_from_i
+                break
+        if param_left is None:
+            raise Exception('No intersection found')
+
+        param_right = None
+        for i in range(0, num_total_spline_points):
+            j = i+1 if i+1 < num_total_spline_points else 0
+            intersect = gh.seg_intersect(source, ray_right, total_spline[i, :], total_spline[j, :])
+            if intersect is not None:
+                dist_from_i = np.linalg.norm(intersect - total_spline[i, :])
+                norm_dist_from_i = dist_from_i / np.linalg.norm(total_spline[j, :] - total_spline[i, :])
+
+                if total_space[i] == 0:
+                    param_right = total_space[j]
+                if total_space[j] == 0:
+                    param_right = total_space[i]
+                else:
+                    param_right = total_space[i] * (1-norm_dist_from_i) + total_space[j] * norm_dist_from_i
+                break
+        if param_right is None:
+            raise Exception('No intersection found')
+
+        print(param_left, param_right)
+        if param_right < param_left:
+            param_right, param_left = param_left, param_right
+
+        return  np.linspace(param_left, param_right, self.number_of_evaluations)
 
 class FeatureCalculation:
     """
@@ -274,6 +338,7 @@ class SingleComparisonResult:
         self.mean_confidence = self.get_mean_confidence_indicator()
         self.mean_cv_accuracy = self.get_mean_cv_accuracy()
         self.mean_cv_f1score = self.get_mean_cv_f1score()
+        self.mean_cv_confidence = self.get_mean_cv_confidence()
         self.margin = self.get_margin_indicator()
         self.margin = self.get_margin_indicator()
         self.rm = self.margin * self.recall
@@ -326,6 +391,26 @@ class SingleComparisonResult:
     def get_mean_cv_f1score(self):
         return self.do_cross_validation(partial(f1_score, pos_label=None, average='macro'))
 
+    def get_mean_cv_confidence(self):
+        classes = np.array(map(lambda o: o['class'], self.bones))
+
+        skf = cross_validation.StratifiedKFold(classes, len(self.bones) / 4)
+        scores = []
+        for train_indices, test_indices in skf:
+            features_train, classes_train = self.features[train_indices], classes[train_indices]
+            features_test, classes_test = self.features[test_indices], classes[test_indices]
+
+            fitted = self.svc.fit(features_train, classes_train)
+            predicted_classes = fitted.predict(features_test)
+            confidences = fitted.decision_function(features_test)
+
+            equals_predicted_classes = (predicted_classes == classes_test)
+            weights = np.full_like(equals_predicted_classes, -1, dtype=np.float)
+            weights[equals_predicted_classes] = 1
+
+            scores.append(np.mean(np.abs(confidences) * weights))
+        return np.array(scores).mean()
+
     def get_performance_indicators(self):
         """
         Return an array of all performance indicators of the algorithm at this evaluation_point
@@ -354,6 +439,10 @@ class SingleComparisonResult:
             {
                 'label': 'Precision * Margin',
                 'value': self.rm,
+            },
+            {
+                'label': 'Mean Cross-Validation Confidence',
+                'value': self.mean_cv_confidence,
             }
         ]
 
@@ -435,8 +524,12 @@ class ComparisonResult:
         self.actor.GetProperty().SetLineWidth(3)
 
         self.chart = vtk.vtkChartXY()
-        self.chart.GetAxis(1).SetBehavior(vtk.vtkAxis.FIXED);
-        self.chart.GetAxis(0).SetBehavior(vtk.vtkAxis.FIXED);
+        self.chart.GetAxis(1).SetBehavior(vtk.vtkAxis.FIXED)
+        self.chart.GetAxis(0).SetBehavior(vtk.vtkAxis.FIXED)
+        self.chart.GetAxis(0).SetTitle('')
+        self.chart.GetAxis(1).SetTitle('')
+        self.chart.GetAxis(0).GetLabelProperties().SetFontSize(30)
+        self.chart.GetAxis(1).GetLabelProperties().SetFontSize(30)
         self.chart.GetAxis(1).SetRange(0, 359)
         self.chart.GetAxis(0).SetRange(0, 1)
         self.chart_table = vtk.vtkTable()
@@ -507,7 +600,7 @@ class ComparisonResult2D(ComparisonResult):
 
         self.chart_table.SetNumberOfRows(len(self.single_results))
         for i, r in enumerate(self.single_results):
-            indicator = r.get_performance_indicators()[index_of_performance_indicator];
+            indicator = r.get_performance_indicators()[index_of_performance_indicator]
             self.chart_metric_array.SetName(indicator['label'])
 
             self.chart_table.SetValue(i, 0, r.evaluation_point)
