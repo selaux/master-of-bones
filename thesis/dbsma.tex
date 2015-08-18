@@ -664,6 +664,32 @@ at this point or not.
 The next step in the algorithm is the selection the evaluation windows at an angle $\rho$ for
 each bone $B \in DB$. For this purpose we implemented two approaches to the problem.
 
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.6\linewidth]{img/window-extraction/by-angle.pdf}
+		\subcaption{By angle}
+		\label{fig:window-extraction-angle}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.6\linewidth]{img/window-extraction/by-length.pdf}
+		\subcaption{By length}
+		\label{fig:window-extraction-length}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/window-extraction/windows.pdf}
+		\vfill
+		\subcaption{Extracted windows}
+		\label{fig:window-extraction-all}
+	\end{subfigure}
+	\caption{Window Extraction at $90^\circ$}
+	\label{fig:window-extraction}
+\end{figure}
+
+
 \subsubsection{By Angle}
 \label{subsub:windowbyangle}
 
@@ -900,6 +926,7 @@ a_{TR}(K) = \frac{|o \in TR | K(o) = C(o)|}{|TR|}
 \end{equation}
 
 \subsubsection{Mean Confidence Score}
+\label{subsub:mean-confidence-score}
 
 Using the SVM for classification also allowed us to see how well an observation can be assigned to a class. This
 is called a confidence score. The confidence score for the SVM is the distance from the observation to the dividing
@@ -937,6 +964,12 @@ as the measure.
 
 \subsubsection{Mean Cross-Validation Confidence}
 \label{subsub:cross-validation-confidence}
+
+The mean cross-validation confidence score is closely tied the the mean confidence score presented in Section \ref{subsub:mean-confidence-score} and the cross validation accuracy presented in the previous section. The selection of training and test data works similarly to the cross-validation accuracy metric. Instead of using the mean accuracy, we are using the distance from the hyperplane of each observation in the test data. This allows us to get a more accurate metric for separability while still using cross-validation to ensure the generalizability of our algorithm.
+
+\begin{equation}
+\bar{c} = \frac{1}{|TR|} \sum_{TR_i \in TR} c_{TR_i}(K_i)
+\end{equation}
 
 \chapter{Detection of Differences That Are Measurable On-Site}
 \label{chapter:measurable-differences}
@@ -984,9 +1017,13 @@ After having trained the decision tree, the result can be used for manual classi
 
 \chapter{Experiments}
 
+In this chapter we will show how the algorithm works on both synthetic and real-world data. We ensured that the algorithm works as expected by predefining synthetic classes of data and feeding it into the algorithm. Then we proceeded to use data of real-bone findings to analyze it for distinct shape variations. 
+
+Unless otherwise stated the algorithm was executed using $n=20$ evaluation points per window, a window length of $l=0.2$ and PCA with 4 components. The window extraction is done by length as described in Section \ref{subsub:windowbylength}. We are using the basic flattened spline point feature from Section \ref{subsub:features-flattened} for feature extraction. As the metric we are using the mean cross-validation confidence. Section \ref{sub:comparisonalgorithmparameters} will show how different parameters influence the resulting graph.
+
 \section{Tests on Synthetic Data}
 
-Additionally to tests on real-world data, we decided to execute some tests on synthetic data as well. The reason for that lies in the lack of similar works in this field, so the method needs to be tested thoroughly. Additionally we wanted to see whether the method could be generalized to different forms and how different characteristics of shape influence the result. 
+To determine whether the algorithm works as intended, we decided to execute some tests on synthetic data. The reason for that lies in the lack of similar works in this field, so the method needs to be tested thoroughly. Additionally we wanted to see whether the method could be generalized to different forms and how different characteristics of shape influence the result. 
 
 \subsection{Generating Synthetic Data}
 \label{sub:generating-synthetic-data}
@@ -1113,7 +1150,7 @@ Using this randomization process two classes of semi-randomized data can be buil
 
 Figure \ref{fig:synthetic-classes} shows two classes that were generated using this process. The classes in this figure have their distinct variations in the position of the small left bulge, the location of the indentation at the bottom and the height of the right bulge at the top. It is also noticeable that the small left bulge is different inside of class A, because it is much more distinct in Figure \ref{subfig:synthetic-classes:a-2} than it is in Figure \ref{subfig:synthetic-classes:a-1}. The small left bulge is less distinct in Figure \ref{subfig:synthetic-classes:b-1} than it is in Figure \ref{subfig:synthetic-classes:b-2} as well. Additionally the indentation at the top more shallow in Figure \ref{subfig:synthetic-classes:b-2} than in \ref{subfig:synthetic-classes:b-1} and has slightly shifted to the right. 
 
-Unless otherwise stated, we use 30 observation per class in our experiments. Only non-characteristic randomization is applied, so it can not influence the results.
+Unless otherwise stated, we use 30 observation per class in our experiments. Only non-characteristic randomization is applied, so it can not influence the results. The generated data is already superimposed so no registration is necessary.
 
 \subsection{Influence of Different Types of Variations in Shape Features}
 
@@ -1280,7 +1317,7 @@ With this knowledge it might not be necessary to register the bones using a non-
 
 \section{Tests on Real-World Data}
 
-After validating the algorithm using synthetic data, we advanced by analyzing the shape of real bone findings. The data provided to us is data from domestic and wild sheep classes that are already classified by zoo-archaeologists as explained in Chapter \ref{chapter:problem-definition}. We have a database size of $57$ observations, $29$ of which are in the class of domestic sheep and $28$ of which are wild sheep. We registered the sheep using one iteration with landmarks as correspondences and 20 iterations using nearest neighbors. Unless otherwise stated the algorithm was executed using $n=20$ evaluation points per window, a window length of $l=0.2$ and PCA with 4 components. The window extraction is done by length as described in Section \ref{subsub:windowbylength}. We are using the basic flattened spline point feature from Section \ref{subsub:features-flattened} for feature extraction. As the metric we are using the mean cross-validation confidence. The input data can be seen in Figure \ref{fig:registration}.
+After validating the algorithm using synthetic data, we advanced by analyzing the shape of real bone findings. The data provided to us is data from domestic and wild sheep classes that are already classified by zoo-archaeologists as explained in Chapter \ref{chapter:problem-definition}. We have a database size of $57$ observations, $29$ of which are in the class of domestic sheep and $28$ of which are wild sheep. We registered the sheep using one iteration with landmarks as correspondences and 20 iterations using nearest neighbors.
 
 \subsection{Results and Compliance with Former Findings} 
 
@@ -1302,7 +1339,7 @@ After validating the algorithm using synthetic data, we advanced by analyzing th
 	\label{fig:main-result}
 \end{figure}
 
-The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. It needs to be noted that the value range of the result is smaller than that of the synthetic tests. Nevertheless distinct peaks are visible in the result graph. The correspondent angles to these peaks are visible in Figure \ref{fig:main-result-data}. 
+The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart1}. It needs to be noted that the value range of the result is smaller than that of the synthetic tests. Nevertheless distinct peaks are visible in the result graph. The correspondent angles to these peaks are visible in Figure \ref{fig:main-result-data}. 
 
 \subsection{Comparison of Algorithm Parameters}
 \label{sub:comparisonalgorithmparameters}
