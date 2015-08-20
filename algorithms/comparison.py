@@ -207,17 +207,10 @@ class FeatureCurvatureOfDistanceFromCenter(FeatureCalculation):
     def calculate_raw_features(self, bones, windows):
         distance_to_center_feature = FeatureDistanceToCenter(False, 0)
 
-        BORDER_FREQUENCY = 8
         distances = distance_to_center_feature.calculate_raw_features(bones, windows)
+        curvatures = np.array([gh.curvature(w, d) for w, d in zip(windows, distances)])
 
-        frequencies = np.fft.fftfreq(distances[0].size, 0.05)
-        fourier_transforms = np.array([np.fft.fft(d) for d in distances])
-        filtered = np.logical_or(frequencies > BORDER_FREQUENCY, frequencies < -BORDER_FREQUENCY)
-        fourier_transforms[:,  filtered] = 0
-        inverse_fourier_transforms = np.array([np.fft.ifft(ft) for ft in fourier_transforms]).real
-
-        c = np.array([gh.curvature(w, ift) for w, ift in zip(windows, inverse_fourier_transforms)])
-        return c
+        return curvatures
 
 class FeatureDistanceToCenter(FeatureCalculation):
     """
@@ -558,7 +551,7 @@ class ComparisonResult:
 
 class ComparisonResult2D(ComparisonResult):
     def get_morphed_outline(self, ratio):
-        space = np.linspace(0, 1, 500)
+        space = np.linspace(0, 1, 250, endpoint=False)
         class1bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == self.class1])
         class2bones = np.array([evaluate_spline(space, o['spline_params']) for o in self.bones if o['class'] == self.class2])
         class1part = ratio

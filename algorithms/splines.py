@@ -36,6 +36,6 @@ def get_spline_params(points):
     y = np.concatenate((points[:, 0][-10:], points[:, 0], points[:, 0][:10]))
     x = np.concatenate((points[:, 1][-10:], points[:, 1], points[:, 1][:10]))
 
-    tck, u = splprep([y, x], s=0.0, u=params)
+    tck, u = splprep([y, x], s=0.025, u=params)
 
     return tck, u

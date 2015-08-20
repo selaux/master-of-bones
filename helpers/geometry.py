@@ -210,11 +210,12 @@ def curvature(x, y):
     :return:
     """
     dalpha = np.pi/1000
-    xd1 = np.gradient(x)
-    xd2 = np.gradient(xd1)
-    yd1 = np.gradient(y)
-    yd2 = np.gradient(yd1)
-    return np.abs(xd1*yd2 - yd1*xd2) / np.power(xd1**2 + yd1**2, 3./2)
+    xd1 = np.gradient(x, 2)
+    xd2 = np.gradient(xd1, 2)
+    yd1 = np.gradient(y, 2)
+    yd2 = np.gradient(yd1, 2)
+
+    return np.abs(xd1*yd2 - yd1*xd2) / np.power(xd1**2 + yd1**2, 3.0/2.0)
 
 def angle(v1, v2):
     cosang = np.dot(v1, v2)
