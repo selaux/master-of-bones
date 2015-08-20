@@ -1325,24 +1325,44 @@ After validating the algorithm using synthetic data, we advanced by analyzing th
 	\centering
 	\begin{subfigure}[b]{0.32\textwidth}
 		\centering
-		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/number_of_evaluations/1-10.pdf}
-		\subcaption{\footnotesize Registered input data}
+		\includegraphics[width=.7\linewidth]{img/results/real/combined_edited.pdf}
+		\subcaption{\footnotesize Mean input data}
 		\label{fig:main-result-data}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.64\textwidth}
 		\centering
-		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/normal/0-result.pdf}
+		\includegraphics[width=.9\linewidth]{img/results/real/result_edited.pdf}
 		\subcaption{\footnotesize Result}
 		\label{fig:main-result-chart}
 	\end{subfigure}
-	\caption{Algorithm applied to real-world data}
+	\caption{Algorithm applied to domestic (yellow) and wild sheep (blue)}
 	\label{fig:main-result}
 \end{figure}
 
-The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart1}. It needs to be noted that the value range of the result is smaller than that of the synthetic tests. Nevertheless distinct peaks are visible in the result graph. The correspondent angles to these peaks are visible in Figure \ref{fig:main-result-data}. 
+The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. Figure \ref{fig:main-result-data} shows the mean outlines for domestic (blue) and wild (yellow) sheep and the angles corresponding to the peaks in Figure \ref{fig:main-result-chart}. From the mean bones it is clearly visible that the highest peak in the chart correspond to the parts of the bone where the mean bones diverge the most. It needs to be noted that the maximum separability metric of the result is smaller than that of the synthetic tests, but that is to be expected with real-world data as a combination of measurement errors, variance in shape features and registration errors applies. Nevertheless distinct peaks are visible in the result graph. While the upper half of the bone is highly separable, the lower half is similar in both classes. This agrees with the results of the zoo-archaeologist who also found significant differences in the area between the lateral and medial crest. Our algorithm shows three distinct points in the upper area of the outline which we marked as one, two and three. In the area between these points, the separability decreases, but does not reach zero. Additionally to the points between the crests, our result shows a highly separable area around the out most point on the medial apex.
+
+The first separable point is in the area around the highest point on the lateral crest marked as one in Figure \ref{fig:main-result}. This difference is not as distinct as the others. It is located right at an intersection between the two mean bones which indicates that it stems from the accumulation of two minor separabilities to the left and right of the evaluation point. The bones of the wild sheep are a bit wider to the right and less high to the left than those of the domestic sheep at this angle. After this key point, the separability falls again, but not to the point of not being separable.
+
+The second separable point is at the angle of $80^\circ$ and marked as two in Figure \ref{fig:main-result}. This point is more distinct that the first key point. This is caused by a distinct bulge that is present in most of the tali of wild sheep. While the bulge is not visible as such in the mean bone, because of variations in position and height, it is noticeable that the mean bone of wild sheep is flatter that the one of domestic sheep around this position. The theory of the zoo-archaeologists is that this bump stems from the different stress level that is put on the bone when the wild sheep stand in mountainous terrain. Domestic sheep usually stand in flat areas so this bulge is not present in their bones.
+
+The third an most significant difference is at about $120^\circ$, which corresponds to the medial crest. The medial crest is much more distinctive in domestic sheep than in wild sheep. This is clearly visible in the mean bones of the two classes. Combined with key point two, where the lateral crest is more distinctive as well, it can also be viewed as the depression between the crests being deeper than in wild sheep. According to the experts, this might be caused by the domestic sheep not moving as much inside their pastures as the wild sheep and thus experiencing more stress between the crests.
+
+The last key point lies at about $190^\circ$ at the medial apex. While the other key points all lie in the area that has been examined by the researchers from the zoo-archeology department, this key point has not been analyzed by them. Based on the mean bones, two differences establish themselves at this point. In wild sheep the medial apex is more pronounced as well as shifted lower towards the out most point of the medial outer edge. This is a new discovery and has not been explained by the zoo-archaeologists.
+
+Apart from the key points the separability graph oscillates around a separability of zero. There exist other minor maxima in the graph, but they are too narrow to represent a real separable point, since the sliding window always incorporates the area around the evaluation angle.
+
+
 
 \subsection{Comparison of Algorithm Parameters}
 \label{sub:comparisonalgorithmparameters}
+
+In this section we examine whether changing algorithm parameters manifest as it would be expected in the result. For this purpose we execute the algorithm with the specified parameters on real-world data, while modifying one of the parameters and observe the changes in the result graph.
+
+\subsubsection{Number of Evaluation Points}
+
+In this experiment we will modify the number of points that are evaluated inside each window that is cut from the bone. One could argue that this corresponds to increasing the resolution of the algorithm inside each window.
+
+When modifying the number of evaluation points, we would expect the resulting graph to approximately stay the same, since the only difference that is apparent is that finer structures can be represented.
 
 \begin{figure}[h]
 	\centering
@@ -1368,6 +1388,16 @@ The results of the algorithm applied on real-world data can be seen in Figure \r
 	\label{fig:number-evaluations}
 \end{figure}
 
+From Figure \ref{fig:number-evaluations}, we can see that the trend of the graph stays the same when increasing the number of evaluations. It becomes also apparent that the absolute separability measure increases when the amount of points is increased. This implies that our separability measure is tied to the dimensionality of the feature vector. This needs to be considered when evaluating different features.
+
+For our experiments we set the number of evaluations to $20$.
+
+\subsubsection{Window Length}
+
+Varying the length of the window that is cut from the bone corresponds to modifying the overall resolution of the algorithm. With a window too small, larger features could be broken up into smaller parts, while with a window too big smaller features that are close by are merged into a single feature.
+
+With a small window size, we expect a very fine grained picture of differences between the bones. When increasing the window size, the graph should be smoothed out and features should slowly merge into larger separable areas.
+
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.32\textwidth}
@@ -1388,9 +1418,17 @@ The results of the algorithm applied on real-world data can be seen in Figure \r
 		\subcaption{\footnotesize$l=0.8$}
 		\label{fig:window-size-2}
 	\end{subfigure}
-	\caption{Graphs for different parameter for window length}
+	\caption{Graphs for different parameters for window length}
 	\label{fig:window-size}
 \end{figure}
+
+Figure \ref{fig:window-size} shows separability graphs for multiple window sizes. As we expected, the features get wider and merge into each other when increasing the parameter. Additionally, while small window sizes generate relatively smooth graphs, they become increasingly jagged. This might result from the window size getting larger without the number of evaluations increasing so more information is included in a vector of the same dimensionality. This way the variations between the feature vectors get bigger as well. When two features merge the separability is averaged between them as visible in Figure \ref{fig:window-size-2} with key points one ($60^\circ$) and two ($80^\circ$) or key point four ($190^\circ$). The largest feature is not influenced by this because it's width exceeds the window width, so only the periphery of the feature is merged with others.
+
+We chose a medium window length of $0.2$ to incorporate larger features while not producing a jagged graph.
+
+\subsubsection{Window Extraction Method}
+
+We implemented two algorithms for window extraction: By angle or by length. When extracting the windows by angle, the extracted windows seemed semantically less similar then when extracting them by length. In this section we want to confirm that extracting the windows by length also works quantitatively better.
 
 \begin{figure}[h]
 	\centering
@@ -1398,24 +1436,151 @@ The results of the algorithm applied on real-world data can be seen in Figure \r
 		\centering
 		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/window_extraction/0-by-angle.pdf}
 		\subcaption{\footnotesize By Angle}
-		\label{fig:window-size-0}
+		\label{fig:window-extraction-graphs-0}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.32\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/window_extraction/1-by-length.pdf}
 		\subcaption{\footnotesize By Length}
-		\label{fig:window-size-1}
+		\label{fig:window-extraction-graphs-1}
 	\end{subfigure}
 	\caption{Graphs for different window extraction strategy}
-	\label{fig:window-size}
+	\label{fig:window-extraction-graphs}
 \end{figure}
 
+The results for different window extraction methods can be seen in figure \ref{fig:window-extraction-graphs}. From the results it is clearly visible that the separability metric produces much more distinct maxima with the extraction method by length while the general trend of the graph stays the same. It is also noticeable that while we tried to keep the window sizes similar, it was not possible since the farther away the bone outline is located from the center, the larger the window gets that is cut from the bone when using the angular method.
 
-\subsection{Comparison of Features}
+To ensure the same window length everywhere we decided to use the extraction by length, which is also supported by the more distinct results.
 
-\subsection{Comparison of Registration Strategies}
+\subsubsection{Principal Component Analysis}
+
+In this section we wanted to determine how principal component analysis influences the results of the algorithm. While the SVM works well in high dimensions, our measure is sensitive to the distance to the hyperplane. The distance is prone to the curse of dimensionality, which states that in larger dimensions, distances between objects become more and more similar.
+
+ \begin{figure}[h]
+ 	\centering
+ 	\begin{subfigure}[b]{0.32\textwidth}
+ 		\centering
+ 		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/pca/0-No-PCA.pdf}
+ 		\subcaption{\footnotesize No PCA}
+ 		\label{fig:pca-0}
+ 	\end{subfigure}
+ 	\begin{subfigure}[b]{0.32\textwidth}
+ 		\centering
+ 		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/pca/1-1-PCA-Component.pdf}
+ 		\subcaption{\footnotesize 1 Component}
+ 		\label{fig:pca-1}
+ 	\end{subfigure}
+ 	\begin{subfigure}[b]{0.32\textwidth}
+ 		\centering
+ 		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/pca/4-4-PCA-Components.pdf}
+ 		\subcaption{\footnotesize 4 Components}
+ 		\label{fig:pca-2}
+ 	\end{subfigure}
+ 	\caption{Graphs for differing PCA configuration}
+ 	\label{fig:pca}
+ \end{figure}
+
+When not using PCA, we would expect the algorithm to still work correctly, but produce less distinct results, since the two classes might not be separable as well as after using PCA, and each observation being "far away" from the hyperplane due to the curse of dimensionality. Using PCA and more components, we expect the result to get finer with each component used from the PCA.
+ 
+While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines are not separable anymore. When using PCA the separability reappears at this point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components then eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
+
+For our purposes we choose PCA with 4 components to ensure separability of the classes and smoothness of the resulting graph.
+
+\subsubsection{Comparison of Features}
+
+In this section we will compare the features we implemented for comparison that were presented in Section \ref{sub:featureextraction}. Figure \ref{fig:features} shows the algorithm run with all features we presented.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/features/0-Flattened-Splines.pdf}
+		\subcaption{Flattened splines \\ \phantom{lb}}
+		\label{fig:features-0}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/features/1-Distances-To-Center.pdf}
+		\subcaption{Distances to center \\ \phantom{lb}}
+		\label{fig:features-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/features/2-Distances-To-Center-and-Curvature.pdf}
+		\subcaption{Distances to center and curvature}
+		\label{fig:features-2}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/features/3-Derivation-of-Mean-Bone.pdf}
+		\subcaption{Derivation from mean bone}
+		\label{fig:features-3}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/features/4-Curvature-of-Distance-To-Center.pdf}
+		\subcaption{Curvature of distances to center}
+		\label{fig:features-4}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/features/5-Spline-Derivatives.pdf}
+		\subcaption{Spline derivatives \\ \phantom{lb}}
+		\label{fig:features-5}
+	\end{subfigure}
+	\caption{Comparison of different features}
+	\label{fig:features}
+\end{figure}
+
+It is noticeable that the Figures \ref{fig:features-0}, \ref{fig:features-1} and \ref{fig:features-3} look very similar. Figures \ref{fig:features-0} and \ref{fig:features-3} are in fact identical. This is because in the used configuration we apply PCA, which incorporates this transformation already. The distances to center feature from Figure \ref{fig:features-1} is slightly different from the other two. The detected separable areas are a little wider, but generally it paints a very similar picture. When using the distances to center in combination with the curves curvature that separability of the key point two at $80^\circ$ increases significantly. The amount of noise in the result increases significantly as well. When testing with curvature only almost no key-points are detected. This lead to the conclusion that adding curvature will not show any additional separable areas, so it has no advantage. For the features from Figures \ref{fig:features-4} and \ref{fig:features-5} the results are even worse, to the degree that none of the key points are detected.
+
+In conclusion we simply continued to use the simplest feature from Figure \ref{fig:features-0}. It shows all key points that are detected by any of the features while generating a smooth graph that is easily readable.
 
 \subsection{Comparison of Separability Measures}
+
+When looking at the separability metrics we implemented, our expectation was for them to all have the same predicate for the separable areas. In contrast to comparing features, the separability metrics should all work and only differ in interpretability. Figure \ref{fig:metrics} shows the charts for all implemented metrics.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/metric/3-Margin.pdf}
+		\subcaption{Margin}
+		\label{fig:metrics-0}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/metric/4-Observed-Accuracy.pdf}
+		\subcaption{Observed Accuracy}
+		\label{fig:metrics-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/metric/0-Mean-Confidence.pdf}
+		\subcaption{Mean Confidence}
+		\label{fig:metrics-2}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/metric/1-Mean-Cross-Validation-Accuracy.pdf}
+		\subcaption{Mean cross-validation accuracy}
+		\label{fig:metrics-3}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/parameter_comparison/metric/5-Mean-Cross-Validation-Confidence.pdf}
+		\subcaption{Mean cross-validation confidence}
+		\label{fig:metrics-4}
+	\end{subfigure}
+	\caption{Comparison of different similarity measures}
+	\label{fig:metrics}
+\end{figure}
+
+There are two groups of metrics in Figure \ref{fig:metrics}. The accuracy-based metrics in Figures \ref{fig:metrics-1} and \ref{fig:metrics-3} are very noisy while the distance-based metrics have a more smooth progression. In the accuracy-based metrics, the separable areas are very hard to locate, although they generally have the same trend. The confidence scores are a combination of accuracy and margin scores. The absolute accuracy values in most areas are not necessarily good enough for classification, but in combination with the margin, they become a lot more meaningful for our case.
+
+The cross-validation metrics almost look the same as the non-cross validation metrics. It is noteworthy though that their maxima are less influenced by cross-validation than the rest of the graph. This is a good sign since they are well generalizable in these areas, which is also an indicator for separability.
+
+When looking at the separability metrics it becomes apparent that the key points in each metric also appear in the other metrics. While some of the metrics might be noisy, the combination lets us draw the conclusion that the key points we found are the separable areas of the bone.
 
 \chapter{Conclusion}
 

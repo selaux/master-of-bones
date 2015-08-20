@@ -52,7 +52,10 @@ gulp.task('clean', function (cb) {
 });
 
 gulp.task('updateCharts', function() {
-    gulp.src('img/results/**/*.svg')
+    gulp.src([
+        'img/results/**/*.svg',
+        '!img/results/**/*_edited.svg'
+    ])
         .pipe(using({}))
         .pipe(lineWidth("5.0"))
         .pipe(gulp.dest('img/results'))
