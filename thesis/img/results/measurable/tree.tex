@@ -1,0 +1,83 @@
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[>=latex,line join=bevel,]
+  \pgfsetlinewidth{1bp}
+%%
+\pgfsetcolor{black}
+  % Edge: 0 -> 6
+  \draw [->] (374.16bp,266.87bp) .. controls (389.18bp,257.39bp) and (406.38bp,246.55bp)  .. (430.66bp,231.25bp);
+  % Edge: 3 -> 5
+  \draw [->] (353.42bp,88.868bp) .. controls (360.51bp,80.184bp) and (368.53bp,70.35bp)  .. (382.49bp,53.25bp);
+  % Edge: 1 -> 2
+  \draw [->] (155.43bp,177.87bp) .. controls (140.62bp,168.39bp) and (123.67bp,157.55bp)  .. (99.752bp,142.25bp);
+  % Edge: 3 -> 4
+  \draw [->] (311.58bp,88.868bp) .. controls (304.49bp,80.184bp) and (296.47bp,70.35bp)  .. (282.51bp,53.25bp);
+  % Edge: 0 -> 1
+  \draw [->] (292.84bp,266.87bp) .. controls (277.82bp,257.39bp) and (260.62bp,246.55bp)  .. (236.34bp,231.25bp);
+  % Edge: 1 -> 3
+  \draw [->] (235.86bp,177.87bp) .. controls (250.78bp,168.39bp) and (267.85bp,157.55bp)  .. (291.95bp,142.25bp);
+  % Node: 1
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (391.0bp,231.0bp) -- (0.0bp,231.0bp) -- (0.0bp,178.0bp) -- (391.0bp,178.0bp) -- cycle;
+  \draw (195.5bp,215.8bp) node {$\frac{||\vec{l}_2 - \vec{l}_3||}{||\vec{l}_1 - \vec{l}_5||} <= 0.2553$};
+  \draw (195.5bp,200.8bp) node {$entropy = 0.84$};
+  \draw (195.5bp,185.8bp) node {$samples = 40$};
+\end{scope}
+  % Node: 0
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (529.0bp,320.0bp) -- (138.0bp,320.0bp) -- (138.0bp,267.0bp) -- (529.0bp,267.0bp) -- cycle;
+  \draw (333.5bp,304.8bp) node {$\frac{||\vec{l}_1 - \vec{l}_5||}{||\vec{l}_3 - \vec{l}_6||} <= 0.8668$};
+  \draw (333.5bp,289.8bp) node {$entropy = 0.99$};
+  \draw (333.5bp,274.8bp) node {$samples = 57$};
+\end{scope}
+  % Node: 3
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (528.0bp,142.0bp) -- (137.0bp,142.0bp) -- (137.0bp,89.0bp) -- (528.0bp,89.0bp) -- cycle;
+  \draw (332.5bp,126.8bp) node {$\frac{||\vec{l}_1 - \vec{l}_2||}{||\vec{l}_1 - \vec{l}_6||} <= 0.2861$};
+  \draw (332.5bp,111.8bp) node {$entropy = 0.54$};
+  \draw (332.5bp,96.8bp) node {$samples = 32$};
+\end{scope}
+  % Node: 2
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (119.0bp,142.0bp) -- (0.0bp,142.0bp) -- (0.0bp,89.0bp) -- (119.0bp,89.0bp) -- cycle;
+  \draw (59.5bp,126.8bp) node {$entropy = 0.5436$};
+  \draw (59.5bp,111.8bp) node {$samples = 8$};
+  \draw (59.5bp,96.8bp) node {$|dome|, |wild| = 1,  7$};
+\end{scope}
+  % Node: 5
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (463.0bp,53.0bp) -- (344.0bp,53.0bp) -- (344.0bp,0.0bp) -- (463.0bp,0.0bp) -- cycle;
+  \draw (403.5bp,37.8bp) node {$entropy = 0.8905$};
+  \draw (403.5bp,22.8bp) node {$samples = 13$};
+  \draw (403.5bp,7.8bp) node {$|dome|, |wild| = 9,  4$};
+\end{scope}
+  % Node: 4
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (326.0bp,53.0bp) -- (197.0bp,53.0bp) -- (197.0bp,0.0bp) -- (326.0bp,0.0bp) -- cycle;
+  \draw (261.5bp,37.8bp) node {$entropy = 0.0000$};
+  \draw (261.5bp,22.8bp) node {$samples = 19$};
+  \draw (261.5bp,7.8bp) node {$|dome|, |wild| = 19,   0$};
+\end{scope}
+  % Node: 6
+\begin{scope}
+  \definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  \pgfsetstrokecolor{strokecol}
+  \draw (534.0bp,231.0bp) -- (409.0bp,231.0bp) -- (409.0bp,178.0bp) -- (534.0bp,178.0bp) -- cycle;
+  \draw (471.5bp,215.8bp) node {$entropy = 0.0000$};
+  \draw (471.5bp,200.8bp) node {$samples = 17$};
+  \draw (471.5bp,185.8bp) node {$|dome|, |wild| = 0,  17$};
+\end{scope}
+%
+\end{tikzpicture}
+}

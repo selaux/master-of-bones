@@ -97,6 +97,16 @@ An approach to classification by local key points has been done by Mhamdi et. al
 \section{Splines}
 \label{section:splines}
 
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.3\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/basics/splines.pdf}
+	\end{subfigure}
+	\caption{Interpolated smooth spline}
+	\label{fig:basics-splines}
+\end{figure}
+
 A spline is a parameterized representation of a function that consists of several pieces of polynomial functions. The end points of these pieces are connected while ensuring smoothness in between them. Splines can be used to represent arbitrary curves in computer graphics. For our purposes we used non-uniform cubic B-Splines to represent the bone outlines. B-Splines have a defined set of base functions in which they describe their pathway. A B-Spline of degree $p$ is described by points $\vec{p}_0 \cdots p_{n-p}$ called knots and a knot vector $t = (t_1, \cdots t_{n})$, which describes the weight of those knots. The basis functions can be calculated recursively.
 
 \begin{equation}
@@ -143,6 +153,24 @@ The extraction of eigenvectors is usually done by an numeric algorithm. The obje
 
 Cluster analysis is an integral part of data mining. The goal of cluster analysis is to group objects, that are similar to each other. The objects are represented as n-dimensional vectors while the similarity of objects translates into a low distance between the vectors. The objects are also often referred to as observations. In this thesis we will use two types of clusterings, which we present in this section.
 
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/basics/kmeans.pdf}
+		\subcaption{k-means}
+		\label{fig:basics-clustering-k-means}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.45\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/basics/dbscan.pdf}
+		\subcaption{DBSCAN}
+		\label{fig:basics-clustering-dbscan}
+	\end{subfigure}
+	\caption{Clustering algorithms}
+	\label{fig:basics-clustering}
+\end{figure}
+
 \subsection{K-Means}
 
 K-means clustering is a partitioning cluster algorithm. Partitioning cluster algorithms separate the space into segments, with all points in one segment belonging to a cluster. In k-means clustering, each cluster $C_i$ is represented by its centroid $\mu_i$. An object belongs to the cluster with the closest centroid. The partitioning manifests in a Voronoi cells built from the representatives from each cluster. The number of clusters $k$ is a parameter that needs to be set to fit the data.
@@ -168,7 +196,7 @@ The goal of the DBSCAN cluster algorithm is to group objects into areas of high 
 
 \begin{itemize}
 	\item
-	Core points: Each point that satisifies: \\$|RQ(p, \epsilon) = \{  o \in DB | dist(o,p) <= \epsilon  \}| \geq minPts$
+	Core points: Each point that satisfies: \\$|RQ(p, \epsilon) = \{  o \in DB | dist(o,p) <= \epsilon  \}| \geq minPts$
 	
 	 \item
 	 $q$ is direct-density-reachable from $p$: $q \in RQ(p, \epsilon)$ and $p$ is core point
@@ -190,9 +218,9 @@ A support vector machine is a classifier that separates a set of objects into tw
 
 \begin{figure}[h]
 	\centering
-	\begin{subfigure}[b]{0.65\textwidth}
+	\begin{subfigure}[b]{0.75\textwidth}
 		\centering
-		\includegraphics[width=.9\linewidth]{img/basics/svm.png}
+		\includegraphics[width=.9\linewidth]{img/basics/svm.pdf}
 	\end{subfigure}
 	\caption{Support Vector Machine}
 	\label{fig:basics-svm}
@@ -287,7 +315,17 @@ In this thesis we are using the decision tree implementation from scikit-learn \
 
 \section{Overview}
 
-Detecting local shape variation had to occur in several steps. The starting point was annotated JPG data. We had a series of images from the same bone, which encode the archaeological site in the file name. From the name of the archaeological site we could extract the class of the observation, since all bones found are of a single type (wild sheep or domestic sheep). The pipeline of the algorithm is shown in figure \ref{somefigure} and shows the steps needed.
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.75\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/process.pdf}
+	\end{subfigure}
+	\caption{Process for finding shape differences}
+	\label{fig:process}
+\end{figure}
+
+Detecting local shape variation had to occur in several steps. The starting point was annotated JPG data. We had a series of images from the same bone, which encode the archaeological site in the file name. From the name of the archaeological site we could extract the class of the observation, since all bones found are of a single type (wild sheep or domestic sheep). The pipeline of the algorithm is shown in figure \ref{fig:process} and shows the steps needed.
 
 First we needed to extract the outline of the bone from the photograph. This is done in two steps: image segmentation is used to find pixels that lie on the bone and triangulation is used to extract the outline of the bone from these pixels. Additionally some landmark points are annotated in the preprocessing step.
 
@@ -438,15 +476,6 @@ The split algorithm can be configured by a parameter $k$, which sets the scale o
 \end{figure}
 
 In contrast to the previous methods, Felzenszwalb's method creates clusters from the edge of the bone only as shown in Figure \ref{fig:felzenszwalb:good}. These labels adhere to the edges of the bone, but some additional areas are included in the result as well. The number of labels is not selectable and for large images this method can create hundreds of labels, which complicates label selection for the user, so a sufficiently high observation level $k$ needs to be chosen to reduce the number of labels. For our purpose, we chose $k=1000$. The images that are difficult to segment could often not be correctly segmented using this method as visible in Figure \ref{fig:felzenszwalb:bad}. When choosing a small value for $k$ a huge amount of small labels was generated. On the other hand, when choosing a large value for $k$, the bone and background collapsed into a single label.
-
-\subsubsection{Semi-local region descriptor}
-
-The method based on a semi-local region descriptor and active contour by Houhou et. al. in \cite{houhou2009fast} is the first method presented here that relies on a description of the texture that surrounds a pixel. The texture feature $F$ presented in the paper analyzes a patch $P_{x,y}$ around the pixel at position $(x,y)$ and represents the texture of this patch by a manifold. The metric
-tensor of this method is then calculated, accumulated for all color channels and a textural feature is extracted from the metric tensor.
-
-For the sake of simplicity we decided only to implement the texture feature from \cite{houhou2009fast} and not the proposed segmentation method, since the documentation was very sparse.
-
-TODO: Results
 
 \subsubsection{Gabor Filters}
 
@@ -600,7 +629,28 @@ of the bone that could be located automatically and overlap as much as possible 
 zooarcheologists. For this purpose we introduced two methods that extract landmarks from outlines of Tali. The landmarks
 found by these methods have very similar positions but differ in on-site-measurability and stability in-between classes.
 
-Figure \ref{figure-landmark-methods} shows the results of the three landmark locating methods: manual, with angles and
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.3\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/landmarks/manual.pdf}
+		\subcaption{Manual}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/landmarks/angles.pdf}
+		\subcaption{By angle}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.3\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/landmarks/space-partitioning.pdf}
+		\subcaption{By space partitioning}
+	\end{subfigure}
+	\caption{Landmarks by method}
+	\label{fig:landmark-methods}
+\end{figure}
+
+Figure \ref{fig:landmark-methods} shows the results of the three landmark locating methods: manual, with angles and
 with space partitioning. The biological correspondences of the landmarks are as follows.
 
 \begin{itemize}
@@ -1184,13 +1234,31 @@ The mean cross-validation confidence score is closely tied the the mean confiden
 \chapter{Detection of Differences That Are Measurable On-Site}
 \label{chapter:measurable-differences}
 
-The method presented in Chapter \ref{chapter:detecting-shape-variations} is useful for finding general differences in shape in between two classes of data. But these differences can only be located, but not measured. Since the zooarchaeologists also needed a method to classify these bones in the field, we implemented another method with the goal of creating a method to classify the bones with only a slide caliper as a tool.
+The method presented in Chapter \ref{chapter:detecting-shape-variations} is useful for finding general differences in shape in between two classes of data. But these differences can only be located, but not measured. Since the zoo-archaeologists also needed a method to classify these bones in the field, we implemented another method with the goal of creating a way to classify the bones with only a slide caliper as a tool.
 
 \section{Definition of Measurable Values}
 
 First we needed to define measurable values that could be extracted from the outline of the bone. For this purpose we decided to use the automatically extracted landmarks that we defined in Section \ref{sub:landmarks}. This method provided us with a sets of points that are semantically identical on each bone. Since these points lie on the extrema of the bones shape, finding them manually should be no problem.
 
 These points can be used to calculate simple features that can be used to classify the bone. Since the point can be located on the bone, but not measured in coordinates, we decided to use distances between these points as features. This way only a few distances need to be measured in the field to be able to decide, with a certain probability, to which class the bone belongs. Since the absolute distance between the landmarks is still not meaningful, because the data was normalized and therefore the distance does not translate into a real-world distance, we decided to use ratios of distances as the input data for finding measurable differences.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/measurable/example1.pdf}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/measurable/example2.pdf}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.25\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/measurable/example3.pdf}
+	\end{subfigure}
+	\caption{Examples for distances between landmarks}
+	\label{fig:measurable-distances}
+\end{figure}
 
 Both methods to extract landmarks that were presented in Section \ref{sub:landmarks} can be used to extract the landmarks. Depending on the extraction method, some of the distances can be hard to measure. Since the landmarks extracted by space-partitioning lie on extrema in x and y direction, they are preferred when using this method for distances that are parallel to the x- and y-axes. The landmarks extracted by angle are favored for distances that are measured diagonally. This can be considered when evaluating the decision tree created by this method.
 
@@ -1215,7 +1283,7 @@ The distance ratios can then be calculated from this set.
 
 \section{Training a Decision Tree}
 
-To classify the bone we decided to use a decision tree as presented in Section \ref{sec:basics-decision-trees}, because it gives the capability to read the decision path from the classifier. This way the zooarchaeologist only needs to measure a handful of distances and apply them to the decision tree to figure out the class of the object.
+To classify the bone we decided to use a decision tree as presented in Section \ref{sec:basics-decision-trees}, because it gives the capability to read the decision path from the classifier. This way the zoo-archaeologist only needs to measure a handful of distances and apply them to the decision tree to figure out the class of the object.
 
 The depth of the decision tree $T$ defines how many distances need to be measured as $m <= depth(T) * 2$. We decided to limit the trees depth to 2 to reduce the number of measurements as well as to have a better generalization of the model.
 
@@ -1539,19 +1607,25 @@ After validating the algorithm using synthetic data, we advanced by analyzing th
 		\subcaption{\footnotesize Mean input data}
 		\label{fig:main-result-data}
 	\end{subfigure}
-	\begin{subfigure}[b]{0.64\textwidth}
+	\begin{subfigure}[b]{0.32\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/results/real/result_edited.pdf}
 		\subcaption{\footnotesize Result}
 		\label{fig:main-result-chart}
 	\end{subfigure}
+	\begin{subfigure}[b]{0.32\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/results/real/distances.pdf}
+		\subcaption{\footnotesize Distance of Mean Bones}
+		\label{fig:main-result-distance}
+	\end{subfigure}
 	\caption{Algorithm applied to domestic (yellow) and wild sheep (blue)}
 	\label{fig:main-result}
 \end{figure}
 
-TODO: Distanz zwischen Mittelwerten plotten.
+The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. Figure \ref{fig:main-result-data} shows the mean outlines for domestic (blue) and wild (yellow) sheep and the angles corresponding to the peaks in Figure \ref{fig:main-result-chart}. For reference we plotted the distance between the mean bones in Figure \ref{fig:main-result-distance}. When comparing the charts of the distance between mean bones and our result it becomes clear that while some of the peaks are visible as well in Figure \ref{fig:main-result-distance}, the peaks are much more distinct using our method. This might be caused because we do not only consider distance between the points, but also separability, allowing us to consider how meaningful a change in shape is.
 
-The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. Figure \ref{fig:main-result-data} shows the mean outlines for domestic (blue) and wild (yellow) sheep and the angles corresponding to the peaks in Figure \ref{fig:main-result-chart}. From the mean bones it is clearly visible that the highest peak in the chart correspond to the parts of the bone where the mean bones diverge the most. It needs to be noted that the maximum separability metric of the result is smaller than that of the synthetic tests, but that is to be expected with real-world data as a combination of measurement errors, variance in shape features and registration errors applies. Nevertheless distinct peaks are visible in the result graph. While the upper half of the bone is highly separable, the lower half is similar in both classes. This agrees with the results of the zoo-archaeologist who also found significant differences in the area between the lateral and medial crest. Our algorithm shows three distinct points in the upper area of the outline which we marked as one, two and three. In the area between these points, the separability decreases, but does not reach zero. Additionally to the points between the crests, our result shows a highly separable area around the out most point on the medial apex.
+From the mean bones it is clearly visible that the highest peak in the result chart correspond to the parts of the bone where the mean bones diverge the most. It needs to be noted that the maximum separability metric of the result is smaller than that of the synthetic tests, but that is to be expected with real-world data as a combination of measurement errors, variance in shape features and registration errors applies. Nevertheless distinct peaks are visible in the result graph. While the upper half of the bone is highly separable, the lower half is similar in both classes. This agrees with the results of the zoo-archaeologist who also found significant differences in the area between the lateral and medial crest. Our algorithm shows three distinct points in the upper area of the outline which we marked as one, two and three. In the area between these points, the separability decreases, but does not reach zero. Additionally to the points between the crests, our result shows a highly separable area around the out most point on the medial apex.
 
 The first separable point is in the area around the highest point on the lateral crest marked as one in Figure \ref{fig:main-result}. This difference is not as distinct as the others. It is located right at an intersection between the two mean bones which indicates that it stems from the accumulation of two minor separabilities to the left and right of the evaluation point. The bones of the wild sheep are a bit wider to the right and less high to the left than those of the domestic sheep at this angle. After this key point, the separability falls again, but not to the point of not being separable.
 
@@ -1692,11 +1766,9 @@ In this section we wanted to determine how principal component analysis influenc
  	\label{fig:pca}
  \end{figure}
 
-TODO: Andere Features?
-
 When not using PCA, we would expect the algorithm to still work correctly, but produce less distinct results, since the two classes might not be separable as well as after using PCA, and each observation being "far away" from the hyperplane due to the curse of dimensionality. Using PCA and more components, we expect the result to get finer with each component used from the PCA.
  
-While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines are not separable anymore. When using PCA the separability reappears at this point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components then eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
+While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines are not separable anymore. We tested using other features than the flattened spline points, and determined that features using only location info had this problem, with the distance and curvature feature this did not happen. When using PCA the separability reappears at this point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components then eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
 
 For our purposes we choose PCA with 4 components to ensure separability of the classes and smoothness of the resulting graph.
 
@@ -1796,15 +1868,51 @@ The cross-validation metrics almost look the same as the non-cross validation me
 
 When looking at the separability metrics it becomes apparent that the key points in each metric also appear in the other metrics. While some of the metrics might be noisy, the combination lets us draw the conclusion that the key points we found are the separable areas of the bone.
 
-\section{Experimente Für Messbare Unterschiede}
+\section{Experiments on Measurable Differences}
+
+We also executed some testing for the decision tree classifier we presented in Chapter \ref{chapter:measurable-differences}. First we used cross-validation to determine the success rate of our classifier and whether it was generalizable. Several parameters to train the decision tree needed to be chosen while aiming for the highest possible cross validation accuracy.
+
+As the split criterion information gain proved to yield better results than using the Gini index. As for the landmark extraction method, space partitioning was increasing the result quality as well. As for the decision and the minimum number of samples per leaf, we decided to favor a decision tree depth of $3$ with minimum $6$ samples per leaf over a depth of $2$. While a depth of $2$ would require the researcher to take fewer measurements, only one of the branches of the tree actually has this depth, which leaves the researcher with almost always taking fewer measurements.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.9\textwidth}
+		\centering
+		\include{img/results/measurable/tree}
+	\end{subfigure}
+	\caption{Decision tree for measurable values}
+	\label{fig:result-decision-tree}
+\end{figure}
+
+With this configuration, the decision tree shown in Figure \ref{fig:result-decision-tree} is trained. The cross-validation accuracy lies at about $77\%$ which is a sufficiently high value for a training set of this size. A researcher in the field would need to take two to six measurements on the bone to determine the type of bone.
 
 \chapter{Conclusion}
 
 \section{Summary}
 
+In this thesis we have presented a novel method to analyze shapes for shape variances between classes. First the bone outlines were segmented from an image of the bone in a semi-automatic fashion. Based on a support vector machine we calculate separability metrics for windows we cut from these outlines. We introduced several features that can be used to train the SVM and compared them. We have validated the algorithm using synthetic data that was generated using randomized class shapes. In the end this method was applied to bone findings of domestic and wild sheep to find locations where these classes differ significantly.
+
+Additionally we presented a decision tree with which domestic and wild sheep can be classified in the field using only a ruler or caliper rule. This method is based on landmarks that need to be located on the bone by the researcher.
+
 \section{Discussion}
 
+The method we presented has some advantages over geometric morphometrics or comparing the mean outlines of the bone. In common geometric morphometric approaches, the only way to locate the differences on the bone is to look at the thin plate spline transformation, which only shows the landmarks. Our method provides another way that concisely shows the location of significant differences on the bone. Additionally, compared to geometrical morphometrics, the process is a lot more automated, without the need to set landmarks or manually tracing the outline between landmarks.
+
+While we can show these differences, we cannot characterize them other than interpreting the raw data or the mean outlines. Because of that, the reason why the bone is separable at a certain location stays hidden in the algorithm. This is not the case in geometric morphometrics where the principal component that correlates simply can be analyzed. With some research this might be possible as well for this algorithm.
+
+A more significant disadvantage of this method is that in its current implementation, it will only work on round shapes where every point on the outline is reachable by ray casting from the center of the shape. Otherwise the windows will not be extracted correctly. While this holds true for the Tali bones we examined, it severely limits the shape space we can work with.
+
+Compared to other shape description methods in data science, we use local data to find key points on a shape, while most other approaches describe the shape as a whole. This allows us to evaluate the shape only at certain points when this method is used as a classifier.
+
 \section{Future Work}
+
+While we are using the algorithm as a method to find separable points, it should be easily possible to extend it to be a classifier that can classify shapes of the respective classes it was trained with. Since a trained SVM already exists at every point that separates the classes these SVMs can be evaluated with new shapes and weighted to create a classifier that works on these points.
+
+Another apparent extension is to make the algorithm work with three dimensional data. For this purpose the evaluation points would need to be selected using two angles and the window would become an area cut from the surface of the three dimensional bone model. Non-uniform Rational B-Splines could be used instead of B-Splines to describe the surface of the bone.
+
+To cope with the limitations on shapes that can be used with the algorithm, another method to find the evaluation points on the outline could be implemented. Instead of using angles, spline parameters could be used to select evaluation points. It would be required to sync these parameters somehow to extract semantically similar windows. This could be done using dynamic time warping or a similar method.
+
+Additionally since we implemented relatively simple features in this thesis, other more sophisticated features could be used to train and evaluate the SVM.
 
 \appendix
 
