@@ -2,6 +2,8 @@
 \usepackage{dbstmpl}
 \usepackage{subcaption}
 \usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usepackage{tikzscale}
 
 % Hier die eigenen Daten eintragen
 \global\arbeit{Masterarbeit}
@@ -23,9 +25,9 @@
 
 % Zusammenfassung
 \begin{abstract}
-Dieses Dokument dient als Muster f"ur die Ausarbeitung einer \the\arbeit\
-an der Lehr- und Forschungseinheit f"ur Datenbanksysteme am Institut f"ur
-Informatik der LMU M"unchen.
+In this thesis we present a novel algorithm employing data-mining techniques, to detect local shape variations between two classes of shapes. We crate a semi-automatic extraction of outlines from images of tali belonging to domestic or wild sheep, which feed the algorithm.
+
+To ensure correctness, we validate the algorithm using synthetically created shapes of bones. We apply the algorithm to the actual bone data to find the variations and compare them to previously detected differences.
 \end{abstract}
 
 % Inhaltsverzeichnis
@@ -34,43 +36,251 @@ Informatik der LMU M"unchen.
 % Hier beginnt der eigentliche Text
 \chapter{Introduction}
 
+In biology a lot of focus lies on the distinctions between species and within species. These distinctions can be based on the genealogical tree of the animal as well as by constitution or other features. While living animals can be examined by several means, like their blood, muscular structure, this is not as easy for animals that are extinct or deceased for a long time.
+
+For zoo-archaeologists, archaeological findings of bones are an integral part of their research since they is the only remains of the studied animals that are available. From these findings a lot of variables about the animal itself and its environment can be inferred. While a lot of mammals share a similar skeleton, the bones of the animals have varied shapes and sizes depending on multiple variables. These differences in shape and size can be statistically analyzed. The goals of the analysis can be manifold. They can be aimed at emphasizing the distinctions between species, but can also show how the habitat of the animal can influence the skeletal structure. While in zoo-archeology only the remains of the animal can be analyzed, biologists use similar methods to analyze the shapes of live animals as well.
+
+These analyses have a long tradition in the field of biology, while the goals are similar to those of data science: Detecting new and interesting information about a data set. But the focus of data scientists in the field of shape are currently different, focusing on shape matching and retrieval. A partnership of the institute of palaeo-anatomy of the Ludwig-Maximilian-University in Munich and the database systems group of the department of computer science allows data scientists to research bone findings to support the zoo-archaeologists.
+
+In this thesis we present a novel algorithm for shape comparison employing data-mining techniques. We then employ this algorithm to detect differences in shape between wild and domestic sheep bones that were supplied by the zoo-archaeologists.
+
 \chapter{Problem Definition}
 \label{chapter:problem-definition}
 
+The area of research that this work is located in is the documentation of early domestication of sheep. Previous work by the zoo-archaeologists examined the Talus, a bone located in the ankle joint of mammals. Their goal was to determine differences between domestic and wild sheep that manifest in this bone. The bone was chosen because it was one of the few bones that stayed intact over the time the skeleton rested in the earth. They based their findings on traditional morphometrics as well as geometric morphometrics. Our goal was to confirm and refine the significant variances that the archaeologists found, as well as to automate the process.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.65\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/example.jpg}
+	\end{subfigure}
+	\caption{An example for a source image}
+	\label{fig:problem-example}
+\end{figure}
+
+
+For this purpose we were provided with several images of Tali from four archaeological sites: Manching, Milet, Gusir and Göbekli. All Tali were photographed from approximately the same perspective. An example for one of these images can be seen in Figure \ref{fig:problem-example}. Based on their place of discovery they can be classified through expert knowledge.
+
+Manching bones can be classified as domestic sheep since it is located in southern Germany which was not a habitat of wild sheep. The bones from Milet are from the iron age when no wild sheep lived anymore in this area and can be classified as domestic sheep as well. Additionally they were found in the temple of Aphrodite where only domestic sheep were sacrificed, because the sacrifice was required to be done inside the temple and the animal needed to be unharmed. The bones from Gusir and Göbekli are classified as wild sheep, since they originate from a period where the human species was still organized as hunter-gatherers.
+
+This classification is the basis for this work to locate significant shape variances in the bones. Our goal was to highlight areas one the bone outline where the two classes are separable the most by a classifier, marking it as a characteristic location where the type can be identified. This would allow the zoo-archaeologists to estimate the class of a bone using a photograph.
+
+Additionally, since relocating a bone finding to another country is difficult, we wanted to provide a method of classification for newly dug out bones, which could be executed using only a caliper rule. This would allow a researcher to identify on-site whether it originates from a domestic or a wild sheep. 
+
 \chapter{Related Work}
 
-\section{Morphometrics in Zooarcheology}
+The field of shape comparison is divided into two areas. Traditional morphometrics in biology analyze distances, masses, angles and ratios, to determine differences between species. Shape matching in data science tries to describe shapes with feature vectors to facilitate shape retrieval or shape classification in a database. These two fields exist fairly independent of each other.
 
-\cite{blackith1971multivariate}
-\cite{adams2004geometric}
-\cite{mitteroecker2009advances}
+\section{Morphometrics in Biology}
+
+Morphometrics were introduced in biology by Blackith et. al in 1971 \cite{blackith1971multivariate}. Their goal was to apply multivariate statistical analysis not only to biology, but to a wide range of fields, like geology, sociology and genetics. In the following years, these techniques were applied to determine correlations between certain variables in animals or animal bones and e.g. the habitat or climate. Mainly distances were used for comparison, which causes a problem, because linear distance measurements are often correlated to size \cite{bookstein1985morphometrics}. Geometric morphometrics was introduced to cope with this problem by analyzon coordinates instead of distances, by comparing outlines or landmarks.
+
+Finding correlations in shapes by evaluating their outline usually consisted of using Fourier Analysis to represent the outlines and then using statistical analysis to find correlations. Palmquist et. al. \cite{palmqvist1996comparative} applied this method to findings of human finger bones to differentiate them from bones of several ape species and confirm that they are in fact from the genus Homo. 
+
+In landmark based methods specific points in 2 or 3 dimensions are selected that are used as the input for the method. These points can be located using different methods, like the intersection of structures or as local maxima or minima on the outline. Methods to analyze these coordinates include Procrustes analysis \cite{small1996statistical} or Euclidean distance matrix analysis \cite{lele1991euclidean}.
+
+Modern approaches to geometric morphometrics often analyze the shapes in Kendall shape space, which is a mathematical space introduced by the shape coordinates \cite{mitteroecker2009advances}. Sliding semi-landmarks are often used to fill the space between the landmarks, while maintaining the shape. To visualize differences between shapes, thin plate spline deformation grids are used, which show how one shape is transformed into the other \cite{adams2004geometric}.
 
 \section{Shape Matching in Data Science}
 
-\cite{da2010shape}
-\cite{veltkamp2001shape}
-\cite{belongie2002shape}
-\cite{mhamdi2014local}
+In the context of data science, the focus of research lies in shape matching rather than shape analysis. Shape matching describes the similarity between two shapes by a distance. This can be used e.g. to fetch similar shapes from a database or classify shapes into several groups.
+
+Veltkamp et. al. present a survey of shape matching algorithms in \cite{veltkamp2001shape}. Distance measures used include Minkowski Distance, Bottleneck Distance or the Turning Function Distance. All of these measures do not employ key points that are selected on the outline of the shape. Other methods like the shape context by Belongie et. al. \cite{belongie2002shape} employ correspondence matching, but generalize the results to the full shape as well.
+
+The book \grqq Shape analysis and classification \grqq by da Fontoura Costa et al. \cite{da2010shape} covers shape classification as well, but leaves out local classification, which we want to employ in this thesis.
+
+An approach to classification by local key points has been done by Mhamdi et. al . \cite{mhamdi2014local}. They represent the critical points by a set of size functions and use the resulting similarity measure for classification.
 
 \chapter{Mathematical Basics}
 
 \section{Splines}
 \label{section:splines}
 
+A spline is a parameterized representation of a function that consists of several pieces of polynomial functions. The end points of these pieces are connected while ensuring smoothness in between them. Splines can be used to represent arbitrary curves in computer graphics. For our purposes we used non-uniform cubic B-Splines to represent the bone outlines. B-Splines have a defined set of base functions in which they describe their pathway. A B-Spline of degree $p$ is described by points $\vec{p}_0 \cdots p_{n-p}$ called knots and a knot vector $t = (t_1, \cdots t_{n})$, which describes the weight of those knots. The basis functions can be calculated recursively.
+
+\begin{equation}
+\begin{split}
+& B_i^0(t) = \left\{
+\begin{matrix} 
+1 & \mathrm{if} \quad t_i \leq t < t_{i+1} \\
+0 & \mathrm{otherwise} 
+\end{matrix} \right. \\
+& B_i^p(t) = \frac{t - t_i}{t_{i+p} - t_i} B_i^{p-1}(t) + \frac{t_{i+p+1} - t}{t_{i+p+1} - t_{t+1}} B_{i+1}^{p-1}(t)
+\end{split} 
+\end{equation}
+
+The B-Spline curve is then defined as:
+
+\begin{equation}
+\vec{s}(t) =  \sum_{i=1}^{n-p} \vec{p}_i B_i^p(t)
+\end{equation}
+
+The interpolation of spline curves is preferred over polynomial interpolation, because it avoids Runge's phenomenon, which manifests in high frequency oscillations between control points. In this thesis we use the spline interpolation algorithm from scikit-learn \cite{pedregosa2011scikit}. This algorithm also allows for smoothing of the spline, which we apply to a small degree to reduce the edges on our bone outlines. Figure \ref{fig:basics-splines} shows a smoothed spline interpolated from some points.
+
 \section{Principal Component Analysis}
 
-\section{Clustering}
+Principal Component analysis is a statistical technique to decrease dimensionality of a data set, while converting the values into linearly uncorrelated variables that are called principal components. These components are sorted by variance so latter components can be omitted from observations without changing the expressiveness of the data as much.
+
+Principal component analysis works on the derivations from the mean data in $DB$.
+
+\begin{equation}
+\begin{split}
+& \vec{\mu} = \frac{1}{|DB|} \sum_{\vec{o} \in DB}  \vec{o} \\
+& DB_\mu = \{ \vec{o} - \vec{\mu} | \forall \vec{o} \in DB \}
+\end{split}
+\end{equation}
+
+The principal components can be obtained by calculating the eigenvectors of the covariance matrix defined by the observations after subtracting the mean values. These vectors are by definition orthogonal to each other leading to uncorrelated variables. The covariance matrix can  be created from a matrix $\mathbf{D}$ with all objects from $DB_\mu$ as rows.
+
+\begin{equation}
+\mathbf{C} = \frac{1}{|DB|-1} \mathbf{D}^* \cdot \mathbf{D}
+\end{equation}
+
+The extraction of eigenvectors is usually done by an numeric algorithm. The objects in the database can now be represented by using the eigenvectors as a new basis. The eigenvectors can then be sorted by their variances in data and limited to the number of dimensions necessary for the task.
+
+\section{Cluster Analysis}
+
+Cluster analysis is an integral part of data mining. The goal of cluster analysis is to group objects, that are similar to each other. The objects are represented as n-dimensional vectors while the similarity of objects translates into a low distance between the vectors. The objects are also often referred to as observations. In this thesis we will use two types of clusterings, which we present in this section.
 
 \subsection{K-Means}
 
+K-means clustering is a partitioning cluster algorithm. Partitioning cluster algorithms separate the space into segments, with all points in one segment belonging to a cluster. In k-means clustering, each cluster $C_i$ is represented by its centroid $\mu_i$. An object belongs to the cluster with the closest centroid. The partitioning manifests in a Voronoi cells built from the representatives from each cluster. The number of clusters $k$ is a parameter that needs to be set to fit the data.
+
+\begin{equation}
+\mu_i = \frac{1}{C_i} \sum_{\vec{o} \in C_i}\vec{o}
+\end{equation}
+
+The algorithm to create the clustering is iterative. Initially random points are selected as centroid for each cluster. Then the cluster memberships are reevaluated and the centroids are recalculated. These two steps are iterated until the following compactness criterion is met:
+
+\begin{equation}
+\begin{split}
+& TD^2(C_i) = \sum\limits_{o \in C_i} dist(o, \mu_i)^2  \\
+& TD^2(CL) = \sum\limits_{C_i \in CL} TD^2(C_i) <= \xi
+\end{split}
+\end{equation}
+
+The clusters created by k-means clustering are spherical compact clusters as visible in Figure \ref{fig:basics-clustering-k-means}. This is caused by the distance being used as a distance measure and as a measure for cluster scatter.
+
 \subsection{DBSCAN}
+
+The goal of the DBSCAN cluster algorithm is to group objects into areas of high densities, separated by areas of low densities. The objects in the low density areas are marked as noise while all objects inside each high density are marked as belonging to the respective cluster. DBSCAN works with a concept of densibility reachability, based on parameters $minPts$ and $\epsilon$:
+
+\begin{itemize}
+	\item
+	Core points: Each point that satisifies: \\$|RQ(p, \epsilon) = \{  o \in DB | dist(o,p) <= \epsilon  \}| \geq minPts$
+	
+	 \item
+	 $q$ is direct-density-reachable from $p$: $q \in RQ(p, \epsilon)$ and $p$ is core point
+	 
+	 \item
+	 $q$ is density-reachable from $p$: There exists a chain of direct-density-reachable objects between $q$ and $p$
+	 
+	 \item
+	 $q$ and $p$ are density-connected: $p$ and $q$ are both density-reachable from an object
+\end{itemize}
+
+Clusters are created from sets of density-connected points. These points are found by expanding clusters with range queries, trying to find direct-density-reachable points or core points until each object has been visited.
+
+Figure \ref{fig:basics-clustering-dbscan} shows a clustering created with DBSCAN. The clusters generated with DBSCAN can be of arbitrary shape as long as they have a similar density. A change in density is necessary for the algorithm to separate clusters. 
 
 \section{Support Vector Machines}
 
-\cite{pedregosa2011scikit}
+A support vector machine is a classifier that separates a set of objects into two classes. As a supervised method it needs to be trained using training data and then can be applied to new objects to classify them. The methodology is to create a hyperplane in the feature space that separates the two classes from each other. The plane is created to have a maximum distance from the nearest data point of each class, facilitating good generalization. These data points are called support vectors and the distance to the hyperplane is called margin.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.65\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/basics/svm.png}
+	\end{subfigure}
+	\caption{Support Vector Machine}
+	\label{fig:basics-svm}
+\end{figure}
+
+Figure \ref{fig:basics-svm} shows a support vector machine. The support vectors are highlighted as the double-outlined points. The separating hyperplane is the solid line while the margin is the distance between the dotted lines.
+
+To train the support vector machine an optimization problem needs to be solved. For a set of observations $\vec{x_i}$ and their classes $c_i \in \{ -1, 1 \}$, the two dotted planes can be described as:
+
+\begin{equation}
+\begin{split}
+	& \vec{w} \cdot \vec{x} - b = 1 \\
+	& \vec{w} \cdot \vec{x} - b = -1
+\end{split}
+\end{equation}
+
+The distance between these planes is $\frac{2}{||w||}$, so $||w||$ needs to be minimized to maximize the margin. Usually this is transformed into a quadratic optimization problem shown in Equation \ref{eq:svm}, which is subject to the second term shown in Equation \ref{eq:svm}. This problem can be solved efficiently.
+
+\begin{equation}
+\label{eq:svm}
+\begin{split}
+& \arg\min_{\vec{w}, b} \frac{1}{2} ||\vec{w}||^2 \\
+& c_i (\vec{w} \vec{x_i} - b) >= 1
+\end{split}
+\end{equation}
+
+Since it is not always possible to separate the two classes linearly, it is necessary to introduce an error term into the optimization. This process is called soft margin optimization, and will create a hyperplane that splits the examples as cleanly as possible. For this purpose positive error terms $\xi_i$ are introduced that represent the degree of misclassification of $\vec{x}_i$. The optimization problem is then adapted to use these error terms:
+
+\begin{equation}
+\arg\min_{\vec{w}, b} \left(\frac{1}{2} ||\vec{w}||^2 + C \sum_{i=1}^{n} \xi_i \right)
+\end{equation}
+
+When classifying with the support vector machine, it needs to be determined on which side of the separating hyperplane the observation is located. This can be determined by evaluating the direction of the vector to the observation $\vec{o}$:
+
+\begin{equation}
+c_i = sign(\vec{w} \vec{o} - b)
+\end{equation}
+
+For our work we are using the LinearSVC implementation from scikit-learn \cite{pedregosa2011scikit}.
 
 \section{Decision Trees}
 \label{sec:basics-decision-trees}
+
+The decision tree is one of the few classifiers which provides the user with explicit knowledge about the decision process. It is from the class of supervised classification mechanisms. A decision tree is a tree with the following attributes:
+
+\begin{itemize}
+	\item An inner node represents an attribute
+	\item A leaf node represents one of the classes
+	\item An edge represents a test based on the attribute of the parent node
+\end{itemize}
+
+In most decision trees an inner node always has two children, so only binary splits are performed. Exactly one of the test needs to pass to perform the split.
+
+The tree is built using training data by iteratively selecting the next attribute for a split for each of the current leaf nodes until only observations of one class are contained in all leaf nodes. The split strategy defines the next attribute that is selected for a split. The most well known split strategies are by maximum information gain or by Gini index.
+
+The maximum information gain split strategy is based on entropy. Entropy is an amount of uncertainty and holds large values if the dataset is random and low values when its less random. The information gain of a attribute that partitions a set $T$ of classes $c_i$ with relative frequencies $p_i$ into multiple sets $T_1, ..., T_n$ is defined as:
+
+\begin{equation}
+\begin{split}
+	& entropy(T) = - \sum_{i=1}^{k} p_i \log_2 p_i \\	
+	& gain(T,A) = entropy(T) - \sum_{i=1}^{m} \frac{|T_i|}{T} entropy(T_i)
+\end{split}
+\end{equation}
+
+The Gini index is a statistical measure to represent uneven distributions. For the maximum uneven distribution of all observations belonging to a single class the Gini index will be one and for a even distribution it will be $0.5$. A split is done in the attribute with the maximum Gini index.
+
+\begin{equation}
+\begin{split}
+& gini(T) = 1 - \sum_{i=1}^{k} p_i^2 \\
+& ginisplit(T,A) = \sum_{i=1}^{m} \frac{|T_i|}{T} gini(T_i) 
+\end{split}
+\end{equation}
+
+After training the decision tree all training data is classified correctly. Pruning might be applied afterwards to make the classifier more generalizable (reduce overfitting). It might also be applied to satisfy external conditions like a maximum tree depth or a minimal support (number of observations) for each leaf node. Depending on the goal multiple pruning strategies exist.
+
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.65\textwidth}
+		\centering
+		\include{img/basics/decision-tree}
+	\end{subfigure}
+	\caption{Decision tree based on data in Appendix \ref{appendix:table:decision-tree}}
+	\label{fig:basics-decision-tree}
+\end{figure}
+
+To classify with a decision tree we start at the root of the tree and follow the path that our attribute values define. When we reach a leaf node, the majority class of the leaf node is the class we use for the observation. For small decision trees this is easy to be done manually. Figure \ref{fig:basics-decision-tree} shows a decision tree build using information gain and the associated data. A new observation can be classified manually using two comparisons.
+
+In this thesis we are using the decision tree implementation from scikit-learn \cite{pedregosa2011scikit}.
 
 \chapter{Detection of Local Shape Variations}
 \label{chapter:detecting-shape-variations}
@@ -894,7 +1104,7 @@ the feature vectors have a dimensionality $d = 2k$ or $d = k$. Depending on the 
 a feature vector of $> 50$ dimensions.
 
 To further analyze these features, we decided to introduce an optional step where principal component analysis
-(PCA) is applied to find the main components of the feature vectors. PCA transforms a number of correlated variables into a number of uncorrelated variables called principal components. The number of principal components can then be limited to to reduce the dimensionality of the feature set.
+(PCA) is applied to find the main components of the feature vectors. 
 
 Scikit-learn \cite{pedregosa2011scikit} provides an implementation of PCA, which we used to reduce the number of features to a user-defined number.
 
@@ -965,7 +1175,7 @@ as the measure.
 \subsubsection{Mean Cross-Validation Confidence}
 \label{subsub:cross-validation-confidence}
 
-The mean cross-validation confidence score is closely tied the the mean confidence score presented in Section \ref{subsub:mean-confidence-score} and the cross validation accuracy presented in the previous section. The selection of training and test data works similarly to the cross-validation accuracy metric. Instead of using the mean accuracy, we are using the distance from the hyperplane of each observation in the test data. This allows us to get a more accurate metric for separability while still using cross-validation to ensure the generalizability of our algorithm.
+The mean cross-validation confidence score is closely tied the the mean confidence score presented in Section \ref{subsub:mean-confidence-score} and the cross validation accuracy presented in the previous section. The selection of training and test data works similarly to the cross-validation accuracy metric. Instead of using the mean accuracy, we are using the distance from the hyperplane of each observation in the test data. This allows us to get a more accurate metric for separability while still using cross-validation to ensure the generalization of our algorithm.
 
 \begin{equation}
 \bar{c} = \frac{1}{|TR|} \sum_{TR_i \in TR} c_{TR_i}(K_i)
@@ -1339,6 +1549,8 @@ After validating the algorithm using synthetic data, we advanced by analyzing th
 	\label{fig:main-result}
 \end{figure}
 
+TODO: Distanz zwischen Mittelwerten plotten.
+
 The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. Figure \ref{fig:main-result-data} shows the mean outlines for domestic (blue) and wild (yellow) sheep and the angles corresponding to the peaks in Figure \ref{fig:main-result-chart}. From the mean bones it is clearly visible that the highest peak in the chart correspond to the parts of the bone where the mean bones diverge the most. It needs to be noted that the maximum separability metric of the result is smaller than that of the synthetic tests, but that is to be expected with real-world data as a combination of measurement errors, variance in shape features and registration errors applies. Nevertheless distinct peaks are visible in the result graph. While the upper half of the bone is highly separable, the lower half is similar in both classes. This agrees with the results of the zoo-archaeologist who also found significant differences in the area between the lateral and medial crest. Our algorithm shows three distinct points in the upper area of the outline which we marked as one, two and three. In the area between these points, the separability decreases, but does not reach zero. Additionally to the points between the crests, our result shows a highly separable area around the out most point on the medial apex.
 
 The first separable point is in the area around the highest point on the lateral crest marked as one in Figure \ref{fig:main-result}. This difference is not as distinct as the others. It is located right at an intersection between the two mean bones which indicates that it stems from the accumulation of two minor separabilities to the left and right of the evaluation point. The bones of the wild sheep are a bit wider to the right and less high to the left than those of the domestic sheep at this angle. After this key point, the separability falls again, but not to the point of not being separable.
@@ -1480,6 +1692,8 @@ In this section we wanted to determine how principal component analysis influenc
  	\label{fig:pca}
  \end{figure}
 
+TODO: Andere Features?
+
 When not using PCA, we would expect the algorithm to still work correctly, but produce less distinct results, since the two classes might not be separable as well as after using PCA, and each observation being "far away" from the hyperplane due to the curse of dimensionality. Using PCA and more components, we expect the result to get finer with each component used from the PCA.
  
 While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines are not separable anymore. When using PCA the separability reappears at this point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components then eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
@@ -1582,6 +1796,8 @@ The cross-validation metrics almost look the same as the non-cross validation me
 
 When looking at the separability metrics it becomes apparent that the key points in each metric also appear in the other metrics. While some of the metrics might be noisy, the combination lets us draw the conclusion that the key points we found are the separable areas of the bone.
 
+\section{Experimente Für Messbare Unterschiede}
+
 \chapter{Conclusion}
 
 \section{Summary}
@@ -1591,6 +1807,27 @@ When looking at the separability metrics it becomes apparent that the key points
 \section{Future Work}
 
 \appendix
+
+\chapter{Mathematical Basics}
+
+\begin{table}[h]
+	\begin{center}
+		\begin{tabular}{|r|r|r|}
+			\hline
+			\makebox[1cm]{$f_1$} & \makebox[1cm]{$f_2$} & \makebox[1cm]{$c$} \\
+			\hline
+			\hline 1 & 2 & 0 \\
+			\hline 2 & 1 & 0 \\
+			\hline 2 & 2 & 0 \\
+			\hline 0 & 2 & 1 \\
+			\hline 0 & 0 & 1 \\
+			\hline 2 & 0 & 1 \\
+			\hline
+		\end{tabular}
+	\end{center}
+	\caption{Landmark Definitions for the Extraction by Angle.}
+	\label{appendix:table:decision-tree}
+\end{table}
 
 \chapter{Landmark Extraction}
 

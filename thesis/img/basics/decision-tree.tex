@@ -1,0 +1,61 @@
+
+\resizebox{\textwidth}{!}{
+\begin{tikzpicture}[>=latex,line join=bevel,]
+  \pgfsetlinewidth{1bp}
+  %%
+  \pgfsetcolor{black}
+  % Edge: 0 -> 1
+  \draw [->] (110.52bp,177.87bp) .. controls (102.66bp,169.1bp) and (93.739bp,159.15bp)  .. (78.586bp,142.25bp);
+  % Edge: 0 -> 2
+  \draw [->] (156.48bp,177.87bp) .. controls (164.34bp,169.1bp) and (173.26bp,159.15bp)  .. (188.41bp,142.25bp);
+  % Edge: 2 -> 3
+  \draw [->] (192.35bp,88.868bp) .. controls (185.93bp,80.272bp) and (178.66bp,70.549bp)  .. (165.74bp,53.25bp);
+  % Edge: 2 -> 4
+  \draw [->] (230.36bp,88.868bp) .. controls (236.68bp,80.272bp) and (243.83bp,70.549bp)  .. (256.56bp,53.25bp);
+  % Node: 1
+  \begin{scope}
+  	\definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  	\pgfsetstrokecolor{strokecol}
+  	\draw (111.0bp,142.0bp) -- (0.0bp,142.0bp) -- (0.0bp,89.0bp) -- (111.0bp,89.0bp) -- cycle;
+  	\draw (55.5bp,126.8bp) node {$entropy = 0$};
+  	\draw (55.5bp,111.8bp) node {$samples = 2$};
+  	\draw (55.5bp,96.8bp) node {$|c_0|, |c_1| = 0,  2$};
+  \end{scope}
+  % Node: 0
+  \begin{scope}
+  	\definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  	\pgfsetstrokecolor{strokecol}
+  	\draw (133.5bp,215.8bp) node {$f_1 <= 0.5$};
+  	\draw (133.5bp,200.8bp) node {$entropy = 1$};
+  	\draw (133.5bp,185.8bp) node {$samples = 6$};
+  \end{scope}
+  % Node: 3
+  \begin{scope}
+  	\definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  	\pgfsetstrokecolor{strokecol}
+  	\draw (202.0bp,53.0bp) -- (91.0bp,53.0bp) -- (91.0bp,0.0bp) -- (202.0bp,0.0bp) -- cycle;
+  	\draw (146.5bp,37.8bp) node {$entropy = 0$};
+  	\draw (146.5bp,22.8bp) node {$samples = 1$};
+  	\draw (146.5bp,7.8bp) node {$|c_0|, |c_1| = 0,  1$};
+  \end{scope}
+  % Node: 2
+  \begin{scope}
+  	\definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  	\pgfsetstrokecolor{strokecol}
+  	\draw (294.0bp,142.0bp) -- (129.0bp,142.0bp) -- (129.0bp,89.0bp) -- (294.0bp,89.0bp) -- cycle;
+  	\draw (211.5bp,126.8bp) node {$f_0 <= 0.5$};
+  	\draw (211.5bp,111.8bp) node {$entropy = 0.81$};
+  	\draw (211.5bp,96.8bp) node {$samples = 4$};
+  \end{scope}
+  % Node: 4
+  \begin{scope}
+  	\definecolor{strokecol}{rgb}{0.0,0.0,0.0};
+  	\pgfsetstrokecolor{strokecol}
+  	\draw (331.0bp,53.0bp) -- (220.0bp,53.0bp) -- (220.0bp,0.0bp) -- (331.0bp,0.0bp) -- cycle;
+  	\draw (275.5bp,37.8bp) node {$entropy = 0$};
+  	\draw (275.5bp,22.8bp) node {$samples = 3$};
+  	\draw (275.5bp,7.8bp) node {$|c_0|, |c_1| = 3,  0$};
+  \end{scope}
+  %
+\end{tikzpicture}
+}
