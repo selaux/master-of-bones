@@ -36,18 +36,18 @@ To ensure correctness, we validate the algorithm using synthetically created sha
 % Hier beginnt der eigentliche Text
 \chapter{Introduction}
 
-In biology a lot of focus lies on the distinctions between species and within species. These distinctions can be based on the genealogical tree of the animal as well as by constitution or other features. While living animals can be examined by several means, like their blood, muscular structure, this is not as easy for animals that are extinct or deceased for a long time.
+In biology a lot of focus lies on the distinctions between species and within species. These distinctions can be based on the genealogical tree of the animal, tis constitution or by other features. While living animals can be examined by several means, like their muscular structure or blood levels, this is not as easy for animals that are extinct or deceased for a long time, which are found in zoo-archaeology.
 
-For zoo-archaeologists, archaeological findings of bones are an integral part of their research since they is the only remains of the studied animals that are available. From these findings a lot of variables about the animal itself and its environment can be inferred. While a lot of mammals share a similar skeleton, the bones of the animals have varied shapes and sizes depending on multiple variables. These differences in shape and size can be statistically analyzed. The goals of the analysis can be manifold. They can be aimed at emphasizing the distinctions between species, but can also show how the habitat of the animal can influence the skeletal structure. While in zoo-archeology only the remains of the animal can be analyzed, biologists use similar methods to analyze the shapes of live animals as well.
+For zoo-archaeologists, archaeological findings of bones are an integral part of their research, since they are the only remains of the studied animals that are available. From these findings a lot of variables about the animal itself and its environment can be inferred. While a lot of mammals share a similar skeleton, the bones of the animals have varied shapes and sizes depending on multiple variables. These differences in shape and size can be statistically analyzed. The goals of the analysis can be manifold. They can be aimed at emphasizing the distinctions between species, but can also show how the habitat of the animal can influence the frame. While in zoo-archeology only the remains of the animal can be analyzed, biologists use similar methods to analyze the shapes of live animals as well.
 
-These analyses have a long tradition in the field of biology, while the goals are similar to those of data science: Detecting new and interesting information about a data set. But the focus of data scientists in the field of shape are currently different, focusing on shape matching and retrieval. A partnership of the institute of palaeo-anatomy of the Ludwig-Maximilian-University in Munich and the database systems group of the department of computer science allows data scientists to research bone findings to support the zoo-archaeologists.
+These analyses have a long tradition in the field of biology, while the goals are similar to those of data science: Detecting new and interesting information about a data set. But the focus of data scientists in the field of shape are currently different, focusing on shape matching and retrieval. A partnership of the institute for palaeo-anatomy of the Ludwig-Maximilian-University in Munich and the database systems group of the department of computer science allows data scientists to research bone findings to support the zoo-archaeologists.
 
 In this thesis we present a novel algorithm for shape comparison employing data-mining techniques. We then employ this algorithm to detect differences in shape between wild and domestic sheep bones that were supplied by the zoo-archaeologists.
 
 \chapter{Problem Definition}
 \label{chapter:problem-definition}
 
-The area of research that this work is located in is the documentation of early domestication of sheep. Previous work by the zoo-archaeologists examined the Talus, a bone located in the ankle joint of mammals. Their goal was to determine differences between domestic and wild sheep that manifest in this bone. The bone was chosen because it was one of the few bones that stayed intact over the time the skeleton rested in the earth. They based their findings on traditional morphometrics as well as geometric morphometrics. Our goal was to confirm and refine the significant variances that the archaeologists found, as well as to automate the process.
+The area of research that this work is located in is the documentation of early domestication of sheep. Previous work by the zoo-archaeologists examined the Talus, a bone located in the ankle joint of mammals. Their goal was to determine differences between domestic and wild sheep that manifest in this bone. This bone was chosen because it is one of the few bones that stayed intact over the time the skeleton rested in the earth. They based their findings on traditional morphometrics as well as geometric morphometrics. Our goal was to confirm and refine the significant variances that the archaeologists found, as well as to automate the process.
 
 \begin{figure}[h]
 	\centering
@@ -55,18 +55,18 @@ The area of research that this work is located in is the documentation of early 
 		\centering
 		\includegraphics[width=.9\linewidth]{img/example.jpg}
 	\end{subfigure}
-	\caption{An example for a source image}
+	\caption{An example for a Talus from a wild sheep}
 	\label{fig:problem-example}
 \end{figure}
 
 
 For this purpose we were provided with several images of Tali from four archaeological sites: Manching, Milet, Gusir and Göbekli. All Tali were photographed from approximately the same perspective. An example for one of these images can be seen in Figure \ref{fig:problem-example}. Based on their place of discovery they can be classified through expert knowledge.
 
-Manching bones can be classified as domestic sheep since it is located in southern Germany which was not a habitat of wild sheep. The bones from Milet are from the iron age when no wild sheep lived anymore in this area and can be classified as domestic sheep as well. Additionally they were found in the temple of Aphrodite where only domestic sheep were sacrificed, because the sacrifice was required to be done inside the temple and the animal needed to be unharmed. The bones from Gusir and Göbekli are classified as wild sheep, since they originate from a period where the human species was still organized as hunter-gatherers.
+Manching bones can be classified as domestic sheep since Manching is located in southern Germany which was not a habitat of wild sheep. The bones from Milet are from the iron age when the wild sheep were extinct in this area and can be classified as domestic sheep as well. Additionally they were found in the temple of Aphrodite, where only domestic sheep were sacrificed, because the sacrifice was required to be done inside the temple and the animal needed to be unharmed. The bones from Gusir and Göbekli are classified as wild sheep, since they originate from a period where the human species was still organized as hunter-gatherers.
 
-This classification is the basis for this work to locate significant shape variances in the bones. Our goal was to highlight areas one the bone outline where the two classes are separable the most by a classifier, marking it as a characteristic location where the type can be identified. This would allow the zoo-archaeologists to estimate the class of a bone using a photograph.
+This classification is the basis for this work to locate significant shape variances in the bones. Our goal was to highlight areas one the bone outline where the two classes are separable the most by a classifier, marking it as a characteristic location where the type of sheep can be identified. This would allow the zoo-archaeologists to estimate the class of a bone using a photograph.
 
-Additionally, since relocating a bone finding to another country is difficult, we wanted to provide a method of classification for newly dug out bones, which could be executed using only a caliper rule. This would allow a researcher to identify on-site whether it originates from a domestic or a wild sheep. 
+Additionally, since relocating a bone finding to another country is difficult, we wanted to provide a method of classification for newly dug out bones, which could be executed using only a caliper rule. This would allow a researcher to identify on-site whether a bone originates from a domestic or a wild sheep. 
 
 \chapter{Related Work}
 
@@ -74,13 +74,13 @@ The field of shape comparison is divided into two areas. Traditional morphometri
 
 \section{Morphometrics in Biology}
 
-Morphometrics were introduced in biology by Blackith et. al in 1971 \cite{blackith1971multivariate}. Their goal was to apply multivariate statistical analysis not only to biology, but to a wide range of fields, like geology, sociology and genetics. In the following years, these techniques were applied to determine correlations between certain variables in animals or animal bones and e.g. the habitat or climate. Mainly distances were used for comparison, which causes a problem, because linear distance measurements are often correlated to size \cite{bookstein1985morphometrics}. Geometric morphometrics was introduced to cope with this problem by analyzon coordinates instead of distances, by comparing outlines or landmarks.
+Morphometrics were introduced in biology by Blackith et. al in 1971 \cite{blackith1971multivariate}. Their goal was to apply multivariate statistical analysis not only to biology, but to a wide range of fields like geology, sociology and genetics. In the following years, these techniques were applied to determine correlations between certain variables in animals or animal bones and e.g. the habitat or climate. Mainly distances were used for comparison, which causes a problem, because linear distance measurements are often correlated to size \cite{bookstein1985morphometrics}. Geometric morphometrics was introduced to cope with this problem by evaluating coordinates instead of distances, by comparing outlines or landmarks.
 
 Finding correlations in shapes by evaluating their outline usually consisted of using Fourier Analysis to represent the outlines and then using statistical analysis to find correlations. Palmquist et. al. \cite{palmqvist1996comparative} applied this method to findings of human finger bones to differentiate them from bones of several ape species and confirm that they are in fact from the genus Homo. 
 
 In landmark based methods specific points in 2 or 3 dimensions are selected that are used as the input for the method. These points can be located using different methods, like the intersection of structures or as local maxima or minima on the outline. Methods to analyze these coordinates include Procrustes analysis \cite{small1996statistical} or Euclidean distance matrix analysis \cite{lele1991euclidean}.
 
-Modern approaches to geometric morphometrics often analyze the shapes in Kendall shape space, which is a mathematical space introduced by the shape coordinates \cite{mitteroecker2009advances}. Sliding semi-landmarks are often used to fill the space between the landmarks, while maintaining the shape. To visualize differences between shapes, thin plate spline deformation grids are used, which show how one shape is transformed into the other \cite{adams2004geometric}.
+Modern approaches to geometric morphometrics often analyze the shapes in Kendall shape space, which is a mathematical space introduced by the shape coordinates \cite{mitteroecker2009advances}. Sliding semi-landmarks are often used to fill the space between the landmarks, while maintaining the shape. To visualize differences between shapes, thin plate spline deformation grids are used, which show how the shape of one class is transformed into the other \cite{adams2004geometric}.
 
 \section{Shape Matching in Data Science}
 
@@ -88,7 +88,7 @@ In the context of data science, the focus of research lies in shape matching rat
 
 Veltkamp et. al. present a survey of shape matching algorithms in \cite{veltkamp2001shape}. Distance measures used include Minkowski Distance, Bottleneck Distance or the Turning Function Distance. All of these measures do not employ key points that are selected on the outline of the shape. Other methods like the shape context by Belongie et. al. \cite{belongie2002shape} employ correspondence matching, but generalize the results to the full shape as well.
 
-The book \grqq Shape analysis and classification \grqq by da Fontoura Costa et al. \cite{da2010shape} covers shape classification as well, but leaves out local classification, which we want to employ in this thesis.
+The book \grqq Shape analysis and classification\grqq  by da Fontoura Costa et al. \cite{da2010shape} covers shape classification, but does not mention classification based on local differences, which we want to employ in this thesis.
 
 An approach to classification by local key points has been done by Mhamdi et. al . \cite{mhamdi2014local}. They represent the critical points by a set of size functions and use the resulting similarity measure for classification.
 
@@ -107,7 +107,7 @@ An approach to classification by local key points has been done by Mhamdi et. al
 	\label{fig:basics-splines}
 \end{figure}
 
-A spline is a parameterized representation of a function that consists of several pieces of polynomial functions. The end points of these pieces are connected while ensuring smoothness in between them. Splines can be used to represent arbitrary curves in computer graphics. For our purposes we used non-uniform cubic B-Splines to represent the bone outlines. B-Splines have a defined set of base functions in which they describe their pathway. A B-Spline of degree $p$ is described by points $\vec{p}_0 \cdots p_{n-p}$ called knots and a knot vector $t = (t_1, \cdots t_{n})$, which describes the weight of those knots. The basis functions can be calculated recursively.
+A spline is a parameterized representation of a function that consists of several pieces of polynomial functions. The end points of these pieces are connected while ensuring smoothness in between them. Splines can be used to represent arbitrary curves in computer graphics. For our purposes we used non-uniform cubic B-Splines to represent the bone outlines. A B-Spline of degree $p$ is described by points $\vec{p}_0 \cdots p_{n-p}$ called knots and a knot vector $t = (t_1, \cdots t_{n})$, which describes the weight of those knots.  B-Splines have a defined set of base functions in which they describe their pathway and can be calculated recursively.
 
 \begin{equation}
 \begin{split}
@@ -126,11 +126,12 @@ The B-Spline curve is then defined as:
 \vec{s}(t) =  \sum_{i=1}^{n-p} \vec{p}_i B_i^p(t)
 \end{equation}
 
-The interpolation of spline curves is preferred over polynomial interpolation, because it avoids Runge's phenomenon, which manifests in high frequency oscillations between control points. In this thesis we use the spline interpolation algorithm from scikit-learn \cite{pedregosa2011scikit}. This algorithm also allows for smoothing of the spline, which we apply to a small degree to reduce the edges on our bone outlines. Figure \ref{fig:basics-splines} shows a smoothed spline interpolated from some points.
+The interpolation of spline curves is preferred over polynomial interpolation, because it avoids Runge's phenomenon, which manifests in high frequency oscillations between control points. In this thesis we use the spline interpolation algorithm from scikit-learn \cite{pedregosa2011scikit}. This algorithm also allows for smoothing of the spline, which we apply to a small degree to reduce the edges on our bone outlines. Figure \ref{fig:basics-splines} shows a smoothed spline interpolated from several points.
 
 \section{Principal Component Analysis}
+\label{section:pca}
 
-Principal Component analysis is a statistical technique to decrease dimensionality of a data set, while converting the values into linearly uncorrelated variables that are called principal components. These components are sorted by variance so latter components can be omitted from observations without changing the expressiveness of the data as much.
+Principal Component analysis is a statistical technique to decrease dimensionality of a data set, while converting the values into linearly uncorrelated variables that are called principal components. These components are sorted by variance so latter components can be omitted from observations without changing the expressiveness of the data.
 
 Principal component analysis works on the derivations from the mean data in $DB$.
 
@@ -147,11 +148,11 @@ The principal components can be obtained by calculating the eigenvectors of the 
 \mathbf{C} = \frac{1}{|DB|-1} \mathbf{D}^* \cdot \mathbf{D}
 \end{equation}
 
-The extraction of eigenvectors is usually done by an numeric algorithm. The objects in the database can now be represented by using the eigenvectors as a new basis. The eigenvectors can then be sorted by their variances in data and limited to the number of dimensions necessary for the task.
+The extraction of eigenvectors is usually done by an numeric algorithm, in our case the implementation from scikit-learn \cite{pedregosa2011scikit}. The objects in the database can now be represented by using the eigenvectors as a new basis. The eigenvectors can then be sorted by their variances in data and limited to the number of dimensions necessary for the task.
 
 \section{Cluster Analysis}
 
-Cluster analysis is an integral part of data mining. The goal of cluster analysis is to group objects, that are similar to each other. The objects are represented as n-dimensional vectors while the similarity of objects translates into a low distance between the vectors. The objects are also often referred to as observations. In this thesis we will use two types of clusterings, which we present in this section.
+Cluster analysis is an integral part of data mining. The goal of cluster analysis is to group objects that are similar to each other. The objects are represented as n-dimensional vectors while the similarity of objects translates into a low distance between the vectors. The objects are also often referred to as observations. In this thesis we will use two types of clusterings, which we present in this section.
 
 \begin{figure}[h]
 	\centering
@@ -173,26 +174,25 @@ Cluster analysis is an integral part of data mining. The goal of cluster analysi
 
 \subsection{K-Means}
 
-K-means clustering is a partitioning cluster algorithm. Partitioning cluster algorithms separate the space into segments, with all points in one segment belonging to a cluster. In k-means clustering, each cluster $C_i$ is represented by its centroid $\mu_i$. An object belongs to the cluster with the closest centroid. The partitioning manifests in a Voronoi cells built from the representatives from each cluster. The number of clusters $k$ is a parameter that needs to be set to fit the data.
+K-means clustering is a partitioning clustering algorithm, a kind of algorithm that separates space into segments, with all points in one segment belonging to a cluster. In k-means clustering, each cluster $C_i$ is represented by its centroid $\mu_i$. An object belongs to the cluster with the closest centroid. The partitioning manifests in a Voronoi cells built from the representatives from each cluster. The number of clusters $k$ is a parameter that needs to be specified to fit the data.
 
 \begin{equation}
 \mu_i = \frac{1}{C_i} \sum_{\vec{o} \in C_i}\vec{o}
 \end{equation}
 
-The algorithm to create the clustering is iterative. Initially random points are selected as centroid for each cluster. Then the cluster memberships are reevaluated and the centroids are recalculated. These two steps are iterated until the following compactness criterion is met:
+The algorithm to create the clustering is iterative. The simplest way is to initially select random points as centroids for each cluster. Then the cluster memberships are reevaluated and the centroids are recalculated. These two steps are iterated until the following compactness criterion is met:
 
 \begin{equation}
-\begin{split}
-& TD^2(C_i) = \sum\limits_{o \in C_i} dist(o, \mu_i)^2  \\
-& TD^2(CL) = \sum\limits_{C_i \in CL} TD^2(C_i) <= \xi
-\end{split}
+\sum\limits_{C_i \in CL} \sum\limits_{o \in C_i} dist(o, \mu_i)^2 <= \xi
 \end{equation}
+
+Other initialization methods exist as well, and the algorithm varies slightly between implementations, e.g. reevaluating cluster memberships and centroids after each membership assignment. 
 
 The clusters created by k-means clustering are spherical compact clusters as visible in Figure \ref{fig:basics-clustering-k-means}. This is caused by the distance being used as a distance measure and as a measure for cluster scatter.
 
 \subsection{DBSCAN}
 
-The goal of the DBSCAN cluster algorithm is to group objects into areas of high densities, separated by areas of low densities. The objects in the low density areas are marked as noise while all objects inside each high density are marked as belonging to the respective cluster. DBSCAN works with a concept of densibility reachability, based on parameters $minPts$ and $\epsilon$:
+The goal of the DBSCAN cluster algorithm is to group objects into areas of high densities, separated by areas of low densities. The objects in the low density areas are marked as noise while all objects inside each high density area are belonging to a single cluster. DBSCAN works with a concept of densibility reachability, based on parameters $minPts$ and $\epsilon$:
 
 \begin{itemize}
 	\item
@@ -214,7 +214,7 @@ Figure \ref{fig:basics-clustering-dbscan} shows a clustering created with DBSCAN
 
 \section{Support Vector Machines}
 
-A support vector machine is a classifier that separates a set of objects into two classes. As a supervised method it needs to be trained using training data and then can be applied to new objects to classify them. The methodology is to create a hyperplane in the feature space that separates the two classes from each other. The plane is created to have a maximum distance from the nearest data point of each class, facilitating good generalization. These data points are called support vectors and the distance to the hyperplane is called margin.
+A support vector machine is a classifier that separates a set of objects into two classes. As a supervised method it needs to be trained using training data and then can be applied to new objects to classify them. The methodology is to create a hyperplane in the feature space which separates the two classes from each other. The plane is created to have a maximum distance from the nearest data point of each class, facilitating good generalization. These data points are called support vectors and the distance to the hyperplane is known as the margin.
 
 \begin{figure}[h]
 	\centering
@@ -264,7 +264,7 @@ For our work we are using the LinearSVC implementation from scikit-learn \cite{p
 \section{Decision Trees}
 \label{sec:basics-decision-trees}
 
-The decision tree is one of the few classifiers which provides the user with explicit knowledge about the decision process. It is from the class of supervised classification mechanisms. A decision tree is a tree with the following attributes:
+The decision tree is one of the few classifiers which provides the user with explicit knowledge about the decision process. Similarly to the SVM, it is from the class of supervised classification mechanisms, requiring training data. A decision tree is a tree with the following properties:
 
 \begin{itemize}
 	\item An inner node represents an attribute
@@ -276,7 +276,7 @@ In most decision trees an inner node always has two children, so only binary spl
 
 The tree is built using training data by iteratively selecting the next attribute for a split for each of the current leaf nodes until only observations of one class are contained in all leaf nodes. The split strategy defines the next attribute that is selected for a split. The most well known split strategies are by maximum information gain or by Gini index.
 
-The maximum information gain split strategy is based on entropy. Entropy is an amount of uncertainty and holds large values if the dataset is random and low values when its less random. The information gain of a attribute that partitions a set $T$ of classes $c_i$ with relative frequencies $p_i$ into multiple sets $T_1, ..., T_n$ is defined as:
+The maximum information gain split strategy is based on entropy. Entropy is an amount of uncertainty and is high if the dataset is random and low when its less random. The information gain of an attribute that partitions a set $T$ of classes $c_i$ with relative frequencies $p_i$ into multiple sets $T_1, ..., T_n$ is defined as:
 
 \begin{equation}
 \begin{split}
@@ -285,7 +285,7 @@ The maximum information gain split strategy is based on entropy. Entropy is an a
 \end{split}
 \end{equation}
 
-The Gini index is a statistical measure to represent uneven distributions. For the maximum uneven distribution of all observations belonging to a single class the Gini index will be one and for a even distribution it will be $0.5$. A split is done in the attribute with the maximum Gini index.
+The Gini index is a statistical measure to represent uneven distributions. For a maximum uneven distribution of all observations the Gini index will be one and for a even distribution it will be $0.5$. A split is done in the attribute with the maximum Gini index.
 
 \begin{equation}
 \begin{split}
@@ -294,7 +294,7 @@ The Gini index is a statistical measure to represent uneven distributions. For t
 \end{split}
 \end{equation}
 
-After training the decision tree all training data is classified correctly. Pruning might be applied afterwards to make the classifier more generalizable (reduce overfitting). It might also be applied to satisfy external conditions like a maximum tree depth or a minimal support (number of observations) for each leaf node. Depending on the goal multiple pruning strategies exist.
+After training the decision tree all training data is classified correctly. Pruning might be applied afterwards to reduce overfitting and thus make the classifier more generalizable. It might also be applied to satisfy external conditions like a maximum tree depth or a minimum support for each leaf node. Depending on the goal multiple pruning strategies exist, which we will not further extend on in this thesis.
 
 \begin{figure}[h]
 	\centering
@@ -306,7 +306,7 @@ After training the decision tree all training data is classified correctly. Prun
 	\label{fig:basics-decision-tree}
 \end{figure}
 
-To classify with a decision tree we start at the root of the tree and follow the path that our attribute values define. When we reach a leaf node, the majority class of the leaf node is the class we use for the observation. For small decision trees this is easy to be done manually. Figure \ref{fig:basics-decision-tree} shows a decision tree build using information gain and the associated data. A new observation can be classified manually using two comparisons.
+To classify using a decision tree we start at the root of the tree and follow the path that our attribute values define. When we reach a leaf node, the majority class of the leaf node is the class we use for the observation. For small decision trees this can be done manually. Figure \ref{fig:basics-decision-tree} shows a decision tree build using information gain and the associated data. A new observation can be classified manually using two comparisons.
 
 In this thesis we are using the decision tree implementation from scikit-learn \cite{pedregosa2011scikit}.
 
@@ -325,26 +325,25 @@ In this thesis we are using the decision tree implementation from scikit-learn \
 	\label{fig:process}
 \end{figure}
 
-Detecting local shape variation had to occur in several steps. The starting point was annotated JPG data. We had a series of images from the same bone, which encode the archaeological site in the file name. From the name of the archaeological site we could extract the class of the observation, since all bones found are of a single type (wild sheep or domestic sheep). The pipeline of the algorithm is shown in figure \ref{fig:process} and shows the steps needed.
+Several steps are necessary to facilitate detecting local shape variations using the data we were provided with. The starting point was a series of images from the Talus of sheep, which encode the archaeological site in the file name. From the name of the archaeological site we could extract the class of the observation, since all bones found are of a single type as explained in Section \ref{chapter:problem-definition}. The pipeline of the algorithm is shown in figure \ref{fig:process} and shows the required steps.
 
 First we needed to extract the outline of the bone from the photograph. This is done in two steps: image segmentation is used to find pixels that lie on the bone and triangulation is used to extract the outline of the bone from these pixels. Additionally some landmark points are annotated in the preprocessing step.
 
-Then the outlines need to be normalized. Since the bones have different sizes and slightly different orientations, we needed to scale them uniformly and superimpose them onto each other as well as possible to be able to determine the local variations.
+Then the outlines need to be normalized and registered. Since the bones have different sizes and slightly different orientations, we needed to scale them uniformly and superimpose them onto each other as well as possible to eliminate side effects from these variances.
 
-The last step is to determine where on the bone significant differences of the two classes lie. For this purpose we sampled sections of the bone and used a support vector machine to determine the separability of the two classes at this section.
+The last step is to determine where on the bone significant differences of the two classes are located. For this purpose we sampled sections, which we call windows, from the bone and used a support vector machine to determine the separability of the two classes at each window.
 
-To analyze the results, the resulting separability metrics can be shown in a line graph where the x-axis corresponds to the position of the bone section and the y-axis corresponds to the separability. Another way to visualize the results is to show it as an overlay onto a mean outline of the bone, which can be warped between the two classes so the reasons for the separability at each position becomes apparent.
+To analyze the results, the resulting separability metrics can be shown in a line graph where the x-axis corresponds to the position of the bone section and the y-axis corresponds to the separability. Another way to visualize the results is to show it as an overlay onto a mean outline of the bone, which can be warped between the two classes so the cause for the separability at each position becomes apparent.
 
 \section{Preprocessing}
 
-In preprocessing, several steps are necessary to extract an outline and other data like landmarks from the image data.
+In this section we present the steps that are not part of the shape analysis, but are prerequisites for it to work correctly. These steps are the segmentation of the images, the extraction of the outlines and their registration.
 
 \subsection{Image Segmentation}
 \label{sub:segmentation}
 
-The first step in the preprocessing pipeline is to extract the bone for the image. Image segmentation
-is necessary to do this automatically. We segment the image into two parts: on-bone and not-on-bone pixels.
-The on bone pixels are the pixels that are part of the bone and are used for further processing.
+The first step in the preprocessing pipeline is to extract the bone outline from the image. Image segmentation
+is necessary to do this automatically. We segment the image into two parts: foreground pixels that lie on the bone and background pixels. Only the foreground pixels are used for further processing.
 
 Since we apply triangulation afterwards it is not necessary for all pixels that lie on the bone
 to be classified as such, but only for the pixels on the outer edge of the bone. The inner pixels
@@ -354,14 +353,14 @@ images contained a lot of edges as well and the edge between the bone and the ba
 visible in all images. Another drawback of the provided image data was that the background of the images
 was not of consistent color.
 
-To cope with the diverse data, we decided to use mostly texture-focused methods of image segmentation. Since the data provided such a challenge we decided to give the user the ability to preview the results for each method and select the one that works best for the current image. If not otherwise stated, the calculated features for each pixel were reduced in dimensionality by using Principal Component Analysis to $4$ components. Then k-means clustering is applied with $k=8$ to cluster the pixels into labels.
+To cope with the diverse data, we decided to use mostly texture-focused methods of image segmentation. Since the data provided such a challenge it was necessary to give the user the ability to preview the results for each method and select the one that works best for the current image. If not otherwise stated, the calculated features for each pixel were reduced in dimensionality by using Principal Component Analysis to $4$ components. Then k-means clustering was applied with $k=8$ to cluster the pixels into labels.
 
 \subsubsection{Watershed Segmentation}
 \label{subsub:segmentationwatershed}
 
 The watershed segmentation is a method that operates on greyscale images. It simulates a drop of water that flows towards the minima of the image using the pixel values of the image as a heightmap. This leads to areas around minima of the image separated by surrounding maxima ranges.
 
-Watershed segmentation usually relies on previous knowledge about the image, since several methods can be used to generate the greyscale image that is used for the segmentation. We based our watershed method on the previous knowledge that the bone is slightly darker than the background in the H channel of the HSV image space. To generate the image used for watershed, we used a threshold calculated from the mean color of the H channel and applied watershed afterwards. Before using the data, a local median filter was applied beforehand to smooth the image and the resulting labels.
+Watershed segmentation usually relies on previous knowledge about the image, since several methods can be used to generate the greyscale image that is used for the segmentation. We based our watershed method on the fact that the bone is slightly darker than the background in the H channel of the HSV image space. To generate the image used for watershed, we used a threshold calculated from the mean color of the H channel and applied watershed afterwards. Before using the data, a local median filter was applied beforehand to smooth the image and the resulting labels.
 
 \begin{equation}
 \begin{split}
@@ -376,27 +375,31 @@ Watershed segmentation usually relies on previous knowledge about the image, sin
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/watershed/cut.jpg}
 		\subcaption{}
+		\label{}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/good/watershed/segmented.jpg}
 		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/watershed/cut.jpg}
-		\subcaption*{}
+		\subcaption{}
+		\label{fig:watershed-bad}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/segmentation/bad/watershed/segmented.jpg}
-		\subcaption{}
+		\subcaption*{}
+		\label{}
 	\end{subfigure}
 	\caption{Image Segmentation using watershed algorithm for two images}
 	\label{fig:watershed}
 \end{figure}
 
-We chose the parameter $\mu$ as $1.25$ and used the largest resulting label as on-bone-pixels. While this yielded results that were sufficient to determine where the  location of the bone in the image is, the exact outline of the bone could not be reproduced using this method as visible in Figure \ref{fig:watershed}. Nevertheless we leveraged this method to limit the search space for the following segmentation methods by cutting out the bounding box of the bone from the rest of the image.
+We chose the parameter $\mu$ as $1.25$ and used the largest resulting label as foreground pixels. While this yielded results that were sufficient to determine where the  location of the bone in the image is, the exact outline of the bone could not be reproduced using this method as visible in Figure \ref{fig:watershed-bad}. Nevertheless we leveraged this method to limit the search space for the following segmentation methods by cutting out the bounding box of the bone from the rest of the image.
 
 \subsubsection{SLIC}
 
@@ -432,7 +435,7 @@ Simple linear iterative clustering (SLIC) is a method proposed by Achanta et. al
 	\label{fig:slic}
 \end{figure}
 
-This superpixel method works well for images with differing background and foreground colors as visible in Figure \ref{fig:slic:good} and when using a sufficiently number of superpixels $k=8$. Increasing the weight $m$ to $m=15$ leads to compact clusters that align to the bone shape. When background and foreground colors are similar as it is the case in Figure \ref{fig:slic:bad}, the clusters become more frayed and do not align anymore with the bone shape.
+This superpixel method works well for images with differing background and foreground colors as visible in Figure \ref{fig:slic:good} and when using a sufficiently number of superpixels $k=8$. Increasing the weight $m$ to $m=15$ leads to compact clusters that align to the bone shape. When background and foreground colors are similar as it is the case in Figure \ref{fig:slic:bad}, the clusters become more frayed and do not always align anymore with the bone shape.
 
 \subsubsection{Felzenszwalb Graph-Based}
 
@@ -475,11 +478,11 @@ The split algorithm can be configured by a parameter $k$, which sets the scale o
 	\label{fig:felzenszwalb}
 \end{figure}
 
-In contrast to the previous methods, Felzenszwalb's method creates clusters from the edge of the bone only as shown in Figure \ref{fig:felzenszwalb:good}. These labels adhere to the edges of the bone, but some additional areas are included in the result as well. The number of labels is not selectable and for large images this method can create hundreds of labels, which complicates label selection for the user, so a sufficiently high observation level $k$ needs to be chosen to reduce the number of labels. For our purpose, we chose $k=1000$. The images that are difficult to segment could often not be correctly segmented using this method as visible in Figure \ref{fig:felzenszwalb:bad}. When choosing a small value for $k$ a huge amount of small labels was generated. On the other hand, when choosing a large value for $k$, the bone and background collapsed into a single label.
+The labels generated by Felzenszwalb's method adhere to the edges of the bone, but some additional areas are included in the result as well. The number of labels is not selectable and for large images this method can create hundreds of labels, which complicates label selection for the user, so a sufficiently high observation level $k$ needs to be chosen to reduce the number of labels. For our purpose, we chose $k=1000$. The images that are difficult to segment could often not be correctly segmented using this method as visible in Figure \ref{fig:felzenszwalb:bad}. When choosing a small value for $k$ a huge amount of small labels was generated. On the other hand, when choosing a large value for $k$, the bone and background collapsed into a single label.
 
 \subsubsection{Gabor Filters}
 
-Another way to do texture segmentation in images is to represent the image using Gabor filters. The image is decomposed using Gabor filters into a number of filtered images that each contain variations in intensity over a certain frequency and in a certain direction. To obtain filtered images for segmentation it is necessary to well define the parameters of the filters. We used the filter selection method from \cite{jain1990unsupervised} to obtain the filter parameters. Gabor filters are tailored to represent the early stages of the human visual system, so the image is preprocessed using a non-linear function first and then the filters with the selected parameters are applied. This results in an vector of pixel values per pixel that can be clustered using k-means.
+Another way to do texture segmentation in images is to represent the image using Gabor filters. The image is decomposed using Gabor filters into a number of filtered images that each contain variations in intensity over a certain frequency and in a certain direction. To obtain filtered images for segmentation it is necessary to define the parameters of the filters well. We used the filter selection method from \cite{jain1990unsupervised} to obtain the filter parameters. Gabor filters are tailored to represent the early stages of the human visual system, so the image is preprocessed using a non-linear function first and then the filters with the selected parameters are applied. This results in an vector of pixel values per pixel that can be clustered using k-means.
 
 \begin{figure}[h]
 	\centering
@@ -515,7 +518,7 @@ The results of clustering the Gabor filter features vary heavily depending on th
 
 \subsubsection{Textural Edge Detection}
 
-An approach to edge detection using semi-local texture features was also implemented. Since it wasn't necessary to segment the whole bone as on-bone-pixels but only the outline, we defined the outline as a region where there are different textures on either side. To detect vertical and horizontal edges we considered the local neighborhood of $n$ pixels into each direction of the pixel $N_{left}(x,y), N_{right}(x,y), N_{top}(x,y), N_{bottom}(x,y)$.
+An approach to edge detection using semi-local texture features was also implemented. Since it wasn't necessary to segment the whole bone as foreground pixels but only the outline, we defined the outline as a region where there are different textures on either side. To detect vertical and horizontal edges we considered the local neighborhood of $n$ pixels into each direction of the pixel $N_{left}(x,y), N_{right}(x,y), N_{top}(x,y), N_{bottom}(x,y)$.
 
 \begin{equation}
 \begin{split}
@@ -526,7 +529,7 @@ An approach to edge detection using semi-local texture features was also impleme
 \end{split}
 \end{equation}
 
-We then calculated textural features $F$ for these local neighborhoods and used the distance between them as a measure for an edge. For this purpose we used Haralick textural features (\cite{haralick1973textural}) or parameter free threshold adjacency statistics (\cite{hamilton2007fast}). 
+We then calculated textural features $F$ for these local neighborhoods and used the distance between them as a measure for an edge. For this purpose we used Haralick textural features \cite{haralick1973textural} or parameter free threshold adjacency statistics \cite{hamilton2007fast}. 
 
 \begin{equation}
 \begin{split}
@@ -564,7 +567,7 @@ E(x,y) = & ||F(N_{left}(x,y)) -F(N_{right}(x,y))|| \\ & + ||F(N_{top}(x,y)) - F(
 	\label{fig:textural}
 \end{figure}
 
-The results for this segmentation method are mixed as well. While edges are detected correctly on images with high contrast as visible in Figure \ref{fig:textural:good}, the results appear random for images with low contrast between bone and background as shown in Figure \ref{fig:textural:bad}. Some structure is visible in Figure \ref{fig:textural:bad}, but the clustering does not work well in this case because of the low number of features.
+The results for this segmentation method were mixed as well. While edges are detected correctly on images with high contrast as visible in Figure \ref{fig:textural:good}, the results appear random for images with low contrast between bone and background as shown in Figure \ref{fig:textural:bad}. Some structure is visible in Figure \ref{fig:textural:bad}, but the clustering does not work well in this case, probably because of the low number of features.
 
 \subsection{Triangulation and Outlining}
 
@@ -573,11 +576,11 @@ The next step for preprocessing images was extracting the outline from a segment
 To extract the outline from these pixels, we first transformed them into points in the x-y-space and then
 triangulated them using the Delaunay triangulation.
 
-To reduce the number of outliers that were detected as on-bone-pixels,
+To reduce the number of outliers that were detected as foreground pixels,
 we decided to use the DBSCAN algorithm from \cite{ester1996density} and apply density based clustering to the points
 beforehand. DBSCAN allowed us to create clusters from the data, which correspond to closely packed points. Since
 the points on the bone were closely packed, and the points not on the bone were only sparsely detected as
-on-bone-pixels this allowed us to filter some of the false-positives. Another benefit of the DBSCAN algorithm is that,
+foreground pixels this allowed us to filter some of the false-positives. Another benefit of the DBSCAN algorithm is that,
 by defining our bone as a large densely connected area, we were able to use the largest cluster from the result,
 so closely packed areas that are disconnected from the bone were also removed.
 
@@ -590,10 +593,9 @@ an accurate concave outline of the bone.
 
 Since we are analyzing the shape of the object, a manual step was introduced here to give the user the ability to
 approve the automatically extracted outline and adapt it if the result was not satisfactory. We gave the user the
-ability to mark points as on-the-bone/off-the-bone as well as fill a rectangle with a grid of on-the-bone points (or mark them all as not on-the-bone).
+ability to mark pixels as foreground/background as well as fill a rectangle with a grid of foreground or background pixels.
 This allows the user to easily adapt a triangulation and, if necessary, create a completely new one. It becomes
-especially important because the result of the image segmentation algorithm often has jagged borders, because the
-image segmentation algorithms do not consider the smoothness of the outline.
+especially important because difficulties with the image segmentation algorithms.
 
 Since the bones might have different sizes and positions, due to different image sizes and position of the bone in
 the image, we needed to introduce another normalization step afterwards. We decided to remove all variance in between the bones that are not attributed to shape. For this purpose we executed the first two steps of Procrustes
@@ -624,7 +626,7 @@ As some of the features we propose in this work are landmark based, and the dete
 is based on landmarks as well, a method to extract these landmarks from the outline of the bone is needed. In contrast to
 our approach, former work on the talus by zooarcheologists was based on manually located landmarks that correspond to
 biological features of the bone. Since our goal was to automate the process as much as possible and some of the landmarks
-are not positioned on the outline of the bone, this was not feasible in our case. We selected landmarks on the outline
+are not positioned on the outline of the bone, using them was not feasible in our case. We selected landmarks on the outline
 of the bone that could be located automatically and overlap as much as possible with the landmark definitions by the
 zooarcheologists. For this purpose we introduced two methods that extract landmarks from outlines of Tali. The landmarks
 found by these methods have very similar positions but differ in on-site-measurability and stability in-between classes.
@@ -650,8 +652,8 @@ found by these methods have very similar positions but differ in on-site-measura
 	\label{fig:landmark-methods}
 \end{figure}
 
-Figure \ref{fig:landmark-methods} shows the results of the three landmark locating methods: manual, with angles and
-with space partitioning. The biological correspondences of the landmarks are as follows.
+Figure \ref{fig:landmark-methods} shows the results of the three landmark locating methods: manual selection, extraction by angles and
+by space partitioning. The biological correspondences of the landmarks are as follows.
 
 \begin{itemize}
 \item Landmark 1: Highest point on the lateral crest
@@ -668,7 +670,7 @@ with space partitioning. The biological correspondences of the landmarks are as 
 \end{itemize}
 
 The landmarks that were extracted automatically are landmarks 1, 2, 3, 5, 6, 7. Furthermore we introduced the new
-landmark 8, which has no biological correspondence, but can be located robustly on all bone outlines.
+landmark number 8, which has no biological correspondence, but can be located robustly on all bone outlines. This newly introduced landmark can be seen in the bottom right Figures \ref{fig:landmark-methods}.
 
 \subsubsection{Extraction by Angle}
 
@@ -693,7 +695,7 @@ will become relevant in Chapter \ref{chapter:measurable-differences}.
 
 When extracting a landmark by space partitioning, the landmark position is defined by a rectangle in which the landmark
 lies, the information whether it lies on a maximum or a minimum turning point and the coordinate axis on which the
-turning point lies. The rectangle is defined by $x_{min}$, $x_{max}$, $y_min$ and $y_max$. The turning point
+turning point lies. The rectangle is defined by $x_{min}$, $x_{max}$, $y_{min}$ and $y_{max}$. The turning point
 is then found by only evaluating the respective axis inside the rectangle. The following function for turning points
 is then evaluated inside the rectangle, where $s_y(x)$ is the x-coordinate of the spline at the x-coordinate $x$.
 
@@ -711,17 +713,17 @@ landmarks by this algorithm, especially when the bone shapes are not registered 
 \section{Shape Registration}
 
 To adequately compare the shapes, we needed to align them first as much as possible, so small differences in shape would
-show in the result. For this purpose we implemented several methods for point-to-point registration algorithms in order
-to find the one that best matches our dataset. In general point-to-point registration algorithms that matches point set
+show in the result. For this purpose we implemented several methods for point-to-point registration in order
+to find the one that best matches our dataset. In general a point-to-point registration algorithm that matches point set
 $X$ onto point set $Y$ consist of two parts:
 
 \begin{itemize}
-\item Find correspondent points $C_Y$ for (some of the) points in $X$
+\item Find correspondent points $C_Y$ for (some of) the points in $X$
 \item Find transformation $T$ that aligns $X$ to $C_Y$ as best as possible under certain restrictions
 \end{itemize}
 
 We chose the reference point set $Y$ to be represented by the bone outline with the most points, since this will allow
-us to find non-duplicate correspondences from $X$ to $Y$. Since we are considering the outline of the bone and not
+us to find the maximum number of non-duplicate correspondences from $X$ to $Y$. Since we are considering the outline of the bone and not
 individual points, we can choose any points on the outline $B_Y$ as $Y$ and any point on the outline $B_X$ as $X$.
 Transformation estimations can also easily be iterated as done by the ``Iterative Closest Point`` method \cite{besl1992method}.
 The method can be different in each iteration. We implemented several methods for point-to-point correspondence
@@ -861,8 +863,8 @@ disadvantage of actually changing the shape of the object. The Procrustes transf
 slightly different perspectives, we allowed the slight change in shape in this case, especially because was
 applied to the whole object.
 
-A affine transformation is represented by a $3\times3$ transformation matrix $A$. A affine transform that
-superimposes a point set $X$ onto a point set $Y$ can be written in homogeneous coordinates as:
+An affine transformation is represented by a $3\times3$ transformation matrix $A$. We can write a transform that
+superimposes a point set $X$ onto a point set $Y$ in homogeneous coordinates as:
 
 \begin{equation}
 \label{eq:projectivetransformation}
@@ -912,7 +914,7 @@ following standards for the the spline representation for each bone. These stand
 \end{split}
 \end{equation}
 
-To compare the shapes, we evaluated windows around $n$ points on the outline. Each evaluation
+To compare the shapes, we evaluated windows around $n$ points (or angles) on the outline. Each evaluation
 point therefore represents a neighborhood around itself. For each of these neighborhoods
 we calculated a set of features for each bone in the database. Then a support vector machine
 was used to determine the separability of the established classes at these points. Based on 
@@ -921,8 +923,7 @@ at this point or not.
 
 \subsection{Selection of Evaluation Windows}
 
-The next step in the algorithm is the selection the evaluation windows at an angle $\rho$ for
-each bone $B \in DB$. For this purpose we implemented two approaches to the problem.
+To determine separabilities we need to sweep the outlines of the bone at $n$ angles $\rho_i$. At each of these angles we need to cut a window from each of the outlines $B \in DB$. For this purpose we implemented two approaches that cut semantically similar windows at each angle.
 
 \begin{figure}[h]
 	\centering
@@ -945,7 +946,7 @@ each bone $B \in DB$. For this purpose we implemented two approaches to the prob
 		\subcaption{Extracted windows}
 		\label{fig:window-extraction-all}
 	\end{subfigure}
-	\caption{Window Extraction at $90^\circ$}
+	\caption{Window Extraction at $\rho=90^\circ$}
 	\label{fig:window-extraction}
 \end{figure}
 
@@ -981,14 +982,14 @@ parameters $t_{\rho-\Delta\rho}$ and $t_{\rho+\Delta\rho}$ in between the spline
 evaluated to get the evaluation window.
 
 The drawback of this method is that bones that are not aligned very well get shorter windows
-if their outline lies closer to the coordinate center and longer windows otherwise. This 
+if their outline lies closer to the coordinate center and longer windows otherwise. The same mechanism leads to differing window lengths overall, because the bone is rectangular. This 
 might lead to unwanted results when doing the comparison since the considered windows are
 not semantically equal. 
 
 \subsubsection{By Length}
 \label{subsub:windowbylength}
 
-To nullify this drawback, we implemented another method to extract the evaluation window.
+To counteract this mechanism, we implemented another method to extract the evaluation window.
 In this approach, a window of a certain length $l$ around a point of evaluation that is defined by the angle $\rho$ is extracted. To find these points we employed ray-casting
 as introduced in Section \ref{subsub:windowbyangle}. This leads to a spline parameter
 $t_\rho$ which now defines the center of our window.
@@ -1019,7 +1020,7 @@ the different bones.
 To compare the two classes at an angle $\rho$, we needed to extract features from the
 window defined by $[t_{start}, t_{end}]$ for each bone. We evaluated several feature
 extraction methods for this purpose. Most of these methods operate on a set of points
-$S$ that are created by evaluating the spline at $k$ equally spaced parameters.
+$S$ that are created by evaluating the spline at $k$ equally spaced parameters. We call $k$ the number of evaluations per window.
 
 \begin{equation}
 \begin{split}
@@ -1027,9 +1028,6 @@ $S$ that are created by evaluating the spline at $k$ equally spaced parameters.
 & S = \{ \vec{s}(t_i) | t_i \in T \}
 \end{split}
 \end{equation}  
-
-Other features like the distances to the markers only use a single point, the center of
-the window.
 
 \subsubsection{Flattened Points}
 \label{subsub:features-flattened}
@@ -1133,8 +1131,7 @@ s_{yB}(t_{Bk-1}) - \bar{s}_{yk-1} \\
 
 Spline derivatives can be used to analyze the shape of an object as well. Changes in the shape reflect heavily
 on the derivatives since they show the direction the outline is currently bending to. To filter out high frequency
-changes which occur due to the uneven surface of the bone, smoothing based on the Fast Fourier Transform (FFT) is applied
-beforehand. The smoothing acts as a low-pass filter in frequency space. For this purpose we use the FFT functions provided by scipy \cite{oliphant2007python}. We can then recalculate the spline parameterization of the smoothed curve and build the feature vector from the spine derivatives.
+changes which occur due to the uneven surface of the bone, smoothing is applied to the spline. The smoothing acts as a low-pass filter in frequency space. We can then build the feature vector from the spine derivatives.
 
 \begin{equation}
 \vec{f}_B = \left( \begin{array}{c}
@@ -1154,7 +1151,7 @@ the feature vectors have a dimensionality $d = 2k$ or $d = k$. Depending on the 
 a feature vector of $> 50$ dimensions.
 
 To further analyze these features, we decided to introduce an optional step where principal component analysis
-(PCA) is applied to find the main components of the feature vectors. 
+(PCA) is applied to find the main components of the feature vectors as presented in Section \ref{section:pca}. 
 
 Scikit-learn \cite{pedregosa2011scikit} provides an implementation of PCA, which we used to reduce the number of features to a user-defined number.
 
@@ -1202,7 +1199,7 @@ c_{TR}(K) = \frac{1}{|TR|} (\sum_{o \in TR | K(o) = C(o)} dist(o, D) - \sum_{o \
 In classification applications it's usually beneficial to separate the training and test sets to see how well a
 classifier can be generalized. Since our application is not a classifier but still very close to it, we wanted
 to make sure that the SVM could be generalized as well. When the classifier can be generalized well, the separation
-should be good as well at this position.
+should work as well at this position.
 
 Since our dataset is relatively small, we decided to use cross-validation to verify that the classifier can be
 generalized. In cross-validation the dataset is split up into $k$ disjoint sets $S_i$ that hold $\frac{|DB|}{k}$ items each. For our case we used $4$ items per set in a stratified manner. Stratified cross-validation is done by using the same ratio of classes inside each disjoint set as inside the whole database. The cross-validation is then
