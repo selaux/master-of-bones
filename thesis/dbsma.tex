@@ -138,7 +138,7 @@ Principal component analysis works on the derivations from the mean data in $DB$
 \begin{equation}
 \begin{split}
 & \vec{\mu} = \frac{1}{|DB|} \sum_{\vec{o} \in DB}  \vec{o} \\
-& DB_\mu = \{ \vec{o} - \vec{\mu} | \forall \vec{o} \in DB \}
+& DB_\mu = \{ \vec{o} - \vec{\mu} \mid \vec{o} \in DB \}
 \end{split}
 \end{equation}
 
@@ -177,13 +177,13 @@ Cluster analysis is an integral part of data mining. The goal of cluster analysi
 K-means clustering is a partitioning clustering algorithm, a kind of algorithm that separates space into segments, with all points in one segment belonging to a cluster. In k-means clustering, each cluster $C_i$ is represented by its centroid $\mu_i$. An object belongs to the cluster with the closest centroid. The partitioning manifests in a Voronoi cells built from the representatives from each cluster. The number of clusters $k$ is a parameter that needs to be specified to fit the data.
 
 \begin{equation}
-\mu_i = \frac{1}{C_i} \sum_{\vec{o} \in C_i}\vec{o}
+\vec{\mu}_i = \frac{1}{|C_i|} \sum_{\vec{o} \in C_i}\vec{o}
 \end{equation}
 
-The algorithm to create the clustering is iterative. The simplest way is to initially select random points as centroids for each cluster. Then the cluster memberships are reevaluated and the centroids are recalculated. These two steps are iterated until the following compactness criterion is met:
+The algorithm to create the clustering is iterative. The simplest way is to initially select random points as centroids for each cluster. Then the cluster memberships are reevaluated and the centroids are recalculated. These two steps are iterated until a maximum number of iterations is reached or the following compactness criterion is met:
 
 \begin{equation}
-\sum\limits_{C_i \in CL} \sum\limits_{o \in C_i} dist(o, \mu_i)^2 <= \xi
+\sum\limits_{C_i \in CL} \sum\limits_{\vec{o} \in C_i} dist(\vec{o}, \vec{\mu}_i)^2 <= \xi
 \end{equation}
 
 Other initialization methods exist as well, and the algorithm varies slightly between implementations, e.g. reevaluating cluster memberships and centroids after each membership assignment. 
@@ -196,19 +196,19 @@ The goal of the DBSCAN cluster algorithm is to group objects into areas of high 
 
 \begin{itemize}
 	\item
-	Core points: Each point that satisfies: \\$|RQ(p, \epsilon) = \{  o \in DB | dist(o,p) <= \epsilon  \}| \geq minPts$
+	Core points: Each point that satisfies: \\$|RQ(\vec{p}, \epsilon) = \{  \vec{o} \in DB \mid dist(\vec{o},\vec{p}) <= \epsilon  \}| \geq minPts$
 	
 	 \item
-	 $q$ is direct-density-reachable from $p$: $q \in RQ(p, \epsilon)$ and $p$ is core point
+	 $\vec{q}$ is direct-density-reachable from $\vec{p}$: $\vec{q} \in RQ(\vec{p}, \epsilon)$ and $\vec{p}$ is core point
 	 
 	 \item
-	 $q$ is density-reachable from $p$: There exists a chain of direct-density-reachable objects between $q$ and $p$
+	 $\vec{q}$ is density-reachable from $\vec{p}$: There exists a chain of direct-density-reachable objects between $\vec{q}$ and $\vec{p}$
 	 
 	 \item
-	 $q$ and $p$ are density-connected: $p$ and $q$ are both density-reachable from an object
+	 $\vec{q}$ and $\vec{p}$ are density-connected: $\vec{p}$ and $\vec{q}$ are both density-reachable from an object
 \end{itemize}
 
-Clusters are created from sets of density-connected points. These points are found by expanding clusters with range queries, trying to find direct-density-reachable points or core points until each object has been visited.
+Clusters are created from sets of density-connected points. These points are found by expanding clusters with range queries, trying to find direct-density-reachable points or core points until each object has either been classified as belonging to a cluster or noise.
 
 Figure \ref{fig:basics-clustering-dbscan} shows a clustering created with DBSCAN. The clusters generated with DBSCAN can be of arbitrary shape as long as they have a similar density. A change in density is necessary for the algorithm to separate clusters. 
 
@@ -529,12 +529,13 @@ An approach to edge detection using semi-local texture features was also impleme
 \end{split}
 \end{equation}
 
-We then calculated textural features $F$ for these local neighborhoods and used the distance between them as a measure for an edge. For this purpose we used Haralick textural features \cite{haralick1973textural} or parameter free threshold adjacency statistics \cite{hamilton2007fast}. 
+We then calculated textural features $F$ for these local neighborhoods and used the distance between them as a measure for an edge. For this purpose we used Haralick textural features \cite{haralick1973textural} or parameter free threshold adjacency statistics \cite{hamilton2007fast} as feature extraction function $\vec{b}$.  
 
 \begin{equation}
-\begin{split}
-E(x,y) = & ||F(N_{left}(x,y)) -F(N_{right}(x,y))|| \\ & + ||F(N_{top}(x,y)) - F(N_{bottom}(x,y))||
-\end{split}
+f(x,y) = \left( \begin{array}{c}
+\vec{b}(N_{left}(x,y)) - \vec{b}(N_{right}(x,y)) \\
+\vec{b}(N_{top}(x,y)) - \vec{b}(N_{bottom}(x,y)
+\end{array} \right)
 \end{equation}
 
 \begin{figure}[h]
@@ -605,16 +606,15 @@ analysis, also used in Section \ref{subsub:procrustes}.
 	\item Transformation of all point sets into the coordinate center
 	\begin{equation}
 		\begin{split}
-			& \bar{x} = \frac{x_{1x} + x_{2x} + \cdots + x_{nx}}{n} \\
-			& \bar{y} = \frac{x_{1y} + x_{2y} + \cdots + x_{ny}}{n} \\
-			& X_c = \{ (x_{1x} - \bar{x}, x_{1y} - \bar{y}), \cdots, + (x_{nx} - \bar{x}, x_{ny} - \bar{y}) \}
+			& \vec{\mu}_x = \frac{1}{n} \sum_{\vec{x} \in X} \vec{x} \\
+			& X_c = \{ \vec{x} - \vec{\mu}_x \mid \vec{x} \in X \}
 		\end{split} 
 	\end{equation}
 	\item Scaling all point sets uniformly
 	\begin{equation}
 		\begin{split}
-			& s = \sqrt{\frac{\sum\limits_{x \in X_c}||x||^2}{n}} \\
-			& X_s = \left\{ \frac{x_{c1}}{s}, \cdots, \frac{x_{cn}}{s}\right\}
+			& s = \sqrt{\frac{\sum\limits_{\vec{x} \in X_c}||\vec{x}||^2}{n}} \\
+			& X_s = \left\{ \frac{\vec{x}}{s} \mid \vec{x} \in X_c \right\}
 		\end{split}
 	\end{equation}
 \end{itemize}
@@ -677,11 +677,11 @@ landmark number 8, which has no biological correspondence, but can be located ro
 When extracting a landmark by angle, the landmark position is defined by a minimum angle $\alpha_{min}$, a maximum
 angle $\alpha_{max}$ and the information whether it is located on a minimum or a maximum turning point.
 The minimum/maximum turning angle $\alpha_{t}$ between $\alpha_{min}$ and $\alpha_{max}$ of the following function
-is calculated, where $i(\alpha)$ is the intersection between a ray from the coordinate center with the angle $\alpha$ and
-the outline. $i(\alpha_t)$ is then used as the landmark.
+is calculated, where $\vec{i}(\alpha)$ is the intersection between a ray from the coordinate center with the angle $\alpha$ and
+the outline. $\vec{i}(\alpha_t)$ is then used as the landmark.
 
 \begin{equation}
-d(\alpha) = ||i(\alpha)||
+d(\alpha) = ||\vec{i}(\alpha)||
 \end{equation}
 
 The definitions for all landmarks when using this method can be found in Appendix \ref{appendix:table:landmarks-angle}.
@@ -769,9 +769,9 @@ equally spaced parameters $T$ as seen in Equation \ref{eq:registration-spline}.
 \begin{equation}
 \label{eq:registration-spline}
 \begin{split}
-& s(t) = ( s_x(t), s_y(t) ) \text{ with } 0 \leq t \leq 1 \\
+& \vec{s}(t) = ( s_x(t), s_y(t) ) \text{ with } 0 \leq t \leq 1 \\
 & T = \{ t_i=\frac{i}{n} | i=0, 1, \dots, (n-1) \} \\
-& X = \{ s(t_i) | t_i \in T \}
+& X = \{ \vec{s}(t_i) | t_i \in T \}
 \end{split}
 \end{equation}
 
@@ -784,10 +784,10 @@ change after an iteration (although the positions of the automatically found lan
 we implemented a nearest-neighbor approach to estimate correspondences. The resulting algorithm is very similar to
 \cite{besl1992method} but uses other transformation estimators.
 
-To find the correspondences for $X$ in $Y$ we simply use the nearest neighbor $NN_Y(x_i)$ for each point $x_i$ in $X$.
+To find the correspondences for $X$ in $Y$ we simply use the nearest neighbor $NN_Y(\vec{x}_i)$ for each point $\vec{x}_i$ in $X$.
 
 \begin{equation}
-NN_Y(x_i) = \arg\min(\{ \forall y_i \in Y: dist(x_i, y_i) \})
+NN_Y(\vec{x}_i) = \arg\min_{y_i \in Y}(dist(\vec{x}_i, \vec{y}_i))
 \end{equation}
 
 The correspondences found with this method might change after each iteration. This is beneficial for already registered
@@ -802,12 +802,12 @@ the point set.
 	\centering
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
-		\includegraphics[width=.9\linewidth]{img/registration/single-before.pdf}
+		\includegraphics[width=.85\linewidth]{img/registration/single-before.pdf}
 		\subcaption{unregistered}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
 		\centering
-		\includegraphics[width=.9\linewidth]{img/registration/single-procrustes.pdf}
+		\includegraphics[width=.85\linewidth]{img/registration/single-procrustes.pdf}
 		\subcaption{Procrustes}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.24\textwidth}
@@ -863,13 +863,13 @@ disadvantage of actually changing the shape of the object. The Procrustes transf
 slightly different perspectives, we allowed the slight change in shape in this case, especially because was
 applied to the whole object.
 
-An affine transformation is represented by a $3\times3$ transformation matrix $A$. We can write a transform that
+An affine transformation is represented by a $3\times3$ transformation matrix $\mathbf{A}$. We can write a transform that
 superimposes a point set $X$ onto a point set $Y$ in homogeneous coordinates as:
 
 \begin{equation}
 \label{eq:projectivetransformation}
 \begin{split}
-& \vec{r_i} = A \vec{x_i} \\
+& \vec{r_i} = \mathbf{A} \vec{x_i} \\
 & R = \{ \vec{r_i}, \cdots, \vec{r_n} \}
 \end{split}
 \end{equation}
@@ -941,8 +941,9 @@ To determine separabilities we need to sweep the outlines of the bone at $n$ ang
 	\end{subfigure}
 	\begin{subfigure}[b]{0.32\textwidth}
 		\centering
+		\raisebox{1cm}{
 		\includegraphics[width=.9\linewidth]{img/window-extraction/windows.pdf}
-		\vfill
+		}
 		\subcaption{Extracted windows}
 		\label{fig:window-extraction-all}
 	\end{subfigure}
@@ -1166,7 +1167,7 @@ purpose we used a Support Vector Machine to calculate several separability measu
 
 The SVM has the advantage of having the first separability measure built in: The width of the margin between the
 support vectors and the separating hyperplane $D$. Since the soft margin method is used to train the SVM, allowing for incorrectly labeled observations, this is the distance to the nearest cleanly split examples. The margin is 
-defined using the normal vector of the separating hyperplane $\vec{w}$. We used all observations $TR = \{ f_B \forall B \in DB \}$ to train the SVM $K$ in this case.
+defined using the normal vector of the separating hyperplane $\vec{w}$. We used all observations $TR = \{ f_B \mid B \in DB \}$ to train the SVM $K$ in this case.
 
 \begin{equation}
 m = \frac{2}{||\vec{w}||}
@@ -1175,11 +1176,11 @@ m = \frac{2}{||\vec{w}||}
 \subsubsection{Observed Accuracy}
 
 Since the margin might incorporate incorrectly classified examples, we decided to use other separability measures
-as well to confirm the results defined by the margin. For this purpose we used the observed accuracy metric of the SVM classifier $K$, trained with all observations as well. The class of the observation is here denoted as $C(o)$
-while the predicted class is denoted as $K(o)$.
+as well to confirm the results defined by the margin. For this purpose we used the observed accuracy metric of the SVM classifier $K$, trained with all observations as well. The class of the observation is here denoted as $C(\vec{o})$
+while the predicted class is denoted as $K(\vec{o})$.
 
 \begin{equation}
-a_{TR}(K) = \frac{|o \in TR | K(o) = C(o)|}{|TR|}
+a_{TR}(K) = \frac{|\vec{o} \in TR | K(\vec{o}) = C(\vec{o})|}{|TR|}
 \end{equation}
 
 \subsubsection{Mean Confidence Score}
@@ -1190,7 +1191,7 @@ is called a confidence score. The confidence score for the SVM is the distance f
 hyperplane $D$. We can use this to calculate a mean confidence score for all observations for the current evaluation point.
 
 \begin{equation}
-c_{TR}(K) = \frac{1}{|TR|} (\sum_{o \in TR | K(o) = C(o)} dist(o, D) - \sum_{o \in TR | K(o) \neq C(o)} dist(o, D))
+c_{TR}(K) = \frac{1}{|TR|} (\sum_{\vec{o} \in TR \mid K(\vec{o}) = C(\vec{o})} dist(\vec{o}, D) - \sum_{\vec{o} \in TR \mid K(\vec{o}) \neq C(\vec{o})} dist(\vec{o}, D))
 \end{equation}
 
 \subsubsection{Mean Cross-Validation Accuracy}
@@ -1216,7 +1217,7 @@ Using these sets $k$ SVMs $K_i$ are trained. The mean accuracy on the test sets 
 as the measure.
 
 \begin{equation}
-\bar{a} = \frac{1}{|DB|} \sum_{i=1}^k | \{o \in TE_i | K(o) = C(o) \}| 
+\bar{a} = \frac{1}{k} \sum_{i=1}^k \frac{1}{|TE_i|} | \{\vec{o} \in TE_i | K(\vec{o}) = C(\vec{o}) \}| 
 \end{equation}
 
 \subsubsection{Mean Cross-Validation Confidence}
@@ -1225,7 +1226,7 @@ as the measure.
 The mean cross-validation confidence score is closely tied the the mean confidence score presented in Section \ref{subsub:mean-confidence-score} and the cross validation accuracy presented in the previous section. The selection of training and test data works similarly to the cross-validation accuracy metric. Instead of using the mean accuracy, we are using the distance from the hyperplane of each observation in the test data. This allows us to get a more accurate metric for separability while still using cross-validation to ensure the generalization of our algorithm.
 
 \begin{equation}
-\bar{c} = \frac{1}{|TR|} \sum_{TR_i \in TR} c_{TR_i}(K_i)
+\bar{c} = \frac{1}{k} \sum_{i=1}^k c_{TR_i}(K_i)
 \end{equation}
 
 \chapter{Detection of Differences That Are Measurable On-Site}
@@ -1257,23 +1258,23 @@ These points can be used to calculate simple features that can be used to classi
 	\label{fig:measurable-distances}
 \end{figure}
 
-Both methods to extract landmarks that were presented in Section \ref{sub:landmarks} can be used to extract the landmarks. Depending on the extraction method, some of the distances can be hard to measure. Since the landmarks extracted by space-partitioning lie on extrema in x and y direction, they are preferred when using this method for distances that are parallel to the x- and y-axes. The landmarks extracted by angle are favored for distances that are measured diagonally. This can be considered when evaluating the decision tree created by this method.
+Both methods to extract landmarks that were presented in Section \ref{sub:landmarks} can be used to extract the landmarks. Depending on the extraction method, some of the distances can be hard to measure. Since the landmarks extracted by space-partitioning lie on extrema in x and y direction, they are preferred when using this method for distances that are parallel to the x- and y-axes. The landmarks extracted by angle are favored for distances that are measured diagonally. This needs to be considered when evaluating the decision tree created by this method.
 
-To create the feature vector for each bone, the initial data is a list of landmarks for this bone $L = \{ l_1, \cdots l_n \}$ and a list of landmark combinations $C = \{ (l_g, l_h), \cdots, (l_i, l_j) \}$ with $1 <= g,h,i,j <= n$. The feature vector will then be created from all possible combinations $D$ of the landmark combinations $C$, which correspond to distances between the landmarks.
+To create the feature vector for each bone, the initial data is a list of landmarks for this bone $L = \{ \vec{l}_1, ... \vec{l}_n \}$ and a list of landmark combinations $C = \{ (\vec{l}_g, \vec{l}_h), ..., (\vec{l}_i, \vec{l}_j) \}$ with $1 <= g,h,i,j <= n$. The feature vector will then be created from all possible combinations $D$ of the landmark combinations $C$, which correspond to distances between the landmarks.
 
 \begin{equation}
-D = C \times C \setminus \{ (c_i, c_i) \forall i = 1 \cdots k \}
+D = C \times C \setminus \{ (C_i, C_i) \mid i = 1 ... k \}
 \end{equation}
 
 The distance ratios can then be calculated from this set.
 
 \begin{equation}
 \begin{split}
-& D = \{ ((l_g, l_h), (l_i, l_j)), \cdots, ((l_k, l_l), (l_m, l_n)) \} \\
+& D = \{ ((\vec{l}_g, \vec{l}_h), (\vec{l}_i, \vec{l}_j)), ..., ((\vec{l}_k, \vec{l}_l), (\vec{l}_m, \vec{l}_n)) \} \\
 & \vec{f} = \left( \begin{array}{c}
-\frac{||l_g - l_h||}{||l_i - l_j||} \\
+\frac{||\vec{l}_g - \vec{l}_h||}{||\vec{l}_i - \vec{l}_j||} \\
 \vdots \\
-\frac{||l_k - l_l||}{||l_m - l_n||} \\
+\frac{||\vec{l}_k - \vec{l}_l||}{||\vec{l}_m - \vec{l}_n||} \\
 \end{array} \right)
 \end{split}
 \end{equation}
@@ -1282,7 +1283,7 @@ The distance ratios can then be calculated from this set.
 
 To classify the bone we decided to use a decision tree as presented in Section \ref{sec:basics-decision-trees}, because it gives the capability to read the decision path from the classifier. This way the zoo-archaeologist only needs to measure a handful of distances and apply them to the decision tree to figure out the class of the object.
 
-The depth of the decision tree $T$ defines how many distances need to be measured as $m <= depth(T) * 2$. We decided to limit the trees depth to 2 to reduce the number of measurements as well as to have a better generalization of the model.
+The depth of the decision tree $T$ defines how many distances need to be measured as $m <= depth(T) * 2$. We decided to limit the tree depth to reduce the number of measurements as well as to have a better generalization of the model.
 
 Training the decision tree is pretty straight forward using the feature vectors from the previous section. The split criterion can be selected by the user.
 
@@ -1325,7 +1326,7 @@ To determine whether the algorithm works as intended, we decided to execute some
 	\label{fig:synthetic-shapes}
 \end{figure}
 
-The first step to testing with synthetic data is to define how the data should look like and how it is possible to generate such data. Since the algorithm compares two classes of data we need to create two sets of outlines that have similar characteristics, but also vary inside each set. Additionally because of the style of our algorithm we decided to create circle-shaped test-data. As the base for our data, we use a ellipsoid, which we can vary in eccentricity. Parameterized by angle the ellipsoid can be defined as, where $\epsilon$ is a parameter that defines the eccentricity of the ellipsoid:
+The first step to testing with synthetic data is to define how the data should look like and how this data could be generated. Since the algorithm compares two classes of data we need to create two sets of outlines that have similar characteristics, but also vary inside each set. Additionally because of the style of our algorithm we decided to create circle-shaped test-data. As the base for our data, we use a ellipsoid, which we can vary in eccentricity. Parameterized by angle the ellipsoid can be defined as, where $\epsilon$ is a parameter that defines the eccentricity of the ellipsoid:
 
 \begin{equation}
 	\vec{e}(\alpha) = \left( \begin{array}{c}
@@ -1337,9 +1338,9 @@ The first step to testing with synthetic data is to define how the data should l
 To represent shape variations on the bone, we decided to use Gaussian bell curves, which can be stacked onto each other to produce a whole variation of shapes. Each of these bell curves $b_i(\alpha)$ is defined by a height $h_i$, an angle at which the curve has its center $\mu_i$ and a width of the curve $\sigma$. The formula for the curve is applied in the normal direction of the current angle $\vec{n}(\alpha)$, which is defined as:
 
 \begin{equation}
-	\vec{n}(\alpha) = \frac{1}{\sqrt{(v_y^\prime(\alpha))^2 + (-v_x^\prime(\alpha))^2}}\left( \begin{array}{c}
-		v_y^\prime(\alpha) \\
-		-v_x^\prime(\alpha)
+	\vec{n}(\alpha) = \frac{1}{\sqrt{(e_y^\prime(\alpha))^2 + (-e_x^\prime(\alpha))^2}}\left( \begin{array}{c}
+		e_y^\prime(\alpha) \\
+		-e_x^\prime(\alpha)
 	\end{array} \right)
 \end{equation}
 
@@ -1361,7 +1362,7 @@ This function needs to be evaluated at $n$ angles $\alpha_i$ with $i = 1 ... n$ 
 	\alpha_i = \frac{i}{n} 360^{\circ}
 \end{equation}
 
-This is the base for generating multiple shapes of this kind to feed the algorithm. Figure \ref{fig:synthetic-shapes} shows shapes that can be built using this method. Using these equations, we could only define two shapes using the described method. To describe two classes, we needed to add randomized elements to the equations.
+Using this method a variety of shapes can be created, examples for which are shown in Figure \ref{fig:synthetic-shapes}. But they only describe the base shapes for the generation of multiple classes of shapes. From two of these shapes, instances can be created that vary from the base shape to some degree. For that purpose randomized elements are added to the base shape.
 
 The first randomized elements are class internal randomizations that describe differences in measurement and registration. For each class we can define standard deviations for radius $\sigma_r$, evaluation angles $\sigma_\alpha$ and transformation $\sigma_t$. Randomized values $n_r()$, $n_\alpha()$, $n_t$ based on normal distributions using these parameters are added whenever a value is accessed. The values are adapted as follows:
 
@@ -1423,9 +1424,9 @@ Using this randomization process two classes of semi-randomized data can be buil
 	\label{fig:synthetic-classes}
 \end{figure}
 
-Figure \ref{fig:synthetic-classes} shows two classes that were generated using this process. The classes in this figure have their distinct variations in the position of the small left bulge, the location of the indentation at the bottom and the height of the right bulge at the top. It is also noticeable that the small left bulge is different inside of class A, because it is much more distinct in Figure \ref{subfig:synthetic-classes:a-2} than it is in Figure \ref{subfig:synthetic-classes:a-1}. The small left bulge is less distinct in Figure \ref{subfig:synthetic-classes:b-1} than it is in Figure \ref{subfig:synthetic-classes:b-2} as well. Additionally the indentation at the top more shallow in Figure \ref{subfig:synthetic-classes:b-2} than in \ref{subfig:synthetic-classes:b-1} and has slightly shifted to the right. 
+Figure \ref{fig:synthetic-classes} shows two classes that were generated using this process. The classes in this figure have their distinct variations in the position of the small left bulge, the location of the indentation at the bottom and the height of the right bulge at the top. It is also noticeable that the small left bulge is different inside of class A, because it is much more distinct in Figure \ref{subfig:synthetic-classes:a-2} than it is in Figure \ref{subfig:synthetic-classes:a-1}. In class B the variation can be seen in the indentation at the top being more shallow in Figure \ref{subfig:synthetic-classes:b-2} than in \ref{subfig:synthetic-classes:b-1} and has slightly shifted to the right.
 
-Unless otherwise stated, we use 30 observation per class in our experiments. Only non-characteristic randomization is applied, so it can not influence the results. The generated data is already superimposed so no registration is necessary.
+The generated data is already superimposed so no registration is necessary. To match our real-world data we always created 30 instances of each class for the experiments.
 
 \subsection{Influence of Different Types of Variations in Shape Features}
 
@@ -1558,7 +1559,7 @@ While a graph like Figure \ref{fig:ascending-radius-angle-2} might not be suffic
 
 \subsection{Influence of Errors in Shape Registration}
 
-The last test we executed on synthetic data was how registration error affects the algorithm. Registration errors are inherent to this method since the shapes cannot be superimposed exactly without any registration error.
+The last test we executed on synthetic data was how registration errors affect the algorithm. Registration errors are inherent to this method since the shapes cannot be superimposed exactly without any registration error.
 
 We model this registration error as variances in translation in between the shapes. This does not affect the outlines shape, but the position of this outline. Both classes now consist of the same shapes with slightly different positions.
 
@@ -1592,7 +1593,7 @@ With this knowledge it might not be necessary to register the bones using a non-
 
 \section{Tests on Real-World Data}
 
-After validating the algorithm using synthetic data, we advanced by analyzing the shape of real bone findings. The data provided to us is data from domestic and wild sheep classes that are already classified by zoo-archaeologists as explained in Chapter \ref{chapter:problem-definition}. We have a database size of $57$ observations, $29$ of which are in the class of domestic sheep and $28$ of which are wild sheep. We registered the sheep using one iteration with landmarks as correspondences and 20 iterations using nearest neighbors.
+After validating the algorithm using synthetic data, we advanced by analyzing the shape of real bone findings. The data provided to us is data from domestic and wild sheep classes that are already classified by zoo-archaeologists as explained in Chapter \ref{chapter:problem-definition}. We have a database size of $57$ observations, $29$ of which are in the class of domestic sheep and $28$ of which are wild sheep. We registered the sheep using procrustes transformation in one iteration with landmarks as correspondences and 20 iterations with nearest neighbors.
 
 \subsection{Results and Compliance with Former Findings} 
 
@@ -1620,19 +1621,21 @@ After validating the algorithm using synthetic data, we advanced by analyzing th
 	\label{fig:main-result}
 \end{figure}
 
-The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. Figure \ref{fig:main-result-data} shows the mean outlines for domestic (blue) and wild (yellow) sheep and the angles corresponding to the peaks in Figure \ref{fig:main-result-chart}. For reference we plotted the distance between the mean bones in Figure \ref{fig:main-result-distance}. When comparing the charts of the distance between mean bones and our result it becomes clear that while some of the peaks are visible as well in Figure \ref{fig:main-result-distance}, the peaks are much more distinct using our method. This might be caused because we do not only consider distance between the points, but also separability, allowing us to consider how meaningful a change in shape is.
+The results of the algorithm applied on real-world data can be seen in Figure \ref{fig:main-result-chart}. Figure \ref{fig:main-result-data} shows the mean outlines for domestic (blue) and wild (yellow) sheep and the angles corresponding to the peaks in Figure \ref{fig:main-result-chart}. For reference we plotted the distance between the mean bones in Figure \ref{fig:main-result-distance}.
 
-From the mean bones it is clearly visible that the highest peak in the result chart correspond to the parts of the bone where the mean bones diverge the most. It needs to be noted that the maximum separability metric of the result is smaller than that of the synthetic tests, but that is to be expected with real-world data as a combination of measurement errors, variance in shape features and registration errors applies. Nevertheless distinct peaks are visible in the result graph. While the upper half of the bone is highly separable, the lower half is similar in both classes. This agrees with the results of the zoo-archaeologist who also found significant differences in the area between the lateral and medial crest. Our algorithm shows three distinct points in the upper area of the outline which we marked as one, two and three. In the area between these points, the separability decreases, but does not reach zero. Additionally to the points between the crests, our result shows a highly separable area around the out most point on the medial apex.
+When comparing the charts of the distance between mean bones and our result it becomes clear that while some of the peaks are visible as well in Figure \ref{fig:main-result-distance}, the peaks are much more distinct using our method. Since we are not only using distances, but essentially the margin between the classes of the bones, our algorithm considers the separability at each angle as well. So if the mean bones diverge, they might do so with such a variance inside at least one class that makes the distance between the mean bones less meaningful. Our method also covers features that vary in position, so they do not express themselves as distinct in the mean bone.
 
-The first separable point is in the area around the highest point on the lateral crest marked as one in Figure \ref{fig:main-result}. This difference is not as distinct as the others. It is located right at an intersection between the two mean bones which indicates that it stems from the accumulation of two minor separabilities to the left and right of the evaluation point. The bones of the wild sheep are a bit wider to the right and less high to the left than those of the domestic sheep at this angle. After this key point, the separability falls again, but not to the point of not being separable.
+But from the mean bones it is apparent that the highest peak in the result chart corresponds to the parts of the bone where the mean bones diverge the most. It needs to be noted that the maximum separability metric of the result is smaller than that of the synthetic tests, but that is to be expected with real-world data as a combination of measurement errors, variance in shape features and registration errors applies. Nevertheless distinct peaks are visible in the result graph. While the upper half of the bone is highly separable, the lower half is similar in both classes. This agrees with the results of the zoo-archaeologist who also found significant differences in the area between the lateral and medial crest. Our algorithm shows three distinct points in the upper area of the outline which we marked as one, two and three. In the area between these points, the separability decreases, but does not reach zero. Additionally to the points between the crests, our result shows a highly separable area around the out most point on the medial apex.
 
-The second separable point is at the angle of $80^\circ$ and marked as two in Figure \ref{fig:main-result}. This point is more distinct that the first key point. This is caused by a distinct bulge that is present in most of the tali of wild sheep. While the bulge is not visible as such in the mean bone, because of variations in position and height, it is noticeable that the mean bone of wild sheep is flatter that the one of domestic sheep around this position. The theory of the zoo-archaeologists is that this bump stems from the different stress level that is put on the bone when the wild sheep stand in mountainous terrain. Domestic sheep usually stand in flat areas so this bulge is not present in their bones.
+The first separable point is located in the area around the highest point on the lateral crest marked as one in Figure \ref{fig:main-result}. This difference is not as distinct as the others. It is located right at an intersection between the two mean bones which indicates that it stems from the accumulation of two minor separabilities to the left and right of the evaluation point. The bones of the wild sheep are a bit wider to the right and less high to the left than those of the domestic sheep at this angle. After this key point, the separability falls again, but not to the point of not being separable.
 
-The third an most significant difference is at about $120^\circ$, which corresponds to the medial crest. The medial crest is much more distinctive in domestic sheep than in wild sheep. This is clearly visible in the mean bones of the two classes. Combined with key point two, where the lateral crest is more distinctive as well, it can also be viewed as the depression between the crests being deeper than in wild sheep. According to the experts, this might be caused by the domestic sheep not moving as much inside their pastures as the wild sheep and thus experiencing more stress between the crests.
+The second separable point is at the angle of $80^\circ$ and marked as two in Figure \ref{fig:main-result}. It is caused by a distinct bulge that is present in most of the Tali of wild sheep. While the bulge is not visible as such in the mean bone, because of variations in position and height, it is noticeable that the mean bone of wild sheep is flatter that the one of domestic sheep around this position. The theory of the zoo-archaeologists is that this bump stems from the different stress level that is put on the bone when the wild sheep stand in mountainous terrain. Domestic sheep usually stand in flat areas so this bulge is not present in their bones.
 
-The last key point lies at about $190^\circ$ at the medial apex. While the other key points all lie in the area that has been examined by the researchers from the zoo-archeology department, this key point has not been analyzed by them. Based on the mean bones, two differences establish themselves at this point. In wild sheep the medial apex is more pronounced as well as shifted lower towards the out most point of the medial outer edge. This is a new discovery and has not been explained by the zoo-archaeologists.
+The third an most significant difference manifests at about $120^\circ$, which corresponds to the medial crest. The medial crest is much more distinctive in domestic sheep than in wild sheep. This is clearly visible in the mean bones of the two classes. Combined with key point two, where the lateral crest is more distinctive as well, it can also be viewed as the depression between the crests being deeper than in wild sheep. According to the experts, this might be caused by the domestic sheep not moving as much inside their pastures as the wild sheep and thus experiencing more stress between the crests.
 
-Apart from the key points the separability graph oscillates around a separability of zero. There exist other minor maxima in the graph, but they are too narrow to represent a real separable point, since the sliding window always incorporates the area around the evaluation angle.
+The last key point lies at about $190^\circ$ at the medial apex. While the other key points all lie in the area that has been examined by the researchers from the zoo-archeology department, this key point has not been analyzed by them. Based on the mean bones, two differences establish themselves at this point. In wild sheep the medial apex is more pronounced as well as shifted lower, towards the out most point of the medial outer edge. 
+
+Apart from the key points the separability graph oscillates around a separability of zero. There exist other minor maxima in the graph, but they are too narrow to represent a separable area. Since the sliding window always incorporates the area around the evaluation angle, they need to be at least as wide as the sliding window.
 
 
 
@@ -1643,9 +1646,9 @@ In this section we examine whether changing algorithm parameters manifest as it 
 
 \subsubsection{Number of Evaluation Points}
 
-In this experiment we will modify the number of points that are evaluated inside each window that is cut from the bone. One could argue that this corresponds to increasing the resolution of the algorithm inside each window.
+In this experiment we will modify the number of points that are evaluated inside each window that is cut from the bone. This relates to increasing the resolution of the algorithm inside each window.
 
-When modifying the number of evaluation points, we would expect the resulting graph to approximately stay the same, since the only difference that is apparent is that finer structures can be represented.
+When modifying the number of evaluation points, we would expect the resulting graph to approximately stay constant over different values, since the only difference that is apparent is that finer structures can be represented.
 
 \begin{figure}[h]
 	\centering
@@ -1731,7 +1734,7 @@ We implemented two algorithms for window extraction: By angle or by length. When
 	\label{fig:window-extraction-graphs}
 \end{figure}
 
-The results for different window extraction methods can be seen in figure \ref{fig:window-extraction-graphs}. From the results it is clearly visible that the separability metric produces much more distinct maxima with the extraction method by length while the general trend of the graph stays the same. It is also noticeable that while we tried to keep the window sizes similar, it was not possible since the farther away the bone outline is located from the center, the larger the window gets that is cut from the bone when using the angular method.
+The results for different window extraction methods can be seen in figure \ref{fig:window-extraction-graphs}. From the results it is clearly visible that the separability metric produces much more distinct maxima with the extraction method by length while the general trend of the graph stays the same. This might be cause by the window having different widths at each location and bone, compared to a constant width with the method my length. This would also explain the .
 
 To ensure the same window length everywhere we decided to use the extraction by length, which is also supported by the more distinct results.
 
@@ -1763,9 +1766,9 @@ In this section we wanted to determine how principal component analysis influenc
  	\label{fig:pca}
  \end{figure}
 
-When not using PCA, we would expect the algorithm to still work correctly, but produce less distinct results, since the two classes might not be separable as well as after using PCA, and each observation being "far away" from the hyperplane due to the curse of dimensionality. Using PCA and more components, we expect the result to get finer with each component used from the PCA.
+Thus we would expect the algorithm to continue working correctly without using PCA, but produce less distinct results. But a missclassification when calculating the separability metric and each observation being "far away" from the hyperplane might make their influence more substantial. Using PCA and more components, we expect the result to get finer with each component used from the PCA.
  
-While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines are not separable anymore. We tested using other features than the flattened spline points, and determined that features using only location info had this problem, with the distance and curvature feature this did not happen. When using PCA the separability reappears at this point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components then eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
+While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines seem not to be separable anymore. We tested using other features than the flattened spline points, and determined that when using features with additional information then location, this effect did not occur. When using PCA the separability reappears at each key point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components then eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
 
 For our purposes we choose PCA with 4 components to ensure separability of the classes and smoothness of the resulting graph.
 
@@ -1815,7 +1818,7 @@ In this section we will compare the features we implemented for comparison that 
 	\label{fig:features}
 \end{figure}
 
-It is noticeable that the Figures \ref{fig:features-0}, \ref{fig:features-1} and \ref{fig:features-3} look very similar. Figures \ref{fig:features-0} and \ref{fig:features-3} are in fact identical. This is because in the used configuration we apply PCA, which incorporates this transformation already. The distances to center feature from Figure \ref{fig:features-1} is slightly different from the other two. The detected separable areas are a little wider, but generally it paints a very similar picture. When using the distances to center in combination with the curves curvature that separability of the key point two at $80^\circ$ increases significantly. The amount of noise in the result increases significantly as well. When testing with curvature only almost no key-points are detected. This lead to the conclusion that adding curvature will not show any additional separable areas, so it has no advantage. For the features from Figures \ref{fig:features-4} and \ref{fig:features-5} the results are even worse, to the degree that none of the key points are detected.
+It is noticeable that the Figures \ref{fig:features-0}, \ref{fig:features-1} and \ref{fig:features-3} look very similar. Figures \ref{fig:features-0} and \ref{fig:features-3} are in fact identical. This is because in the used configuration we apply PCA, which incorporates this transformation already. The distances to center feature from Figure \ref{fig:features-1} is slightly different from the other two. The detected separable areas are a little wider, but generally it paints a very similar picture. When using the distances to center in combination with the curves curvature that separability of the key point two at $80^\circ$ increases significantly. The amount of noise in the result increases significantly as well. When testing with curvature only almost no key-points are detected. This lead to the conclusion that adding curvature will not show any additional separable areas, so it has little advantage over the other. Only using features that are based on the bendiness of the curve was not feasible as shown in Figures \ref{fig:features-4} and \ref{fig:features-5}. This was to the degree that the curves appear random.
 
 In conclusion we simply continued to use the simplest feature from Figure \ref{fig:features-0}. It shows all key points that are detected by any of the features while generating a smooth graph that is easily readable.
 
@@ -1859,7 +1862,7 @@ When looking at the separability metrics we implemented, our expectation was for
 	\label{fig:metrics}
 \end{figure}
 
-There are two groups of metrics in Figure \ref{fig:metrics}. The accuracy-based metrics in Figures \ref{fig:metrics-1} and \ref{fig:metrics-3} are very noisy while the distance-based metrics have a more smooth progression. In the accuracy-based metrics, the separable areas are very hard to locate, although they generally have the same trend. The confidence scores are a combination of accuracy and margin scores. The absolute accuracy values in most areas are not necessarily good enough for classification, but in combination with the margin, they become a lot more meaningful for our case.
+There are two groups of metrics in Figure \ref{fig:metrics}. The accuracy-based metrics in Figures \ref{fig:metrics-1} and \ref{fig:metrics-3} are very noisy while the distance-based metrics have a more smooth progression. In the accuracy-based metrics, the separable areas are fairly hard to locate, although they generally have the same trend as the others. The confidence scores are a combination of accuracy and margin scores. The absolute accuracy values in most areas are not necessarily good enough for classification, but in combination with the margin, they become a lot more meaningful for our case.
 
 The cross-validation metrics almost look the same as the non-cross validation metrics. It is noteworthy though that their maxima are less influenced by cross-validation than the rest of the graph. This is a good sign since they are well generalizable in these areas, which is also an indicator for separability.
 
@@ -1869,7 +1872,7 @@ When looking at the separability metrics it becomes apparent that the key points
 
 We also executed some testing for the decision tree classifier we presented in Chapter \ref{chapter:measurable-differences}. First we used cross-validation to determine the success rate of our classifier and whether it was generalizable. Several parameters to train the decision tree needed to be chosen while aiming for the highest possible cross validation accuracy.
 
-As the split criterion information gain proved to yield better results than using the Gini index. As for the landmark extraction method, space partitioning was increasing the result quality as well. As for the decision and the minimum number of samples per leaf, we decided to favor a decision tree depth of $3$ with minimum $6$ samples per leaf over a depth of $2$. While a depth of $2$ would require the researcher to take fewer measurements, only one of the branches of the tree actually has this depth, which leaves the researcher with almost always taking fewer measurements.
+As the split criterion information gain proved to yield better results than using the Gini index. As for the landmark extraction method, space partitioning was increasing the result quality as well. Since they are more easy to locate as well, this proved to be a perk. As for the depth and the minimum number of samples per leaf, we decided to favor a decision tree depth of $3$ with minimum $6$ samples per leaf over a depth of $2$. While a depth of $2$ would require the researcher to take fewer measurements, only one of the branches of the tree actually has this depth, which leaves the researcher with often taking fewer measurements.
 
 \begin{figure}[h]
 	\centering
@@ -1887,7 +1890,7 @@ With this configuration, the decision tree shown in Figure \ref{fig:result-decis
 
 \section{Summary}
 
-In this thesis we have presented a novel method to analyze shapes for shape variances between classes. First the bone outlines were segmented from an image of the bone in a semi-automatic fashion. Based on a support vector machine we calculate separability metrics for windows we cut from these outlines. We introduced several features that can be used to train the SVM and compared them. We have validated the algorithm using synthetic data that was generated using randomized class shapes. In the end this method was applied to bone findings of domestic and wild sheep to find locations where these classes differ significantly.
+In this thesis we have presented a novel method to analyze shapes for local variances between classes. First the bone outlines were segmented from an image of the bone in a semi-automatic fashion. Based on a support vector machine we calculated separability metrics for windows we cut from these outlines. We introduced several features that can be used to train the SVM and compared them. We have validated the algorithm using synthetic data that was generated using randomized class instances. In the end this method was applied to bone findings of domestic and wild sheep to find locations where these types differ significantly.
 
 Additionally we presented a decision tree with which domestic and wild sheep can be classified in the field using only a ruler or caliper rule. This method is based on landmarks that need to be located on the bone by the researcher.
 
@@ -1897,17 +1900,17 @@ The method we presented has some advantages over geometric morphometrics or comp
 
 While we can show these differences, we cannot characterize them other than interpreting the raw data or the mean outlines. Because of that, the reason why the bone is separable at a certain location stays hidden in the algorithm. This is not the case in geometric morphometrics where the principal component that correlates simply can be analyzed. With some research this might be possible as well for this algorithm.
 
-A more significant disadvantage of this method is that in its current implementation, it will only work on round shapes where every point on the outline is reachable by ray casting from the center of the shape. Otherwise the windows will not be extracted correctly. While this holds true for the Tali bones we examined, it severely limits the shape space we can work with.
+A more significant disadvantage of this method is that, in its current implementation, it will only work on round shapes where every point on the outline is reachable by ray casting from the center of the shape. Otherwise the windows will not be extracted correctly. While this holds true for the Tali bones we examined, it severely limits the shape space we can work with.
 
 Compared to other shape description methods in data science, we use local data to find key points on a shape, while most other approaches describe the shape as a whole. This allows us to evaluate the shape only at certain points when this method is used as a classifier.
 
 \section{Future Work}
 
-While we are using the algorithm as a method to find separable points, it should be easily possible to extend it to be a classifier that can classify shapes of the respective classes it was trained with. Since a trained SVM already exists at every point that separates the classes these SVMs can be evaluated with new shapes and weighted to create a classifier that works on these points.
+While we are using the algorithm as a method to find separable points, it should be easily possible to extend it to be a classifier that can classify shapes of the respective classes it was trained with. Since a trained SVM already exists at every point that separates the classes, these SVMs can be evaluated with new shapes and weighted to create a classifier which works on these points.
 
 Another apparent extension is to make the algorithm work with three dimensional data. For this purpose the evaluation points would need to be selected using two angles and the window would become an area cut from the surface of the three dimensional bone model. Non-uniform Rational B-Splines could be used instead of B-Splines to describe the surface of the bone.
 
-To cope with the limitations on shapes that can be used with the algorithm, another method to find the evaluation points on the outline could be implemented. Instead of using angles, spline parameters could be used to select evaluation points. It would be required to sync these parameters somehow to extract semantically similar windows. This could be done using dynamic time warping or a similar method.
+To cope with the limitations on shapes that can be used with the algorithm, a different method to find the evaluation points on the outline could be implemented. Instead of using angles, spline parameters could be used to select evaluation points. It would be required to synchronize these parameters somehow to extract semantically similar windows, which could be achieved by using dynamic time warping.
 
 Additionally since we implemented relatively simple features in this thesis, other more sophisticated features could be used to train and evaluate the SVM.
 
@@ -1930,7 +1933,7 @@ Additionally since we implemented relatively simple features in this thesis, oth
 			\hline
 		\end{tabular}
 	\end{center}
-	\caption{Landmark Definitions for the Extraction by Angle.}
+	\caption{Training data for the example decision tree.}
 	\label{appendix:table:decision-tree}
 \end{table}
 
