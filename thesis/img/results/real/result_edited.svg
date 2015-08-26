@@ -8,8 +8,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="636.88306"
-   height="368.98029"
-   viewBox="0 0 636.88306 368.98029"
+   height="371.97769"
+   viewBox="0 0 636.88306 371.9777"
    id="svg2"
    version="1.1"
    inkscape:version="0.91 r13725"
@@ -35,13 +35,13 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1016"
+     inkscape:window-width="1600"
+     inkscape:window-height="836"
      id="namedview46"
      showgrid="false"
      inkscape:zoom="1.3111111"
-     inkscape:cx="278.68511"
-     inkscape:cy="113.47755"
+     inkscape:cx="83.049515"
+     inkscape:cy="203.47755"
      inkscape:window-x="0"
      inkscape:window-y="32"
      inkscape:window-maximized="1"
@@ -63,7 +63,7 @@ CreationDate: Mon Aug 17 19:28:43 2015
   <g
      id="g10"
      style="shape-rendering:crispEdges"
-     transform="translate(-7.1455489,7.8722875)">
+     transform="translate(-7.1455489,10.869682)">
     <text
        x="47.574299"
        y="323.39801"
@@ -176,30 +176,46 @@ CreationDate: Mon Aug 17 19:28:43 2015
   </g>
   <text
      style="font-size:30px;font-family:Helvetica;baseline-shift:-15px;text-anchor:end;fill:#fb0000;fill-opacity:1"
-     x="184.42885"
-     y="6.9988136"
+     x="186.42885"
+     y="-4.0037923"
      font-size="30"
      baseline-shift="-15"
-     id="text14-0-0">2</text>
+     id="text14-0-0">
+    <tspan
+       style="font-size:35px"
+       id="tspan4162">2</tspan>
+  </text>
   <text
-     style="font-size:30px;font-family:Helvetica;baseline-shift:-15px;text-anchor:end;fill:#fb0000;fill-opacity:1"
-     x="247.93797"
-     y="7.3886442"
+     style="font-size:27.26775932px;font-family:Helvetica;baseline-shift:-15px;text-anchor:end;fill:#fb0000;fill-opacity:1"
+     x="249.15207"
+     y="-5.1849999"
      font-size="30"
      baseline-shift="-15"
-     id="text14-0-0-4">3</text>
+     id="text14-0-0-4">
+    <tspan
+       style="font-size:35px"
+       id="tspan4164">3</tspan>
+  </text>
   <text
      style="font-size:30px;font-family:Helvetica;baseline-shift:-15px;text-anchor:end;fill:#fb0000;fill-opacity:1"
      x="362.90411"
-     y="8.558135"
+     y="-4.4444709"
      font-size="30"
      baseline-shift="-15"
-     id="text14-0-0-8">4</text>
+     id="text14-0-0-8">
+    <tspan
+       style="font-size:35px"
+       id="tspan4166">4</tspan>
+  </text>
   <text
      style="font-size:30px;font-family:Helvetica;baseline-shift:-15px;text-anchor:end;fill:#fb0000;fill-opacity:1"
-     x="149.49367"
-     y="6.27"
+     x="151.49367"
+     y="-4.7326059"
      font-size="30"
      baseline-shift="-15"
-     id="text14-0">1</text>
+     id="text14-0">
+    <tspan
+       style="font-size:35px"
+       id="tspan4160">1</tspan>
+  </text>
 </svg>

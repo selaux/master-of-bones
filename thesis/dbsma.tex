@@ -165,7 +165,7 @@ Cluster analysis is an integral part of data mining. The goal of cluster analysi
 	\begin{subfigure}[b]{0.45\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/basics/kmeans.pdf}
-		\subcaption{k-means}
+		\subcaption{K-means}
 		\label{fig:basics-clustering-k-means}
 	\end{subfigure}
 	\begin{subfigure}[b]{0.45\textwidth}
@@ -280,6 +280,16 @@ The decision tree is one of the few classifiers which provides the user with exp
 
 In most decision trees an inner node always has two children, so only binary splits are performed. Exactly one of the test needs to pass to perform the split.
 
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.65\textwidth}
+		\centering
+		\include{img/basics/decision-tree}
+	\end{subfigure}
+	\caption{Decision tree based on data in Appendix \ref{appendix:table:decision-tree}}
+	\label{fig:basics-decision-tree}
+\end{figure}
+
 The tree is built using training data by iteratively selecting the next attribute for a split for each of the current leaf nodes until only observations of one class are contained in all leaf nodes. The split strategy defines the next attribute that is selected for a split. The most well known split strategies are by maximum information gain or by Gini index.
 
 The maximum information gain split strategy is based on entropy. Entropy is an amount of uncertainty and is high if the dataset is random and low when its less random. The information gain of an attribute that partitions a set $T$ of classes $c_i$ with relative frequencies $p_i$ into multiple sets $T_1, ..., T_n$ is defined as:
@@ -302,16 +312,6 @@ The Gini index is a statistical measure to represent uneven distributions. For a
 
 After training the decision tree all training data is classified correctly. Pruning might be applied afterwards to reduce overfitting and thus make the classifier more generalizable. It might also be applied to satisfy external conditions like a maximum tree depth or a minimum support for each leaf node. Depending on the goal multiple pruning strategies exist, which we will not further extend on in this thesis.
 
-\begin{figure}[h]
-	\centering
-	\begin{subfigure}[b]{0.65\textwidth}
-		\centering
-		\include{img/basics/decision-tree}
-	\end{subfigure}
-	\caption{Decision tree based on data in Appendix \ref{appendix:table:decision-tree}}
-	\label{fig:basics-decision-tree}
-\end{figure}
-
 To classify using a decision tree we start at the root of the tree and follow the path that our attribute values define. When we reach a leaf node, the majority class of the leaf node is the class we use for the observation. For small decision trees this can be done manually. Figure \ref{fig:basics-decision-tree} shows a decision tree build using information gain and the associated data. A new observation can be classified manually using two comparisons.
 
 In this thesis we are using the decision tree implementation from scikit-learn \cite{pedregosa2011scikit}.
@@ -323,9 +323,9 @@ In this thesis we are using the decision tree implementation from scikit-learn \
 
 \begin{figure}[h]
 	\centering
-	\begin{subfigure}[b]{0.75\textwidth}
+	\begin{subfigure}[b]{0.95\textwidth}
 		\centering
-		\includegraphics[width=.9\linewidth]{img/process.pdf}
+		\includegraphics[width=1\linewidth]{img/process.pdf}
 	\end{subfigure}
 	\caption{Process for finding shape differences}
 	\label{fig:process}
@@ -401,7 +401,7 @@ Watershed segmentation usually relies on previous knowledge about the image, sin
 		\subcaption*{}
 		\label{}
 	\end{subfigure}
-	\caption{Image Segmentation using watershed algorithm for two images}
+	\caption{Image segmentation using watershed algorithm for two images}
 	\label{fig:watershed}
 \end{figure}
 
@@ -437,7 +437,7 @@ Simple linear iterative clustering (SLIC) is a method proposed by Achanta et. al
 		\subcaption*{}
 		\label{}
 	\end{subfigure}
-	\caption{Image Segmentation using SLIC superpixels for two images}
+	\caption{Image segmentation using SLIC superpixels for two images}
 	\label{fig:slic}
 \end{figure}
 
@@ -480,7 +480,7 @@ The split algorithm can be configured by a parameter $k$, which sets the scale o
 		\subcaption*{}
 		\label{}
 	\end{subfigure}
-	\caption{Image Segmentation using Felzenszwalb's graph-based method for two images}
+	\caption{Image segmentation using Felzenszwalb's graph-based method for two images}
 	\label{fig:felzenszwalb}
 \end{figure}
 
@@ -516,7 +516,7 @@ Another way to do texture segmentation in images is to represent the image using
 		\subcaption*{}
 		\label{}
 	\end{subfigure}
-	\caption{Image Segmentation using Gabor filters for two images}
+	\caption{Image segmentation using Gabor filters for two images}
 	\label{fig:gabor}
 \end{figure}
 
@@ -570,7 +570,7 @@ f(x,y) = \left( \begin{array}{c}
 		\subcaption*{}
 		\label{}
 	\end{subfigure}
-	\caption{Image Segmentation using textural edge detection for two images}
+	\caption{Image segmentation using textural edge detection for two images}
 	\label{fig:textural}
 \end{figure}
 
@@ -660,7 +660,7 @@ of the bone that could be located automatically and overlap as much as possible 
 zooarcheologists. For this purpose we introduced two methods that extract landmarks from outlines of Tali. The landmarks
 found by these methods have very similar positions but differ in on-site-measurability and stability in-between classes.
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\begin{subfigure}[b]{0.3\textwidth}
 		\centering
@@ -952,7 +952,7 @@ To determine separabilities we need to sweep the outlines of the bone at $n$ ang
 		\subcaption{Extracted windows}
 		\label{fig:window-extraction-all}
 	\end{subfigure}
-	\caption{Window Extraction at $\rho=90^\circ$}
+	\caption{Window extraction at $\rho=90^\circ$}
 	\label{fig:window-extraction}
 \end{figure}
 
@@ -1370,6 +1370,37 @@ This function needs to be evaluated at $n$ angles $\alpha_i$ with $i = 1 ... n$ 
 
 Using this method a variety of shapes can be created, examples for which are shown in Figure \ref{fig:synthetic-shapes}. But they only describe the base shapes for the generation of multiple classes of shapes. From two of these shapes, instances can be created that vary from the base shape to some degree. For that purpose randomized elements are added to the base shape.
 
+\begin{figure}
+	\centering
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/1-1.pdf}
+		\caption{Class A}
+		\label{subfig:synthetic-classes:a-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/1-2.pdf}
+		\caption{Class A}
+		\label{subfig:synthetic-classes:a-2}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/2-1.pdf}
+		\caption{Class B}
+		\label{subfig:synthetic-classes:b-1}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.24\textwidth}
+		\centering
+		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/2-2.pdf}
+		\caption{Class B}
+		\label{subfig:synthetic-classes:b-2}
+	\end{subfigure}
+	\caption{Two observations each for two classes of outlines that were synthetically generated}
+	\label{fig:synthetic-classes}
+\end{figure}
+
+
 The first randomized elements are class internal randomizations that describe differences in measurement and registration. For each class we can define standard deviations for radius $\sigma_r$, evaluation angles $\sigma_\alpha$ and transformation $\sigma_t$. Randomized values $n_r()$, $n_\alpha()$, $n_t$ based on normal distributions using these parameters are added whenever a value is accessed. The values are adapted as follows:
 
 \begin{equation}
@@ -1400,36 +1431,6 @@ Similarly to randomizing the overall shapes, the shape variations need to be ran
 
 Using this randomization process two classes of semi-randomized data can be built that we can compare using the algorithm presented in Section \ref{sec:shape-comparison}. The classes are already registered, so the comparison is possible without further preprocessing. Since we define the characteristic locations on the bone outline ourselves, we can validate whether they are detected by the algorithm correctly.
 
-\begin{figure}[h]
-	\centering
-	\begin{subfigure}[b]{0.24\textwidth}
-		\centering
-		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/1-1.pdf}
-		\caption{Class A}
-		\label{subfig:synthetic-classes:a-1}
-	\end{subfigure}
-	\begin{subfigure}[b]{0.24\textwidth}
-		\centering
-		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/1-2.pdf}
-		\caption{Class A}
-		\label{subfig:synthetic-classes:a-2}
-	\end{subfigure}
-	\begin{subfigure}[b]{0.24\textwidth}
-		\centering
-		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/2-1.pdf}
-		\caption{Class B}
-		\label{subfig:synthetic-classes:b-1}
-	\end{subfigure}
-	\begin{subfigure}[b]{0.24\textwidth}
-		\centering
-		\includegraphics[width=.9\linewidth]{img/synthetic-generation/classes/2-2.pdf}
-		\caption{Class B}
-		\label{subfig:synthetic-classes:b-2}
-	\end{subfigure}
-	\caption{Two observations each for two classes of outlines that were synthetically generated}
-	\label{fig:synthetic-classes}
-\end{figure}
-
 Figure \ref{fig:synthetic-classes} shows two classes that were generated using this process. The classes in this figure have their distinct variations in the position of the small left bulge, the location of the indentation at the bottom and the height of the right bulge at the top. It is also noticeable that the small left bulge is different inside of class A, because it is much more distinct in Figure \ref{subfig:synthetic-classes:a-2} than it is in Figure \ref{subfig:synthetic-classes:a-1}. In class B the variation can be seen in the indentation at the top being more shallow in Figure \ref{subfig:synthetic-classes:b-2} than in \ref{subfig:synthetic-classes:b-1} and has slightly shifted to the right.
 
 The generated data is already superimposed so no registration is necessary. To match our real-world data we always created 30 instances of each class for the experiments.
@@ -1438,7 +1439,7 @@ The generated data is already superimposed so no registration is necessary. To m
 
 The first test with randomized data has the goal of visualizing how certain changes in shape in between the classes materialize in the result. Since we cannot determine the type of shape shift from the separability metric itself, we need to know how these shape changes influence the separability metric and how we can determine them using the mean shapes of the classes in combination with the separability metric. For this purpose we determined several characteristic changes in shape that we tested using synthetic data based on the variances from Appendix \ref{appendix:table:synthetic-bone} as the base.
 
-\begin{figure}[h]
+\begin{figure}
 	\centering
 	\begin{subfigure}[b]{0.45\textwidth}
 		\centering
@@ -1465,7 +1466,7 @@ The first test with randomized data has the goal of visualizing how certain chan
 		\label{}
 	\end{subfigure}
 	\caption{Mean input data for two classes (red and green) and separability measure chart for this comparison}
-	\label{fig:slic}
+	\label{fig:diff}
 \end{figure}
 
 Most features manifest similarly in the separability measure as a very distinctive maximum. An example for this kind of difference can be seen in Figure \ref{fig:diff:missing}. For this comparison we left out a feature at the left side of the bone at an angle of $180^\circ$ as defined in Appendix \ref{appendix:table:synthetic-bone-missing} for one class (green). This is clearly visible as a distinct peak at $180^\circ$ in the respective diagram. The separability measure begins to rise when the window that is cut from the bones includes the missing feature.  
@@ -1565,10 +1566,6 @@ While a graph like Figure \ref{fig:ascending-radius-angle-2} might not be suffic
 
 \subsection{Influence of Errors in Shape Registration}
 
-The last test we executed on synthetic data was how registration errors affect the algorithm. Registration errors are inherent to this method since the shapes cannot be superimposed exactly without any registration error.
-
-We model this registration error as variances in translation in between the shapes. This does not affect the outlines shape, but the position of this outline. Both classes now consist of the same shapes with slightly different positions.
-
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.32\textwidth}
@@ -1593,31 +1590,35 @@ We model this registration error as variances in translation in between the shap
 	\label{fig:ascending-translation}
 \end{figure}
 
+The last test we executed on synthetic data was how registration errors affect the algorithm. Registration errors are inherent to this method since the shapes cannot be superimposed exactly without any registration error.
+
+We model this registration error as variances in translation in between the shapes. This does not affect the outlines shape, but the position of this outline. Both classes now consist of the same shapes with slightly different positions.
+
 From Figure \ref{fig:ascending-translation} we can see that small or medium registration errors only have little effect on the result of our algorithm. Similarly to the variances of feature from Section \ref{sub:synthetic-variances}, the small feature at $300^\circ$ is lost in the registration error. The missing feature at $180^\circ$ is again the least influenced by the error. While all but this feature fade in Figure \ref{fig:ascending-translation-2}, the registration error encountered in this experiment is larger than the one found in real-word-data.
 
 With this knowledge it might not be necessary to register the bones using a non-similarity transform, avoiding changes in the shape of the bones. While this might lead to smaller separability, we can assure that the data used by the algorithm has not been altered in a possibly biasing fashion.
 
 \section{Tests on Real-World Data}
 
-After validating the algorithm using synthetic data, we advanced by analyzing the shape of real bone findings. The data provided to us is data from domestic and wild sheep classes that are already classified by zoo-archaeologists as explained in Chapter \ref{chapter:problem-definition}. We have a database size of $57$ observations, $29$ of which are in the class of domestic sheep and $28$ of which are wild sheep. We registered the sheep using procrustes transformation in one iteration with landmarks as correspondences and 20 iterations with nearest neighbors.
+After validating the algorithm using synthetic data, we advanced by analyzing the shape of real bone findings. The data provided to us is data from domestic and wild sheep classes that are already classified by zoo-archaeologists as explained in Chapter \ref{chapter:problem-definition}. We have a database size of $57$ observations, $29$ of which are in the class of domestic sheep and $28$ of which are wild sheep. We registered the sheep using Procrustes transformation in one iteration with landmarks as correspondences and 20 iterations with nearest neighbors.
 
 \subsection{Results and Compliance with Former Findings} 
 
 \begin{figure}
 	\centering
-	\begin{subfigure}[b]{0.32\textwidth}
+	\begin{subfigure}[b]{0.25\textwidth}
 		\centering
-		\includegraphics[width=.7\linewidth]{img/results/real/combined_edited.pdf}
+		\includegraphics[width=.6\linewidth]{img/results/real/combined_edited.pdf}
 		\subcaption{\footnotesize Mean input data}
 		\label{fig:main-result-data}
 	\end{subfigure}
-	\begin{subfigure}[b]{0.32\textwidth}
+	\begin{subfigure}[b]{0.35\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/results/real/result_edited.pdf}
 		\subcaption{\footnotesize Result}
 		\label{fig:main-result-chart}
 	\end{subfigure}
-	\begin{subfigure}[b]{0.32\textwidth}
+	\begin{subfigure}[b]{0.35\textwidth}
 		\centering
 		\includegraphics[width=.9\linewidth]{img/results/real/distances.pdf}
 		\subcaption{\footnotesize Distance of Mean Bones}
@@ -1652,10 +1653,6 @@ In this section we examine whether changing algorithm parameters manifest as it 
 
 \subsubsection{Number of Evaluation Points}
 
-In this experiment we will modify the number of points that are evaluated inside each window that is cut from the bone. This relates to increasing the resolution of the algorithm inside each window.
-
-When modifying the number of evaluation points, we would expect the resulting graph to approximately stay constant over different values, since the only difference that is apparent is that finer structures can be represented.
-
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.32\textwidth}
@@ -1679,6 +1676,10 @@ When modifying the number of evaluation points, we would expect the resulting gr
 	\caption{Graphs for different parameters for the number of evaluation points in each window}
 	\label{fig:number-evaluations}
 \end{figure}
+
+In this experiment we will modify the number of points that are evaluated inside each window that is cut from the bone. This relates to increasing the resolution of the algorithm inside each window.
+
+When modifying the number of evaluation points, we would expect the resulting graph to approximately stay constant over different values, since the only difference that is apparent is that finer structures can be represented.
 
 From Figure \ref{fig:number-evaluations}, we can see that the trend of the graph stays the same when increasing the number of evaluations. It becomes also apparent that the absolute separability measure increases when the amount of points is increased. This implies that our separability measure is tied to the dimensionality of the feature vector. This needs to be considered when evaluating different features.
 
@@ -1780,8 +1781,6 @@ For our purposes we choose PCA with 4 components to ensure separability of the c
 
 \subsubsection{Comparison of Features}
 
-In this section we will compare the features we implemented for comparison that were presented in Section \ref{sub:featureextraction}. Figure \ref{fig:features} shows the algorithm run with all features we presented.
-
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.32\textwidth}
@@ -1823,6 +1822,8 @@ In this section we will compare the features we implemented for comparison that 
 	\caption{Comparison of different features}
 	\label{fig:features}
 \end{figure}
+
+In this section we will compare the features we implemented for comparison that were presented in Section \ref{sub:featureextraction}. Figure \ref{fig:features} shows the algorithm run with all features we presented.
 
 It is noticeable that the Figures \ref{fig:features-0}, \ref{fig:features-1} and \ref{fig:features-3} look very similar. Figures \ref{fig:features-0} and \ref{fig:features-3} are in fact identical. This is because in the used configuration we apply PCA, which incorporates this transformation already. The distances to center feature from Figure \ref{fig:features-1} is slightly different from the other two. The detected separable areas are a little wider, but generally it paints a very similar picture. When using the distances to center in combination with the curves curvature that separability of the key point two at $80^\circ$ increases significantly. The amount of noise in the result increases significantly as well. When testing with curvature only almost no key-points are detected. This lead to the conclusion that adding curvature will not show any additional separable areas, so it has little advantage over the other. Only using features that are based on the bendiness of the curve was not feasible as shown in Figures \ref{fig:features-4} and \ref{fig:features-5}. This was to the degree that the curves appear random.
 
@@ -1878,8 +1879,6 @@ When looking at the separability metrics it becomes apparent that the key points
 
 We also executed some testing for the decision tree classifier we presented in Chapter \ref{chapter:measurable-differences}. First we used cross-validation to determine the success rate of our classifier and whether it was generalizable. Several parameters to train the decision tree needed to be chosen while aiming for the highest possible cross validation accuracy.
 
-As the split criterion information gain proved to yield better results than using the Gini index. As for the landmark extraction method, space partitioning was increasing the result quality as well. Since they are more easy to locate as well, this proved to be a perk. As for the depth and the minimum number of samples per leaf, we decided to favor a decision tree depth of $3$ with minimum $6$ samples per leaf over a depth of $2$. While a depth of $2$ would require the researcher to take fewer measurements, only one of the branches of the tree actually has this depth, which leaves the researcher with often taking fewer measurements.
-
 \begin{figure}[h]
 	\centering
 	\begin{subfigure}[b]{0.9\textwidth}
@@ -1889,6 +1888,8 @@ As the split criterion information gain proved to yield better results than usin
 	\caption{Decision tree for measurable values}
 	\label{fig:result-decision-tree}
 \end{figure}
+
+As the split criterion information gain proved to yield better results than using the Gini index. As for the landmark extraction method, space partitioning was increasing the result quality as well. Since they are more easy to locate as well, this proved to be a perk. As for the depth and the minimum number of samples per leaf, we decided to favor a decision tree depth of $3$ with minimum $6$ samples per leaf over a depth of $2$. While a depth of $2$ would require the researcher to take fewer measurements, only one of the branches of the tree actually has this depth, which leaves the researcher with often taking fewer measurements.
 
 With this configuration, the decision tree shown in Figure \ref{fig:result-decision-tree} is trained. The cross-validation accuracy lies at about $77\%$ which is a sufficiently high value for a training set of this size. A researcher in the field would need to take two to six measurements on the bone to determine the type of bone.
 
