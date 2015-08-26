@@ -25,9 +25,11 @@
 
 % Zusammenfassung
 \begin{abstract}
-In this thesis we present a novel algorithm employing data-mining techniques, to detect local shape variations between two classes of shapes. We crate a semi-automatic extraction of outlines from images of tali belonging to domestic or wild sheep, which feed the algorithm.
+In this thesis we present a novel algorithm to detect local shape variations between two classes of shapes. Based on local sampling of the shapes, we employ a support vector machine to determine the local separability of the classes. To ensure correctness, we validate the algorithm using synthetically created shapes of bones.
 
-To ensure correctness, we validate the algorithm using synthetically created shapes of bones. We apply the algorithm to the actual bone data to find the variations and compare them to previously detected differences.
+The presented method is then applied to Tali bones from sheep, which are provided as image data. These have been classified by expert knowledge as wild or domestic sheep. We create a semi-automatic extraction pipeline of outlines from the pictures, which feeds the algorithm.
+
+We apply the algorithm to the actual bone data to find the significant variations. The findings are then compared to previous findings from zoo-archaeologists.
 \end{abstract}
 
 % Inhaltsverzeichnis
@@ -36,13 +38,15 @@ To ensure correctness, we validate the algorithm using synthetically created sha
 % Hier beginnt der eigentliche Text
 \chapter{Introduction}
 
-In biology a lot of focus lies on the distinctions between species and within species. These distinctions can be based on the genealogical tree of the animal, tis constitution or by other features. While living animals can be examined by several means, like their muscular structure or blood levels, this is not as easy for animals that are extinct or deceased for a long time, which are found in zoo-archaeology.
+In biology a lot of focus lies on the distinctions between species and within species. These distinctions can be based on the genealogical tree of the animal, its constitution or by other features. While living animals can be examined by several additional means, like their muscular structure or blood levels, this is not as easy for animals that are extinct or deceased for a long time, which are found in zoo-archaeology.
 
-For zoo-archaeologists, archaeological findings of bones are an integral part of their research, since they are the only remains of the studied animals that are available. From these findings a lot of variables about the animal itself and its environment can be inferred. While a lot of mammals share a similar skeleton, the bones of the animals have varied shapes and sizes depending on multiple variables. These differences in shape and size can be statistically analyzed. The goals of the analysis can be manifold. They can be aimed at emphasizing the distinctions between species, but can also show how the habitat of the animal can influence the frame. While in zoo-archeology only the remains of the animal can be analyzed, biologists use similar methods to analyze the shapes of live animals as well.
+For zoo-archaeologists, archaeological findings of bones are an integral part of their research, since they are one of the sparse remains of the studied animals that are available. From these findings a lot of variables about the animal itself and its environment can be inferred. While a lot of mammals share a similar skeleton, the bones of the animals have varied shapes and sizes depending on multiple variables. These differences in shape and size can be statistically analyzed. The goals of the analysis can be manifold. They can be aimed at emphasizing the distinctions between species, but can also show how the habitat of the animal can influence the frame. While in zoo-archeology only the remains of the animal can be analyzed, biologists use similar methods to analyze the shapes of live animals as well.
 
 These analyses have a long tradition in the field of biology, while the goals are similar to those of data science: Detecting new and interesting information about a data set. But the focus of data scientists in the field of shape are currently different, focusing on shape matching and retrieval. A partnership of the institute for palaeo-anatomy of the Ludwig-Maximilian-University in Munich and the database systems group of the department of computer science allows data scientists to research bone findings to support the zoo-archaeologists.
 
-In this thesis we present a novel algorithm for shape comparison employing data-mining techniques. We then employ this algorithm to detect differences in shape between wild and domestic sheep bones that were supplied by the zoo-archaeologists.
+In this thesis we present a novel algorithm for shape comparison employing data-mining techniques. Our method is based on sampling sections of the shapes outlines in each observation. A support vector machine is used to evaluate the separability of these samples, by extracting features from them and training the SVM. We then employ this algorithm to detect differences in shape between wild and domestic sheep bones that were supplied by the zoo-archaeologists. Furthermore we present a method to classify sheep bones in the field using distances between landmark points and a decision tree classifier. 
+
+In Chapter \ref{chapter:problem-definition} we will describe the problem as it was presented to us by the zoo-archaeologists. Related works to this task are evaluated in Chapter \ref{chapter:related}, highlighting differences between morphometrics and shape matching. Chapter \ref{chapter:basics} will cover the mathematical basics required to comprehend the matter in this thesis. The novel method to find significant shape variations and the preprocessing that is necessary to extract the shapes from the images are introduced in Chapter \ref{chapter:detecting-shape-variations}. Chapter \ref{chapter:measurable-differences} addresses classification of sheep bones using a decision tree based on landmark distances. The experiments that were conducted to validate and apply the presented algorithms are covered in \ref{chapter:experiments}. We discuss the results from these experiments in Chapter \ref{chapter:conclusion} and present possibilities for future research. 
 
 \chapter{Problem Definition}
 \label{chapter:problem-definition}
@@ -69,6 +73,7 @@ This classification is the basis for this work to locate significant shape varia
 Additionally, since relocating a bone finding to another country is difficult, we wanted to provide a method of classification for newly dug out bones, which could be executed using only a caliper rule. This would allow a researcher to identify on-site whether a bone originates from a domestic or a wild sheep. 
 
 \chapter{Related Work}
+\label{chapter:related}
 
 The field of shape comparison is divided into two areas. Traditional morphometrics in biology analyze distances, masses, angles and ratios, to determine differences between species. Shape matching in data science tries to describe shapes with feature vectors to facilitate shape retrieval or shape classification in a database. These two fields exist fairly independent of each other.
 
@@ -93,6 +98,7 @@ The book \grqq Shape analysis and classification\grqq  by da Fontoura Costa et a
 An approach to classification by local key points has been done by Mhamdi et. al . \cite{mhamdi2014local}. They represent the critical points by a set of size functions and use the resulting similarity measure for classification.
 
 \chapter{Mathematical Basics}
+\label{chapter:basics}
 
 \section{Splines}
 \label{section:splines}
@@ -619,6 +625,29 @@ analysis, also used in Section \ref{subsub:procrustes}.
 	\end{equation}
 \end{itemize}
 
+To represent the outlines we decided to use splines as introduced in Section \ref{section:splines},
+as this allows us to easily extract segments of the bone outline. After the normalization all outlines
+adhere to the following standards.
+
+\begin{itemize}
+	\item The centroid lies close to the coordinate center $(0,0)$
+	\item The expansion lies within the ranges of $0$ to $2$ in the x and y directions
+\end{itemize}
+
+To have consistent spline representations, which all start at $s_y(0) = 0$, we calculated the intersection between the x-axis and the bone outline
+in the positive section of the x-axis. This point was introduced as the starting point for the polygon that is our outline.
+The spline $(s_x(t), s_y(t))$ for the interval $t \in [0, 1]$ was then extracted leading to the
+following standards for the spline representation for each bone. These standards can be leveraged for the comparison algorithm.
+
+\begin{equation}
+\begin{split}
+& s_y(0) = 0 \\
+& s_y(1) = 0 \\
+& s_x^\prime(0) = s_x^\prime(1) \\
+& s_y^\prime(0) = s_y^\prime(1)
+\end{split}
+\end{equation}
+
 \subsection{Landmark Extraction}
 \label{sub:landmarks}
 
@@ -890,31 +919,7 @@ A projective transformation can be represented similarly to an affine transform 
 \section{Shape Comparison}
 \label{sec:shape-comparison}
 
-After registering the bone shapes, we could test them for significant local shape variations.
-To represent the outlines we decided to use splines as introduced in Section \ref{section:splines},
-as this allows us to easily extract segments of the bone outline. After the registration all outlines
-adhere to the following standards.
-
-\begin{itemize}
-\item The centroid lies close to the coordinate center $(0,0)$
-\item The expansion lies within the ranges of $0$ to $2$ in the x and y directions
-\end{itemize}
-
-To further normalize the data we calculated the intersection between the x-axis and the bone outline
-in the positive section of the x-axis. This point was introduced as the starting point for the outline.
-The spline $(s_x(t), s_y(t))$ for the interval $t \in [0, 1]$ was then extracted leading to the
-following standards for the the spline representation for each bone. These standards can be leveraged for the comparison algorithm.
-
-\begin{equation}
-\begin{split}
-& s_y(0) = 0 \\
-& s_y(1) = 0 \\
-& s_x^\prime(0) = s_x^\prime(1) \\
-& s_y^\prime(0) = s_y^\prime(1)
-\end{split}
-\end{equation}
-
-To compare the shapes, we evaluated windows around $n$ points (or angles) on the outline. Each evaluation
+After registering the bone shapes, we could test them for significant local shape variations. To compare the shapes, we evaluated windows around $n$ points, each defined by an angle $\rho_i$. An evaluation
 point therefore represents a neighborhood around itself. For each of these neighborhoods
 we calculated a set of features for each bone in the database. Then a support vector machine
 was used to determine the separability of the established classes at these points. Based on 
@@ -1203,7 +1208,7 @@ to make sure that the SVM could be generalized as well. When the classifier can 
 should work as well at this position.
 
 Since our dataset is relatively small, we decided to use cross-validation to verify that the classifier can be
-generalized. In cross-validation the dataset is split up into $k$ disjoint sets $S_i$ that hold $\frac{|DB|}{k}$ items each. For our case we used $4$ items per set in a stratified manner. Stratified cross-validation is done by using the same ratio of classes inside each disjoint set as inside the whole database. The cross-validation is then
+generalized. In cross-validation the dataset is split up into $k$ disjoint sets $S_i$ each of which holds $\frac{|DB|}{k}$ observations. For our case we used $4$ items per set in a stratified manner. Stratified cross-validation is done by using the same ratio of classes inside each disjoint set as inside the whole database. The cross-validation is then
 executed by using all but one set as the training data and the remaining one as the test data. This is done $k$ times, so each set is used as test data once.
 
 \begin{equation}
@@ -1292,6 +1297,7 @@ To validate our findings we use the cross-validation method already presented in
 After having trained the decision tree, the result can be used for manual classification. The split dimensions and values are included in the decision tree. The distances between landmarks represented by the split dimensions need to be measured on the bone that was found in the field. After obtaining the distances the researcher can use a simple calculator to determine the ratios of these distances. The decision tree needs to be applied to these ratios to get the leaf node that corresponds to the found bone. After applying this method correctly the researcher can determine with what probability the bone belongs to a certain class.
 
 \chapter{Experiments}
+\label{chapter:experiments}
 
 In this chapter we will show how the algorithm works on both synthetic and real-world data. We ensured that the algorithm works as expected by predefining synthetic classes of data and feeding it into the algorithm. Then we proceeded to use data of real-bone findings to analyze it for distinct shape variations. 
 
@@ -1887,6 +1893,7 @@ As the split criterion information gain proved to yield better results than usin
 With this configuration, the decision tree shown in Figure \ref{fig:result-decision-tree} is trained. The cross-validation accuracy lies at about $77\%$ which is a sufficiently high value for a training set of this size. A researcher in the field would need to take two to six measurements on the bone to determine the type of bone.
 
 \chapter{Conclusion}
+\label{chapter:conclusion}
 
 \section{Summary}
 
