@@ -66,7 +66,7 @@ The area of research that this work is located in is the documentation of early 
 
 For this purpose we were provided with several images of Tali from four archaeological sites: Manching, Milet, Gusir and Göbekli. All Tali were photographed from approximately the same perspective. An example for one of these images can be seen in Figure \ref{fig:problem-example}. Based on their place of discovery they can be classified through expert knowledge.
 
-Manching bones can be classified as domestic sheep since Manching is located in southern Germany which was not a habitat of wild sheep. The bones from Milet are from the iron age when the wild sheep were extinct in this area and can be classified as domestic sheep as well. Additionally they were found in the temple of Aphrodite, where only domestic sheep were sacrificed, because the sacrifice was required to be done inside the temple and the animal needed to be unharmed. The bones from Gusir and Göbekli are classified as wild sheep, since they originate from a period where the human species was still organized as hunter-gatherers.
+Manching bones can be classified as domestic sheep since Manching is located in southern Germany which was not a habitat of wild sheep. The bones from Milet are from the iron age when the wild sheep were extinct in this area and can be classified as domestic sheep as well. Additionally they were found in the temple of Aphrodite, where only domestic sheep were sacrificed, because the sacrifice was required to be done inside the temple and the animal needed to be unharmed. The bones from Gusir and Göbekli are classified as wild sheep, since they originate from a period in which the human species was still organized as hunter-gatherers.
 
 This classification is the basis for this work to locate significant shape variances in the bones. Our goal was to highlight areas one the bone outline where the two classes are separable the most by a classifier, marking it as a characteristic location where the type of sheep can be identified. This would allow the zoo-archaeologists to estimate the class of a bone using a photograph.
 
@@ -75,7 +75,7 @@ Additionally, since relocating a bone finding to another country is difficult, w
 \chapter{Related Work}
 \label{chapter:related}
 
-The field of shape comparison is divided into two areas. Traditional morphometrics in biology analyze distances, masses, angles and ratios, to determine differences between species. Shape matching in data science tries to describe shapes with feature vectors to facilitate shape retrieval or shape classification in a database. These two fields exist fairly independent of each other.
+The field of shape comparison is divided into two areas. Traditional morphometrics in biology analyze distances, masses, angles and ratios in order to determine differences between species. Shape matching in data science tries to describe shapes with feature vectors to facilitate shape retrieval or shape classification in a database. These two fields exist fairly independent of each other.
 
 \section{Morphometrics in Biology}
 
@@ -1332,7 +1332,7 @@ To determine whether the algorithm works as intended, we decided to execute some
 	\label{fig:synthetic-shapes}
 \end{figure}
 
-The first step to testing with synthetic data is to define how the data should look like and how this data could be generated. Since the algorithm compares two classes of data we need to create two sets of outlines that have similar characteristics, but also vary inside each set. Additionally because of the style of our algorithm we decided to create circle-shaped test-data. As the base for our data, we use a ellipsoid, which we can vary in eccentricity. Parameterized by angle the ellipsoid can be defined as, where $\epsilon$ is a parameter that defines the eccentricity of the ellipsoid:
+The first step to testing with synthetic data is to define how the data should look like and how this data could be generated. Since the algorithm compares two classes of data we need to create two sets of outlines that have similar characteristics, but also vary inside each set. Additionally because of the style of our algorithm we decided to create circle-shaped test-data. As the base for our data, we use a ellipsoid, which we can vary in eccentricity. Parameterized by angle the ellipsoid can be defined as following, where $\epsilon$ is a parameter that defines the eccentricity of the ellipsoid:
 
 \begin{equation}
 	\vec{e}(\alpha) = \left( \begin{array}{c}
@@ -1362,7 +1362,7 @@ The whole shape can be defined by summing these functions together:
 	\vec{b}(\alpha) = \vec{e}(\alpha) + \vec{b}(\alpha)
 \end{equation}
 
-This function needs to be evaluated at $n$ angles $\alpha_i$ with $i = 1 ... n$ to get an outline that can be used as input for the algorithm.
+This function needs to be evaluated at $n$ angles $\alpha_i$ with $i = 1 ... n$ to get an outline that can be used as an input for the algorithm.
 
 \begin{equation}
 	\alpha_i = \frac{i}{n} 360^{\circ}
@@ -1471,7 +1471,7 @@ The first test with randomized data has the goal of visualizing how certain chan
 
 Most features manifest similarly in the separability measure as a very distinctive maximum. An example for this kind of difference can be seen in Figure \ref{fig:diff:missing}. For this comparison we left out a feature at the left side of the bone at an angle of $180^\circ$ as defined in Appendix \ref{appendix:table:synthetic-bone-missing} for one class (green). This is clearly visible as a distinct peak at $180^\circ$ in the respective diagram. The separability measure begins to rise when the window that is cut from the bones includes the missing feature.  
 
-While the differences between two classes of bones between are apparent and even visible to the human eye, the algorithm also detects differences in features that are less dissimilar. The model that is visible in Figure \ref{fig:diff:shifted} was built by moving the feature that creates part of the bottom recess to the left as defined in Appendix \ref{appendix:table:synthetic-bone-shifted}. The difference is still visible in the result, although the absolute value is smaller. Noticeable is also the V-shape of the top of the peak, which can occur if the feature is wider than the window that is cut out of the bone. The separability of the individual parts of the feature are calculated instead of the separability of the full width of the feature. This can be fixed by using a larger window size for the algorithm.
+While the differences between the two classes of bones are apparent and even visible to the human eye, the algorithm also detects differences in features that are less dissimilar. The model that is visible in Figure \ref{fig:diff:shifted} was built by moving the feature that creates part of the bottom recess to the left as defined in Appendix \ref{appendix:table:synthetic-bone-shifted}. The difference is still visible in the result, although the absolute value is smaller. Noticeable is also the V-shape of the top of the peak, which can occur if the feature is wider than the window that is cut out of the bone. The separability of the individual parts of the feature are calculated instead of the separability of the full width of the feature. This can be fixed by using a larger window size for the algorithm.
 
 \begin{figure}[h]
 	\centering
@@ -1534,7 +1534,7 @@ The shape variances presented in this experiment are subjectively larger than th
 
 Errors in shape measurement can have multiple reasons. On the one hand they can result from a bad photograph or a bad image segmentation. On the other hand they can occur when the bone is being chipped or parts of the bone break away over the bone's time in the ground.
 
-These errors are modeled by adding randomization to the evaluation angle and radius of the generation algorithm presented in Section \ref{sub:generating-synthetic-data}. The bone outlines become irregular, bit still follow the same mean outline per class.  
+These errors are modeled by adding randomization to the evaluation angle and radius of the generation algorithm presented in Section \ref{sub:generating-synthetic-data}. The bone outlines become irregular, but still follow the same mean outline per class.  
 
 \begin{figure}[h]
 	\centering
@@ -1560,7 +1560,7 @@ These errors are modeled by adding randomization to the evaluation angle and rad
 	\label{fig:ascending-radius-angle}
 \end{figure}
 
-The first noticeable change is the serrated edge of the graph in Figure \ref{fig:ascending-radius-angle}. While the graph still follows the same general outline, the results seem to have more variance when increasing the error. This might occur when certain observations are not classified correctly anymore when validating the model, because of their distortion. The peaks of the features approximately stay at the same height and become sharper because the less distinct parts of the feature are superimposed by noise.
+The first noticeable change is the serrated edge of the graph in Figure \ref{fig:ascending-radius-angle}. While the graph still follows the same general outline, the results seem to have more variance when increasing the error. This might occur when certain observations are not classified correctly anymore during validation of the model, because of their distortion. The peaks of the features approximately stay at the same height and become sharper because the less distinct parts of the feature are superimposed by noise.
 
 While a graph like Figure \ref{fig:ascending-radius-angle-2} might not be sufficient to be analyzed for differences in the bone class, we can still see that our method picks up differences in very noisy data. What we have not verified is how bigger broken-off parts of the object influences shape analysis, since our data does not contain such samples.
 
@@ -1721,7 +1721,7 @@ We chose a medium window length of $0.2$ to incorporate larger features while no
 
 \subsubsection{Window Extraction Method}
 
-We implemented two algorithms for window extraction: By angle or by length. When extracting the windows by angle, the extracted windows seemed semantically less similar then when extracting them by length. In this section we want to confirm that extracting the windows by length also works quantitatively better.
+We implemented two algorithms for window extraction: By angle or by length. When extracting the windows by angle, the extracted windows seemed semantically less similar compared to the ones extracted by length. In this section we want to confirm that extracting the windows by length also works quantitatively better.
 
 \begin{figure}[h]
 	\centering
@@ -1741,9 +1741,9 @@ We implemented two algorithms for window extraction: By angle or by length. When
 	\label{fig:window-extraction-graphs}
 \end{figure}
 
-The results for different window extraction methods can be seen in figure \ref{fig:window-extraction-graphs}. From the results it is clearly visible that the separability metric produces much more distinct maxima with the extraction method by length while the general trend of the graph stays the same. This might be cause by the window having different widths at each location and bone, compared to a constant width with the method my length. This would also explain the .
+The results for different window extraction methods can be seen in figure \ref{fig:window-extraction-graphs}. From the results it is clearly visible that the separability metric produces much more distinct maxima with the extraction method by length while the general trend of the graph stays the same. This might be cause by the window having different widths at each location and bone, compared to a constant width with the method my length.
 
-To ensure the same window length everywhere we decided to use the extraction by length, which is also supported by the more distinct results.
+To ensure identical window lengths everywhere we decided to use the extraction by length, which is also supported by the more distinct results.
 
 \subsubsection{Principal Component Analysis}
 
@@ -1773,9 +1773,9 @@ In this section we wanted to determine how principal component analysis influenc
  	\label{fig:pca}
  \end{figure}
 
-Thus we would expect the algorithm to continue working correctly without using PCA, but produce less distinct results. But a missclassification when calculating the separability metric and each observation being "far away" from the hyperplane might make their influence more substantial. Using PCA and more components, we expect the result to get finer with each component used from the PCA.
+Thus we would expect the algorithm to continue working correctly without using PCA, but producing less distinct results. But a missclassification when calculating the separability metric and each observation being far away from the hyperplane might make their influence more substantial. Using PCA and more components, we expect the result to get finer with each component used from the PCA.
  
-While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines seem not to be separable anymore. We tested using other features than the flattened spline points, and determined that when using features with additional information then location, this effect did not occur. When using PCA the separability reappears at each key point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components then eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
+While we expected the algorithm to work without PCA, it barely does as it is visible in Figure \ref{fig:pca-0}. Two key points are still visible, but key point two at originally $80^\circ$ has shifted a few degrees to $90^\circ$. The most obvious change is that the previously largest difference in the bones at $119^\circ$ is not detected anymore at all. With other experiments we confirmed that the accuracy is now low at this point, so the outlines seem not to be separable anymore. We tested using other features than the flattened spline points, and determined that when using features with additional information than location, this effect did not occur. When using PCA the separability reappears at each key point, even when only using a single component as shown in Figure \ref{fig:pca-1}. Increasing the number of components eliminates the jumps in the graph, for example at $60^\circ$ or $90^\circ$.
 
 For our purposes we choose PCA with 4 components to ensure separability of the classes and smoothness of the resulting graph.
 
