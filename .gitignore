@@ -9,7 +9,7 @@ venv
 
 thesis/~*
 thesis/*.bak
-thesis/*.aux
+*.aux
 thesis/*.log
 thesis/*.toc
 thesis/*.lof

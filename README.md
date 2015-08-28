@@ -28,9 +28,9 @@ cp -r /usr/lib/python2.7/dist-packages/sip.so ./venv/lib/python2.7/site-packages
 cp -r /usr/lib/python2.7/dist-packages/vtk ./venv/lib/python2.7/site-packages/
 ```
 
-Fix VTK installation (https://bugs.launchpad.net/ubuntu/+source/vtk6/+bug/1354127):  
+Fix VTK installation as su (https://bugs.launchpad.net/ubuntu/+source/vtk6/+bug/1354127):  
 ```
-for link in `ls ./venv/lib/python2.7/site-packages/vtk/vtk*.so`; do target=$(readlink $link).6.0; echo $link; sudo rm $link; sudo ln -s $target $link ; done  
+for link in `ls /usr/lib/python2.7/dist-packages/vtk/vtk*.so`; do target=$(readlink $link).6.0; echo $link; sudo rm $link; sudo ln -s $target $link ; done 
 ```
 
 Install Dependencies (this might take a while):  
@@ -55,23 +55,20 @@ Registration Helper: Register Bones
 python registration_helper.py
 ```
 
+Triangulation Helper: Extract bone outlines from images
+```
+python registration_helper.py
+```
+
 Synthetic Generation Helper: Generate Synthetic Bone Data  
 ```
 python synthetic_generation_helper.py
 ```
 
+### Contents
 
-# Einleitung
-# Problemdefinition
-- Geometric Morphometrics
-# Verwandte Arbeiten
-# Vorgehensweise
-## Einzelne Schritte -> Welche Möglichkeiten
-## Theoretische Beschreibung
-## Experimente
-### Real-World Data
-### Experimente
-- Graphen-Darstellung -> Kombination mit "Farb-Darstellung"
-## Conclusion 
-   
--> ca. 80 Seiten
+```thesis```: The masters thesis in source form and pdf from (dbsma.tex, dbsma.pdf)
+
+```algorithms```: The algorithms presented in this thesis
+
+```helpers```: Helper Functions and UI

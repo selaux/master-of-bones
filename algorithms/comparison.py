@@ -108,8 +108,8 @@ class WindowExtractor2DByAngle(WindowExtractor):
         tck = bone['spline_params']
         source = np.array([0.0, 0.0])
         step = radians(self.window_size / 2 * 90)
-        ray_left = np.array(gh.pol2cart(2, radians(self.evaluation_point) - step))
-        ray_right = np.array(gh.pol2cart(2, radians(self.evaluation_point) + step))
+        ray_start = np.array(gh.pol2cart(2, radians(self.evaluation_point) - step))
+        ray_end = np.array(gh.pol2cart(2, radians(self.evaluation_point) + step))
         total_space = np.linspace(0, 1, self.number_of_evaluations, endpoint=False)
 
         coords = splev(total_space, tck)
@@ -118,47 +118,47 @@ class WindowExtractor2DByAngle(WindowExtractor):
         total_spline[:, 0] = coords[0]
         total_spline[:, 1] = coords[1]
 
-        param_left = None
+        param_start = None
         for i in range(0, num_total_spline_points):
             j = i+1 if i+1 < num_total_spline_points else 0
-            intersect = gh.seg_intersect(source, ray_left, total_spline[i, :], total_spline[j, :])
+            intersect = gh.seg_intersect(source, ray_start, total_spline[i, :], total_spline[j, :])
             if intersect is not None:
                 dist_from_i = np.linalg.norm(intersect - total_spline[i, :])
                 norm_dist_from_i = dist_from_i / np.linalg.norm(total_spline[j, :] - total_spline[i, :])
 
                 if total_space[i] == 0:
-                    param_left = total_space[j]
+                    param_start = total_space[j]
                 if total_space[j] == 0:
-                    param_left = total_space[i]
+                    param_start = total_space[i]
                 else:
-                    param_left = total_space[i] * (1-norm_dist_from_i) + total_space[j] * norm_dist_from_i
+                    param_start = total_space[i] * (1-norm_dist_from_i) + total_space[j] * norm_dist_from_i
                 break
-        if param_left is None:
+        if param_start is None:
             raise Exception('No intersection found')
 
-        param_right = None
+        param_end = None
         for i in range(0, num_total_spline_points):
             j = i+1 if i+1 < num_total_spline_points else 0
-            intersect = gh.seg_intersect(source, ray_right, total_spline[i, :], total_spline[j, :])
+            intersect = gh.seg_intersect(source, ray_end, total_spline[i, :], total_spline[j, :])
             if intersect is not None:
                 dist_from_i = np.linalg.norm(intersect - total_spline[i, :])
                 norm_dist_from_i = dist_from_i / np.linalg.norm(total_spline[j, :] - total_spline[i, :])
 
                 if total_space[i] == 0:
-                    param_right = total_space[j]
+                    param_end = total_space[j]
                 if total_space[j] == 0:
-                    param_right = total_space[i]
+                    param_end = total_space[i]
                 else:
-                    param_right = total_space[i] * (1-norm_dist_from_i) + total_space[j] * norm_dist_from_i
+                    param_end = total_space[i] * (1-norm_dist_from_i) + total_space[j] * norm_dist_from_i
                 break
-        if param_right is None:
+        if param_end is None:
             raise Exception('No intersection found')
 
-        print(param_left, param_right)
-        if param_right < param_left:
-            param_right, param_left = param_left, param_right
-
-        return  np.linspace(param_left, param_right, self.number_of_evaluations)
+        if param_end < param_start:
+            sp = np.linspace(param_start-1, param_end, self.number_of_evaluations)
+            sp[sp < 0] += 1
+            return sp
+        return np.linspace(param_start, param_end, self.number_of_evaluations)
 
 class FeatureCalculation:
     """

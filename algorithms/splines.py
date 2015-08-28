@@ -25,16 +25,16 @@ def get_spline_params(points):
     :return:
     """
     distances = np.linalg.norm(points - np.roll(points, -1, axis=0), axis=1)
-    distances = np.cumsum(distances / np.sum(distances))
+    distances = np.roll(np.cumsum(distances / np.sum(distances)), 1)
+    distances[0] = 0
 
     params = np.concatenate((
-        (distances-1)[-10:],
         distances,
-        (distances+1)[:10]
+        [1]
     ))
 
-    y = np.concatenate((points[:, 0][-10:], points[:, 0], points[:, 0][:10]))
-    x = np.concatenate((points[:, 1][-10:], points[:, 1], points[:, 1][:10]))
+    y = np.concatenate((points[:, 0], [points[0, 0]]))
+    x = np.concatenate((points[:, 1], [points[0, 1]]))
 
     tck, u = splprep([y, x], s=0.025, u=params)
 
